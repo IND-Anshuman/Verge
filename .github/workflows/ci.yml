@@ -34,8 +34,6 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    # Non-blocking until the pnpm lockfile is committed; flip to false after.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -44,5 +42,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: pnpm install --no-frozen-lockfile
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @verge/console typecheck
+      - run: pnpm --filter @verge/console build
