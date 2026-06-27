@@ -1,12 +1,12 @@
 """Sensor-health classification — each degraded state is detectable."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from verge_risk.health import classify, is_degraded, ribbon
 from verge_schema.core import Reading, Sensor
 from verge_schema.enums import DataQuality
 
-NOW = datetime(2025, 1, 13, 6, 44, tzinfo=timezone.utc)
+NOW = datetime(2025, 1, 13, 6, 44, tzinfo=UTC)
 
 
 def _sensor(**kw) -> Sensor:

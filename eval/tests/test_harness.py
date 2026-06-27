@@ -1,6 +1,5 @@
 """The harness must reproduce the headline: Verge beats every baseline on lead."""
 
-import eval._paths  # noqa: F401
 from eval.harness import run_incident
 
 

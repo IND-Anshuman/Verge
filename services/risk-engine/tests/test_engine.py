@@ -1,14 +1,14 @@
 """The engine must catch the Vizag-style three-way convergence — and stay quiet
 when the legs don't co-occur — and down-weight on degraded sensors."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from verge_risk import STARTER_RULES, evaluate, load_rules
 from verge_risk.context import RiskContext
 from verge_schema.core import Permit, Reading, Sensor
 from verge_schema.enums import EstimateQuality, LeadTimeBand
 
-NOW = datetime(2025, 1, 13, 6, 44, tzinfo=timezone.utc)
+NOW = datetime(2025, 1, 13, 6, 44, tzinfo=UTC)
 RULES = load_rules(STARTER_RULES)
 
 

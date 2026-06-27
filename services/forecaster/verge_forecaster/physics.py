@@ -29,13 +29,13 @@ def _linfit(xs: list[float], ys: list[float]) -> tuple[float, float, float]:
     mx = sum(xs) / n
     my = sum(ys) / n
     sxx = sum((x - mx) ** 2 for x in xs)
-    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True))
     if sxx == 0:
         return 0.0, my, 0.0
     slope = sxy / sxx
     intercept = my - slope * mx
     ss_tot = sum((y - my) ** 2 for y in ys)
-    ss_res = sum((y - (slope * x + intercept)) ** 2 for x, y in zip(xs, ys))
+    ss_res = sum((y - (slope * x + intercept)) ** 2 for x, y in zip(xs, ys, strict=True))
     r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
     return slope, intercept, r2
 
@@ -64,7 +64,9 @@ def forecast(
     (spec §4.7) we refuse to emit a band: quality=suppressed, band=UNKNOWN.
     """
     if degraded:
-        return Forecast(LeadTimeBand.UNKNOWN, None, "degraded contributing sensor", EstimateQuality.SUPPRESSED)
+        return Forecast(
+            LeadTimeBand.UNKNOWN, None, "degraded contributing sensor", EstimateQuality.SUPPRESSED
+        )
 
     if len(samples) < MIN_SAMPLES:
         return Forecast(LeadTimeBand.UNKNOWN, None, "insufficient samples", EstimateQuality.LOW)
@@ -77,11 +79,15 @@ def forecast(
     # Not approaching the limit in the dangerous direction -> WATCH, not a number.
     approaching = slope > 0 if rising_is_bad else slope < 0
     if not approaching or slope == 0:
-        return Forecast(LeadTimeBand.WATCH, None, "no approach to threshold", EstimateQuality.MEDIUM)
+        return Forecast(
+            LeadTimeBand.WATCH, None, "no approach to threshold", EstimateQuality.MEDIUM
+        )
 
     remaining = (threshold - current) if rising_is_bad else (current - threshold)
     if remaining <= 0:
-        return Forecast(LeadTimeBand.IMMINENT, 0.0, "already at/over threshold", EstimateQuality.HIGH)
+        return Forecast(
+            LeadTimeBand.IMMINENT, 0.0, "already at/over threshold", EstimateQuality.HIGH
+        )
 
     eta_min = (remaining / abs(slope)) / 60.0
     band = _band_for(eta_min)

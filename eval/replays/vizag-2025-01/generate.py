@@ -22,12 +22,12 @@ Outputs (committed): events.jsonl, ground-truth.json, feedback.jsonl
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).parent
-T0 = datetime(2025, 1, 13, 6, 30, tzinfo=timezone.utc)
-BREACH = datetime(2025, 1, 13, 7, 5, tzinfo=timezone.utc)
+T0 = datetime(2025, 1, 13, 6, 30, tzinfo=UTC)
+BREACH = datetime(2025, 1, 13, 7, 5, tzinfo=UTC)
 LEL_THRESHOLD = 100.0
 CO_THRESHOLD = 50.0
 
@@ -97,7 +97,9 @@ def build_ground_truth() -> dict:
         "thresholdSensor": "LEL-04",
         "thresholds": {"gas-lel": LEL_THRESHOLD, "gas-co": CO_THRESHOLD},
         "expectedConvergence": ["hot-work permit", "rising flammable gas", "shift changeover"],
-        "injectedHealth": [{"sensorId": "LEL-04", "state": "stale", "from": "06:38", "to": "06:42"}],
+        "injectedHealth": [
+            {"sensorId": "LEL-04", "state": "stale", "from": "06:38", "to": "06:42"}
+        ],
         "source": "The Wire investigation + public DGFASLI summary (synthesis, not extraction)",
     }
 

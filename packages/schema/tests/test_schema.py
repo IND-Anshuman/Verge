@@ -1,6 +1,6 @@
 """Schema invariants: camelCase wire format, enum vocab, lead-time band bounds."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from verge_schema import (
     BAND_BOUNDS_MIN,
@@ -14,7 +14,7 @@ from verge_schema import (
 
 
 def _now() -> datetime:
-    return datetime(2025, 1, 13, 6, 44, tzinfo=timezone.utc)
+    return datetime(2025, 1, 13, 6, 44, tzinfo=UTC)
 
 
 def test_finding_serializes_camel_case() -> None:

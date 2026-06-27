@@ -14,7 +14,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-
 from verge_llm import provider_from_env
 from verge_risk.health import ribbon as health_ribbon  # noqa: F401 (kept in sync)
 from verge_schema.enums import FeedbackVerdict

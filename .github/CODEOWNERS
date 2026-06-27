@@ -1,0 +1,7 @@
+# Default owner for everything in the repo.
+* @arjun7n9s
+
+# The safety-critical core and the audit chain get extra scrutiny.
+/services/risk-engine/ @arjun7n9s
+/packages/audit/       @arjun7n9s
+/eval/                 @arjun7n9s

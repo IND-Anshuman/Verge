@@ -28,7 +28,7 @@ def _slope_per_min(readings: list[Reading]) -> float:
     sxx = sum((x - mx) ** 2 for x in xs)
     if sxx == 0:
         return 0.0
-    return (sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx) * 60.0
+    return (sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / sxx) * 60.0
 
 
 # ── predicate implementations ────────────────────────────────────────────────

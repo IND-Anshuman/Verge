@@ -1,18 +1,17 @@
 """Lifecycle: legal paths flow, illegal ones raise, reasons are enforced."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
-
 from verge_schema.enums import FindingState as S
 from verge_schema.lifecycle import IllegalTransition, can_transition, is_terminal, transition
 
-TS = datetime(2025, 1, 13, 6, 44, tzinfo=timezone.utc)
+TS = datetime(2025, 1, 13, 6, 44, tzinfo=UTC)
 
 
 def test_happy_path_new_to_closed() -> None:
     path = [S.NEW, S.ACKNOWLEDGED, S.IN_PROGRESS, S.RESOLVED, S.CLOSED]
-    for frm, to in zip(path, path[1:]):
+    for frm, to in zip(path, path[1:], strict=False):
         assert can_transition(frm, to)
         ev = transition("F-1", frm, to, actor="maya", timestamp=TS)
         assert ev.to_state == to

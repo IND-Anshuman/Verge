@@ -1,13 +1,13 @@
 """The audit chain must detect any tampering and survive a faithful rebuild."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from verge_audit import AuditChain, canonical_json
 from verge_audit.chain import GENESIS_HASH, IntegrityError
 
 
 def _ts(i: int) -> datetime:
-    return datetime(2025, 1, 13, 6, 0, tzinfo=timezone.utc) + timedelta(seconds=i)
+    return datetime(2025, 1, 13, 6, 0, tzinfo=UTC) + timedelta(seconds=i)
 
 
 def _build(n: int = 5) -> AuditChain:
@@ -32,7 +32,7 @@ def test_chain_links_and_verifies() -> None:
     chain.verify()  # must not raise
     entries = list(chain)
     assert entries[0].prev_hash == GENESIS_HASH
-    for a, b in zip(entries, entries[1:]):
+    for a, b in zip(entries, entries[1:], strict=False):
         assert b.prev_hash == a.hash
 
 

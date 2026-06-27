@@ -25,6 +25,8 @@ extend-exclude = ["apps", "node_modules"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+# `str, Enum` is intentional (pydantic use_enum_values + JSON-string members).
+ignore = ["UP042"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

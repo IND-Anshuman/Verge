@@ -2,7 +2,6 @@
 safety data on a blip (until bounded, and then it counts)."""
 
 import pytest
-
 from verge_edge import (
     NormalizationError,
     StoreAndForward,

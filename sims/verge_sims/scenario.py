@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 
 @dataclass
@@ -78,7 +78,7 @@ def vizag_like() -> Scenario:
     """The demo scenario: hot-work + rising LEL during changeover in B-04."""
     return Scenario(
         name="vizag-like",
-        t0=datetime(2025, 1, 13, 6, 30, tzinfo=timezone.utc),
+        t0=datetime(2025, 1, 13, 6, 30, tzinfo=UTC),
         duration_min=40.0,
         sensors=[
             SensorSpec("LEL-04", "gas-lel", "%LEL", "B-04", start=80.0, drift_per_min=0.45,

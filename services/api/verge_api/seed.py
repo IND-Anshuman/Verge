@@ -3,14 +3,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from verge_schema.enums import DataQuality, EstimateQuality, FindingState, LeadTimeBand
 from verge_schema.findings import ContributingSignal, RiskFinding
 
 from .store import Store
 
-T = datetime(2025, 1, 13, 6, 38, tzinfo=timezone.utc)
+T = datetime(2025, 1, 13, 6, 38, tzinfo=UTC)
 
 
 def seed(store: Store) -> Store:
@@ -50,9 +50,13 @@ def seed(store: Store) -> Store:
         title="Hot work + rising flammable gas during shift changeover",
         state=FindingState.NEW, confidence=0.85,
         contributing_signals=[
-            ContributingSignal(kind="permit", ref_id="PW-2025-0142", summary="hot-work permit active"),
+            ContributingSignal(
+                kind="permit", ref_id="PW-2025-0142", summary="hot-work permit active"
+            ),
             ContributingSignal(kind="reading", ref_id="LEL-04", summary="gas-lel 91.5 (rising)"),
-            ContributingSignal(kind="shift", ref_id="changeover", summary="shift changeover window"),
+            ContributingSignal(
+                kind="shift", ref_id="changeover", summary="shift changeover window"
+            ),
         ],
         lead_time_band=LeadTimeBand.NEAR, lead_time_basis="rate-of-rise 1.0/min, R^2=0.98, n=10",
         estimate_quality=EstimateQuality.HIGH,

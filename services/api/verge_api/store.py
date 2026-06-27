@@ -6,7 +6,7 @@ counts. Every lifecycle transition and feedback event is hash-chained (P6).
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from verge_audit import AuditChain
 from verge_schema.enums import DataQuality, FeedbackVerdict
@@ -16,7 +16,7 @@ from verge_schema.lifecycle import transition
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Store:

@@ -9,7 +9,7 @@ the rest of the system can assume clean canonical events.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 class NormalizationError(ValueError):
@@ -18,13 +18,13 @@ class NormalizationError(ValueError):
 
 def _parse_ts(raw: str | float | int | None) -> str:
     if raw is None:
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
     if isinstance(raw, (int, float)):  # epoch seconds
-        return datetime.fromtimestamp(raw, tz=timezone.utc).isoformat()
+        return datetime.fromtimestamp(raw, tz=UTC).isoformat()
     # ISO string; normalize to tz-aware
     dt = datetime.fromisoformat(raw)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt.isoformat()
 
 

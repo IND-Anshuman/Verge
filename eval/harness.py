@@ -12,13 +12,12 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from . import _paths  # noqa: F401  (sys.path bootstrap; must precede verge imports)
+from verge_risk import STARTER_RULES, evaluate, load_rules
+from verge_risk.context import RiskContext
+from verge_schema.core import Permit, Reading, Sensor
 
-from verge_risk import STARTER_RULES, evaluate, load_rules  # noqa: E402
-from verge_risk.context import RiskContext  # noqa: E402
-from verge_schema.core import Permit, Reading, Sensor  # noqa: E402
-
-from eval.baselines import (  # noqa: E402
+# sys.path is wired by eval/__init__.py (imported first), so these resolve.
+from eval.baselines import (
     b0_fixed_threshold,
     b1_rate_of_rise,
     b2_multi_sensor_and_gate,

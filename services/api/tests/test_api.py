@@ -1,7 +1,6 @@
 """API contract: lifecycle is enforced, feedback measures FPR, audit verifies."""
 
 from fastapi.testclient import TestClient
-
 from verge_api.main import app
 
 client = TestClient(app)
@@ -23,7 +22,9 @@ def test_findings_seeded_in_multiple_states() -> None:
 
 def test_legal_transition_updates_and_audits() -> None:
     before = len(client.get("/api/audit?limit=999").json())
-    r = client.post("/api/findings/F-NEW-01/transition", json={"to": "acknowledged", "actor": "maya"})
+    r = client.post(
+        "/api/findings/F-NEW-01/transition", json={"to": "acknowledged", "actor": "maya"}
+    )
     assert r.status_code == 200
     assert r.json()["state"] == "acknowledged"
     after = len(client.get("/api/audit?limit=999").json())
