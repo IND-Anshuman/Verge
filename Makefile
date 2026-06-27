@@ -17,8 +17,8 @@ down: ## Tear down infra
 logs: ## Tail infra logs
 	$(COMPOSE) logs -f --tail=100
 
-seed: ## Load demo plant + Vizag replay
-	python -m verge_cli seed --plant demo
+seed: ## (Re)generate the Vizag replay dataset
+	python eval/replays/vizag-2025-01/generate.py
 
 dev: ## Run api + console (dev)
 	$(MAKE) -j2 api console

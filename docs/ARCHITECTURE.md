@@ -1,0 +1,48 @@
+# Architecture
+
+Five planes (spec §2). Data flows up; the **safety core is LLM-independent** (P1).
+
+```
+①  EDGE / INGESTION   OPC-UA, MQTT, RTSP, file/DB  ──┐  services/edge-gateway
+                       normalize + store-and-forward  │
+②  STREAM BUS         Redpanda (canonical events)  ◄──┘  deploy/
+③  DATA PLANE         TimescaleDB · Postgres/PostGIS · Neo4j · pgvector · MinIO
+④  INTELLIGENCE       risk-engine · forecaster · rag · orchestrator · audit
+                       └─ LLMProvider (aimlapi ↔ Ollama/vLLM)   packages/llm
+⑤  APPLICATION        FastAPI gateway (SSE/WS) · console · alerting
+```
+
+## Where the spec lives in code
+
+| Spec | Code |
+|------|------|
+| §4.1 Compound Risk Engine | `services/risk-engine/verge_risk/engine.py` |
+| §4.2 Lead-Time Forecaster | `services/forecaster/verge_forecaster/physics.py` |
+| §4.5 Finding lifecycle | `packages/schema/verge_schema/lifecycle.py` |
+| §4.6 Alert fatigue (feedback, FPR) | `services/api` store + `FindingFeedback` |
+| §4.7 Sensor-health plane | `services/risk-engine/verge_risk/health.py` |
+| §6 Safety Rules DSL | `services/risk-engine/verge_risk/rules.py` + `rules/*.yaml` |
+| §10 Eval harness + baselines | `eval/harness.py`, `eval/baselines/` |
+| §10.6 Graceful degradation | LLM `degraded`, edge `StoreAndForward`, `/health` |
+| P6 Hash-chained audit | `packages/audit/verge_audit/chain.py` |
+| P3 Source lineage | `RiskFinding.lineage` + `contributingSignals[]` |
+
+## Data flow (one finding)
+
+1. Sensors/permits/shift → edge-gateway normalizes → Redpanda.
+2. `risk-engine` builds a `RiskContext` snapshot; the Safety Rules DSL fires on a
+   zone; each matched predicate adds a `ContributingSignal` (lineage).
+3. `forecaster` projects a lead-time **band**; the sensor-health plane may
+   down-weight confidence and **suppress** the band on degraded inputs.
+4. A `RiskFinding` is created (state `new`) and hash-chained into the audit.
+5. The operator works it through the lifecycle; every transition + feedback is
+   another hash-chained `AuditEntry`.
+6. The eval harness replays all of the above and proves the lead-time edge vs.
+   B0/B1/B2 — the same engine, no special-casing.
+
+## The one rule that shapes everything
+
+The detection → alert path must run with **no LLM and no cloud** (P1). The
+`LLMProvider` only ever powers narrative/explanation, and it **degrades, never
+raises** into the safety path. If you find the safety core importing `verge_llm`
+for anything load-bearing, that's a bug.

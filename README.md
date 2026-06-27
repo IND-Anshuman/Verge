@@ -50,7 +50,7 @@ evidence — all able to run **inside an air-gapped plant network**.
 
 ```bash
 make up        # bring up infra (docker compose)
-make seed      # load the demo plant + Vizag replay
+make seed      # (re)generate the Vizag replay dataset
 make dev       # run api + console
 make eval      # run the replay harness vs. baselines B0/B1/B2
 ```
