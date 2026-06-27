@@ -56,3 +56,22 @@ def test_feedback_drives_fpr() -> None:
 def test_ribbon_text() -> None:
     txt = client.get("/api/sensors/ribbon").json()["text"]
     assert "live" in txt and "stale" in txt
+
+
+def test_respond_drafts_advisory_and_audits() -> None:
+    before = len(client.get("/api/audit?limit=999").json())
+    r = client.post("/api/findings/F-CONV-07/respond")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["action"]["advisory"] is True
+    assert body["action"]["kind"] == "recommend-permit-pause"
+    assert body["alert"]["languages"] == ["en", "hi", "te"]
+    assert body["report"]["submitted"] is False  # P8: never auto-submitted
+    # three advisory audit entries appended (recommendation, alert, evidence)
+    after = len(client.get("/api/audit?limit=999").json())
+    assert after == before + 3
+    assert client.get("/health").json()["audit"]["verified"] is True
+
+
+def test_respond_unknown_finding_is_404() -> None:
+    assert client.post("/api/findings/NOPE/respond").status_code == 404

@@ -8,6 +8,7 @@ dependencies = [
     "verge-audit",
     "verge-llm",
     "verge-risk-engine",
+    "verge-orchestrator",
     "fastapi>=0.111",
     "uvicorn>=0.30",
 ]
@@ -24,3 +25,4 @@ verge-schema = { workspace = true }
 verge-audit = { workspace = true }
 verge-llm = { workspace = true }
 verge-risk-engine = { workspace = true }
+verge-orchestrator = { workspace = true }

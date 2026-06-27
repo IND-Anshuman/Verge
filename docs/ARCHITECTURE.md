@@ -18,6 +18,7 @@ Five planes (spec §2). Data flows up; the **safety core is LLM-independent** (P
 |------|------|
 | §4.1 Compound Risk Engine | `services/risk-engine/verge_risk/engine.py` |
 | §4.2 Lead-Time Forecaster | `services/forecaster/verge_forecaster/physics.py` |
+| §4.4 Emergency Response Orchestrator | `services/orchestrator/` (advisory; `respond()`) |
 | §4.5 Finding lifecycle | `packages/schema/verge_schema/lifecycle.py` |
 | §4.6 Alert fatigue (feedback, FPR) | `services/api` store + `FindingFeedback` |
 | §4.7 Sensor-health plane | `services/risk-engine/verge_risk/health.py` |

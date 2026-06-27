@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+from datetime import UTC, datetime
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from verge_llm import provider_from_env
+from verge_orchestrator import respond
 from verge_risk.health import ribbon as health_ribbon  # noqa: F401 (kept in sync)
 from verge_schema.enums import FeedbackVerdict
 from verge_schema.enums import FindingState as S
@@ -92,6 +94,33 @@ def feedback(finding_id: str, body: FeedbackBody) -> dict:
         raise HTTPException(404, "finding not found")
     fb = store.add_feedback(finding_id, body.actor, body.verdict, body.reasonCode)
     return {"feedback": fb.model_dump(by_alias=True, mode="json"), "fpr": store.fpr()}
+
+
+@app.post("/api/findings/{finding_id}/respond")
+def respond_to_finding(finding_id: str) -> dict:
+    """Draft the coordinated response (Act 3): advisory action + multilingual
+    alert + evidence pack + report draft. Verge executes nothing (P8); it
+    hash-chains the recommendation and returns it for the operator to Approve."""
+    f = store.findings.get(finding_id)
+    if not f:
+        raise HTTPException(404, "finding not found")
+    r = respond(f, at=datetime.now(UTC), provider=llm)
+    for payload in r.audit_payloads():
+        store.audit.append(
+            actor="orchestrator", kind=payload["kind"], payload=payload,
+            timestamp=datetime.now(UTC),
+        )
+    return {
+        "action": r.action.model_dump(by_alias=True, mode="json"),
+        "alert": r.alert.model_dump(by_alias=True, mode="json"),
+        "evidence": r.evidence.model_dump(by_alias=True, mode="json"),
+        "report": {
+            "markdown": r.report.markdown,
+            "cited": r.report.cited,
+            "submitted": r.report.submitted,
+            "narrativeDegraded": r.report.narrative_degraded,
+        },
+    }
 
 
 @app.get("/api/sensors/ribbon")
