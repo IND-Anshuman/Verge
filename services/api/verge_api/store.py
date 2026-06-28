@@ -35,11 +35,24 @@ class Store:
         )
         return f
 
-    def list_findings(self, state: str | None = None) -> list[RiskFinding]:
+    def list_findings(
+        self, state: str | None = None, shadow: bool | None = False
+    ) -> list[RiskFinding]:
+        """`shadow=False` (default) is the operator feed — live findings only.
+        `shadow=True` is the shadow-review surface; `shadow=None` returns both."""
         items = list(self.findings.values())
         if state:
             items = [f for f in items if f.state == state]
+        if shadow is not None:
+            items = [f for f in items if f.shadow == shadow]
         return sorted(items, key=lambda f: f.created_at, reverse=True)
+
+    def shadow_summary(self) -> dict:
+        shadow = [f for f in self.findings.values() if f.shadow]
+        by_band: dict[str, int] = {}
+        for f in shadow:
+            by_band[f.lead_time_band] = by_band.get(f.lead_time_band, 0) + 1
+        return {"shadow": len(shadow), "byBand": by_band}
 
     def transition(
         self, finding_id: str, to: S, actor: str,

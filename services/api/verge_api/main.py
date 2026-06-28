@@ -66,8 +66,16 @@ def health() -> dict:
 
 
 @app.get("/api/findings")
-def list_findings(state: str | None = None) -> list[dict]:
-    return [f.model_dump(by_alias=True, mode="json") for f in store.list_findings(state)]
+def list_findings(state: str | None = None, shadow: bool = False) -> list[dict]:
+    """The operator feed. shadow=False (default) returns live findings only;
+    shadow=True returns the shadow-review surface (spec §14.5)."""
+    return [f.model_dump(by_alias=True, mode="json") for f in store.list_findings(state, shadow)]
+
+
+@app.get("/api/shadow/summary")
+def shadow_summary() -> dict:
+    """Day-31 shadow-mode readout: how much Verge would have flagged."""
+    return store.shadow_summary()
 
 
 @app.post("/api/findings")

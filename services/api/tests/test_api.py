@@ -75,3 +75,23 @@ def test_respond_drafts_advisory_and_audits() -> None:
 
 def test_respond_unknown_finding_is_404() -> None:
     assert client.post("/api/findings/NOPE/respond").status_code == 404
+
+
+def test_shadow_findings_hidden_from_operator_feed() -> None:
+    shadow = {
+        "findingId": "F-SHADOW-1", "createdAt": "2025-01-13T06:50:00Z", "zoneId": "B-04",
+        "title": "shadow convergence", "state": "new", "confidence": 0.85,
+        "leadTimeBand": "NEAR", "estimateQuality": "high", "lineage": ["reading:LEL-09"],
+        "shadow": True,
+    }
+    assert client.post("/api/findings", json=shadow).status_code == 200
+
+    live = client.get("/api/findings").json()  # default feed: live only
+    assert all(f["findingId"] != "F-SHADOW-1" for f in live)
+
+    shadow_feed = client.get("/api/findings?shadow=true").json()
+    assert any(f["findingId"] == "F-SHADOW-1" for f in shadow_feed)
+
+    summary = client.get("/api/shadow/summary").json()
+    assert summary["shadow"] >= 1
+    assert summary["byBand"].get("NEAR", 0) >= 1

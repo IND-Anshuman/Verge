@@ -16,6 +16,7 @@ export function FindingCard({ f, onChange }: { f: RiskFinding; onChange: () => v
     <article className="card">
       <header className="card-head">
         <span className={`band ${BAND_CLASS[f.leadTimeBand]}`}>{f.leadTimeBand}</span>
+        {f.shadow && <span className="badge badge-shadow">SHADOW</span>}
         <span className="zone">{f.zoneId}</span>
         <span className="conf">conf {f.confidence.toFixed(2)}</span>
       </header>

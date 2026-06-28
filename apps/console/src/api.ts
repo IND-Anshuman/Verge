@@ -23,7 +23,10 @@ async function get<T>(path: string): Promise<T> {
 
 export const api = {
   health: () => get<Health>("/health"),
-  findings: () => get<RiskFinding[]>("/api/findings"),
+  findings: (shadow = false) => get<RiskFinding[]>(`/api/findings?shadow=${shadow}`),
+  shadowSummary: () => get<{ shadow: number; byBand: Record<string, number> }>(
+    "/api/shadow/summary",
+  ),
   ribbon: () => get<Ribbon>("/api/sensors/ribbon"),
 
   async transition(id: string, to: FindingState, actor: string, reasonCode?: string) {
