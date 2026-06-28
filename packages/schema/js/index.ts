@@ -73,6 +73,7 @@ export interface RiskFinding {
   confidenceDegradedBy: string[];
   counterfactual?: string | null;
   lineage: string[];
+  shadow: boolean;
 }
 
 export interface FindingEvent {

@@ -49,6 +49,10 @@ class RiskFinding(VergeModel):
     # Lineage: opaque pointers to raw evidence (P3)
     lineage: list[str] = Field(default_factory=list)
 
+    # Shadow mode (spec 14.5): produced while running alongside the existing
+    # alarm system; recorded and hash-chained, but not surfaced as a live alert.
+    shadow: bool = False
+
 
 class FindingEvent(VergeModel):
     """An append-only lifecycle transition. Hash-chains into AuditEntry (spec 4.5)."""

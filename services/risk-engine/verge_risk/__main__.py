@@ -3,7 +3,12 @@
     verge sim --scenario vizag-like | python -m verge_risk            # JSONL on stdin
     python -m verge_risk --source eval/replays/vizag-2025-01/events.jsonl
     ... --post http://localhost:8000     # also POST findings to the API (live console)
+    ... --shadow                          # shadow mode: tag findings, don't alert (§14.5)
+    ... --plant services/twin/.../plant.yaml   # plant model for thresholds + adjacency
     ... --redpanda localhost:19092 --topic verge.events
+
+The unified runtime: gas rules (risk-engine) + SIMOPS permit conflicts (permit),
+resolved against the plant model (twin) for thresholds and zone adjacency.
 """
 
 from __future__ import annotations
@@ -25,15 +30,37 @@ def _events_from(path: str | None):
                 yield json.loads(line)
 
 
+def _simops_detector(adjacency):
+    """Closure that runs SIMOPS conflict detection over the live permits. Imported
+    here (not in runner) so risk-engine keeps no dependency on permit/twin."""
+    from verge_permit import conflict_findings
+
+    def detect(state):
+        return conflict_findings(state.permits, adjacency=adjacency, now=state.now, at=state.now)
+
+    return detect
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="verge_risk", description="Verge streaming risk engine")
     ap.add_argument("--source", help="JSONL file of canonical events (default: stdin)")
     ap.add_argument("--redpanda", help="brokers, e.g. localhost:19092 (overrides --source)")
     ap.add_argument("--topic", default="verge.events")
     ap.add_argument("--post", help="API base URL to POST findings to, e.g. http://localhost:8000")
+    ap.add_argument("--plant", help="plant model YAML (default: the demo plant)")
+    ap.add_argument("--no-simops", action="store_true", help="disable SIMOPS permit conflicts")
+    ap.add_argument("--shadow", action="store_true", help="shadow mode: tag findings, don't alert")
     args = ap.parse_args(argv)
 
     rules = load_rules(STARTER_RULES)
+
+    # Plant model -> thresholds + adjacency (twin). Defaults to the demo plant.
+    from verge_twin import load_plant
+
+    plant = load_plant(args.plant) if args.plant else load_plant()
+    thresholds = plant.thresholds_by_kind()
+    detectors = [] if args.no_simops else [_simops_detector(plant.adjacency())]
+
     posted = {"n": 0}
 
     def sink(f):
@@ -54,10 +81,13 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"post failed: {exc}", file=sys.stderr)
 
     if args.redpanda:
-        consume_redpanda(args.redpanda, args.topic, rules, sink)
+        consume_redpanda(args.redpanda, args.topic, rules, sink,
+                         thresholds=thresholds, detectors=detectors, shadow=args.shadow)
     else:
-        n = run_stream(_events_from(args.source), rules, sink)
-        print(f"emitted {n} finding(s); posted {posted['n']}", file=sys.stderr)
+        n = run_stream(_events_from(args.source), rules, sink,
+                       thresholds=thresholds, detectors=detectors, shadow=args.shadow)
+        mode = "shadow" if args.shadow else "live"
+        print(f"[{mode}] emitted {n} finding(s); posted {posted['n']}", file=sys.stderr)
     return 0
 
 

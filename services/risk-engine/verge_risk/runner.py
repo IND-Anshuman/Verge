@@ -82,29 +82,50 @@ class StreamState:
         )
 
 
+# An extra detector takes the live StreamState and returns findings (e.g. the
+# permit SIMOPS detector). Injected by the caller so the runner needs no
+# dependency on the permit/twin packages.
+Detector = Callable[["StreamState"], list[RiskFinding]]
+
+
 def run_stream(
     events: Iterable[dict],
     rules: list[Rule],
     sink: Callable[[RiskFinding], None],
     *,
     thresholds: dict[str, float] | None = None,
+    detectors: list[Detector] | None = None,
+    shadow: bool = False,
     min_confidence: float = 0.8,
 ) -> int:
-    """Drive the engine over a live stream. Emits each qualifying finding once
-    (deduped by zone+title). Returns the number emitted."""
+    """Drive the engine over a live stream. Runs the gas rules plus any injected
+    detectors (e.g. SIMOPS), emits each qualifying finding once (deduped by zone
+    + lineage), and tags findings shadow when running alongside an existing alarm
+    system (spec §14.5). Returns the number emitted."""
     from .engine import evaluate  # local import avoids a cycle at module load
 
+    detectors = detectors or []
     state = StreamState(thresholds)
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[str, tuple[str, ...]]] = set()
     emitted = 0
     for e in events:
-        if state.ingest(e) != "reading":
+        # readings and permits both change the risk picture; re-evaluate on either.
+        if state.ingest(e) not in ("reading", "permit"):
             continue
-        for f in evaluate(state.context(), rules):
-            key = (f.zone_id, f.title)
-            if key in seen or f.confidence < min_confidence:
+        findings = list(evaluate(state.context(), rules))
+        for detect in detectors:
+            findings.extend(detect(state))
+        for f in findings:
+            if f.confidence < min_confidence:
+                continue
+            # Lineage uniquely identifies a finding's contributors, so this dedups
+            # both gas findings (stable sensors) and SIMOPS (per permit pair).
+            key = (f.zone_id, tuple(sorted(f.lineage)))
+            if key in seen:
                 continue
             seen.add(key)
+            if shadow:
+                f.shadow = True
             sink(f)
             emitted += 1
     return emitted

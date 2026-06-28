@@ -1,0 +1,18 @@
+# Demo plant model (commissioned config, spec §14.5). Matches the sims + Vizag
+# replay: coke-oven batteries B-01..B-05 with adjacency, and the B-04 sensors.
+name: vizag-coke-oven
+
+zones:
+  - {id: B-01, name: "Coke-oven battery 1", adjacent: [B-02]}
+  - {id: B-02, name: "Coke-oven battery 2", adjacent: [B-01, B-03]}
+  - {id: B-03, name: "Coke-oven battery 3", adjacent: [B-02, B-04]}
+  - {id: B-04, name: "Coke-oven battery 4", adjacent: [B-03, B-05]}
+  - {id: B-05, name: "Coke-oven battery 5", adjacent: [B-04]}
+
+equipment:
+  - {id: charging-car-hydraulics, name: "Charging-car hydraulic line", kind: hydraulic, zone: B-04}
+
+sensors:
+  - {id: LEL-04, kind: gas-lel, unit: "%LEL", zone: B-04, threshold: 100, cadenceS: 30}
+  - {id: CO-04, kind: gas-co, unit: ppm, zone: B-04, threshold: 50, cadenceS: 30}
+  - {id: LEL-05, kind: gas-lel, unit: "%LEL", zone: B-05, threshold: 100, cadenceS: 30}

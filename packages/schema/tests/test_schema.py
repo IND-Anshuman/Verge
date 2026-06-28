@@ -66,3 +66,9 @@ def test_data_quality_default_is_live() -> None:
     )
     assert f.confidence_degraded is False
     assert DataQuality.LIVE.value == "live"
+
+
+def test_shadow_defaults_false_and_serializes_camel() -> None:
+    f = RiskFinding(finding_id="F-4", created_at=_now(), zone_id="Z", title="t", confidence=0.1)
+    assert f.shadow is False
+    assert f.model_dump(by_alias=True)["shadow"] is False

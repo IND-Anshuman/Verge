@@ -47,15 +47,28 @@ class Scenario:
     sensors: list[SensorSpec]
     permit_at_min: float | None = None
     permit: dict = field(default_factory=dict)
+    # Multiple permits for SIMOPS scenarios; each dict carries atMin (+ optional
+    # durationMin) plus permitId/kind/zoneId. Takes precedence over permit_at_min.
+    permits: list[dict] | None = None
     changeover: tuple[float, float] | None = None  # (start_min, end_min)
     step_s: float = 30.0
 
-    def events(self) -> Iterator[dict]:
+    def _permit_specs(self) -> list[dict]:
+        if self.permits:
+            return self.permits
         if self.permit_at_min is not None:
-            t = self.t0 + timedelta(minutes=self.permit_at_min)
-            yield {"type": "permit", "ts": t.isoformat(), **self.permit,
+            return [{"atMin": self.permit_at_min, **self.permit}]
+        return []
+
+    def events(self) -> Iterator[dict]:
+        for p in self._permit_specs():
+            at = float(p["atMin"])
+            dur = float(p.get("durationMin", self.duration_min + 30 - at))
+            t = self.t0 + timedelta(minutes=at)
+            body = {k: v for k, v in p.items() if k not in ("atMin", "durationMin")}
+            yield {"type": "permit", "ts": t.isoformat(), **body,
                    "validFrom": t.isoformat(),
-                   "validTo": (self.t0 + timedelta(minutes=self.duration_min + 30)).isoformat()}
+                   "validTo": (t + timedelta(minutes=dur)).isoformat()}
         if self.changeover:
             s, e = self.changeover
             yield {"type": "shift", "ts": (self.t0 + timedelta(minutes=s)).isoformat(),
@@ -92,4 +105,26 @@ def vizag_like() -> Scenario:
     )
 
 
-SCENARIOS = {"vizag-like": vizag_like}
+def simops_demo() -> Scenario:
+    """A SIMOPS conflict: a hot-work permit in B-04 and a confined-space entry in
+    adjacent B-05, overlapping in time. No single gas reading is alarming — the
+    risk is the *combination* of the two permits in adjacent zones."""
+    return Scenario(
+        name="simops-demo",
+        t0=datetime(2025, 2, 1, 8, 0, tzinfo=UTC),
+        duration_min=20.0,
+        sensors=[
+            SensorSpec("LEL-04", "gas-lel", "%LEL", "B-04", start=40.0, drift_per_min=0.1),
+            SensorSpec("LEL-05", "gas-lel", "%LEL", "B-05", start=42.0, drift_per_min=0.1),
+        ],
+        permits=[
+            {"atMin": 2.0, "permitId": "PW-HW-21", "kind": "hot-work", "zoneId": "B-04",
+             "equipmentId": "charging-car-hydraulics"},
+            {"atMin": 5.0, "permitId": "PW-CS-22", "kind": "confined-space", "zoneId": "B-05",
+             "equipmentId": "vessel-V-7"},
+        ],
+    )
+
+
+SCENARIOS = {"vizag-like": vizag_like, "simops-demo": simops_demo}
+

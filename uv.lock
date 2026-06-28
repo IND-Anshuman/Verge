@@ -16,6 +16,7 @@ members = [
     "verge-risk-engine",
     "verge-schema",
     "verge-sims",
+    "verge-twin",
 ]
 
 [[package]]
@@ -706,6 +707,7 @@ dependencies = [
     { name = "verge-risk-engine" },
     { name = "verge-schema" },
     { name = "verge-sims" },
+    { name = "verge-twin" },
 ]
 
 [package.dev-dependencies]
@@ -728,6 +730,7 @@ requires-dist = [
     { name = "verge-risk-engine", editable = "services/risk-engine" },
     { name = "verge-schema", editable = "packages/schema" },
     { name = "verge-sims", editable = "sims" },
+    { name = "verge-twin", editable = "services/twin" },
 ]
 
 [package.metadata.requires-dev]
@@ -916,6 +919,21 @@ requires-dist = [
     { name = "verge-schema", editable = "packages/schema" },
 ]
 provides-extras = ["mqtt"]
+
+[[package]]
+name = "verge-twin"
+version = "0.3.0"
+source = { editable = "services/twin" }
+dependencies = [
+    { name = "pyyaml" },
+    { name = "verge-schema" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "verge-schema", editable = "packages/schema" },
+]
 
 [[package]]
 name = "wait-for2"
