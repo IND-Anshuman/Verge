@@ -26,14 +26,7 @@ CREATE TABLE IF NOT EXISTS permit (
     status       TEXT NOT NULL DEFAULT 'open'
 );
 
--- Append-only, hash-chained audit (P6). No UPDATE/DELETE in application code.
-CREATE TABLE IF NOT EXISTS audit_entry (
-    entry_id   TEXT PRIMARY KEY,
-    ts         TIMESTAMPTZ NOT NULL,
-    actor      TEXT NOT NULL,
-    kind       TEXT NOT NULL,
-    payload    JSONB NOT NULL,
-    hash       TEXT NOT NULL,
-    prev_hash  TEXT
-);
-CREATE INDEX IF NOT EXISTS audit_entry_ts_idx ON audit_entry (ts);
+-- The findings / feedback / audit_entry / sensor_health tables are owned and
+-- created by the API's durable store (verge_api/db.py, SQLAlchemy) so the same
+-- schema runs on Postgres and SQLite. The audit_entry table is append-only by
+-- design (P6) — application code never issues UPDATE/DELETE against it.

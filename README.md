@@ -41,7 +41,7 @@ evidence — all able to run **inside an air-gapped plant network**.
 | `services/orchestrator` | Advisory response — alerts, evidence packs, report drafts (P8) |
 | `services/permit` | Digital permit-to-work + SIMOPS spatial-temporal conflict detection |
 | `services/twin` | Plant digital twin — zones, adjacency, per-sensor thresholds |
-| `services/api` | FastAPI gateway, SSE/WebSocket fan-out |
+| `services/api` | FastAPI gateway, SSE/WebSocket fan-out, durable store |
 | `apps/console` | Operator console (React + Vite + MapLibre/deck.gl) |
 | `eval` | Replay-provable eval harness + incident datasets |
 | `sims` | SCADA/MQTT simulators emitting realistic event streams |

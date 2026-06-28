@@ -8,16 +8,17 @@ from datetime import UTC, datetime, timedelta
 from verge_schema.enums import DataQuality, EstimateQuality, FindingState, LeadTimeBand
 from verge_schema.findings import ContributingSignal, RiskFinding
 
-from .store import Store
+from .store_base import StoreProtocol
 
 T = datetime(2025, 1, 13, 6, 38, tzinfo=UTC)
 
 
-def seed(store: Store) -> Store:
-    store.sensor_health = {
+def seed(store: StoreProtocol) -> StoreProtocol:
+    """Populate a store via its protocol — works for in-memory and SQL alike."""
+    store.set_sensor_health({
         DataQuality.LIVE: 847, DataQuality.STALE: 12, DataQuality.STUCK_AT_VALUE: 3,
         DataQuality.MISSING: 0,
-    }
+    })
 
     findings = [
         RiskFinding(finding_id="F-NEW-01", created_at=T + timedelta(minutes=-7), zone_id="B-04",
@@ -42,10 +43,10 @@ def seed(store: Store) -> Store:
                     lineage=["reading:CO-02"]),
     ]
     for f in findings:
-        store.findings[f.finding_id] = f
+        store.add_finding(f)
 
     # The convergence (Act 2) arrives as the seventh, in NEW.
-    store.findings["F-CONV-07"] = RiskFinding(
+    store.add_finding(RiskFinding(
         finding_id="F-CONV-07", created_at=T + timedelta(minutes=6), zone_id="B-04",
         title="Hot work + rising flammable gas during shift changeover",
         state=FindingState.NEW, confidence=0.85,
@@ -62,5 +63,5 @@ def seed(store: Store) -> Store:
         estimate_quality=EstimateQuality.HIGH,
         counterfactual="risk drops to LOW if permit PW-2025-0142 is closed",
         lineage=["permit:PW-2025-0142", "reading:LEL-04", "shift:changeover"],
-    )
+    ))
     return store

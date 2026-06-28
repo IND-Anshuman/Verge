@@ -26,6 +26,7 @@ Five planes (spec §2). Data flows up; the **safety core is LLM-independent** (P
 | §5 Pillar 4 — SIMOPS permit conflicts | `services/permit/verge_permit/conflicts.py` |
 | §6 Safety Rules DSL | `services/risk-engine/verge_risk/rules.py` + `rules/*.yaml` |
 | §14.5 Shadow mode | `RiskFinding.shadow` + `run_stream(shadow=)` + `/api/findings?shadow=` |
+| Durable store (P6) | `services/api/verge_api/{store_base,store,sql_store,db,factory}.py` |
 | §10 Eval harness + baselines | `eval/harness.py`, `eval/baselines/` |
 | §10.6 Graceful degradation | LLM `degraded`, edge `StoreAndForward`, `/health` |
 | P6 Hash-chained audit | `packages/audit/verge_audit/chain.py` |
@@ -52,6 +53,17 @@ resolved against the plant model (twin) for thresholds and zone adjacency.
 risk-engine stays dependency-clean — composition happens in the CLI. Findings
 dedup by `(zone, lineage)` so gas and SIMOPS coexist; `shadow=True` tags them for
 the §14.5 review surface instead of surfacing live alerts.
+
+## Persistence
+
+The API depends only on `StoreProtocol`. `InMemoryStore` (default; dev/tests/
+demo) and `SqlStore` (durable) are interchangeable, proven by a shared contract
+test. `SqlStore` uses SQLAlchemy Core with dialect-agnostic types, so the same
+code runs on SQLite (tests, no Docker) and Postgres (`VERGE_STORE=sql`,
+`VERGE_DB_URL=postgresql+psycopg://...`). The audit chain is the durable record;
+on startup it is rebuilt from the persisted rows and **re-verified** — findings,
+feedback, and the hash-chained audit survive a restart, and a tampered audit row
+is rejected on load (P6, §10.6, §14.6). The store seeds only when empty.
 
 ## The one rule that shapes everything
 

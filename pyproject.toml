@@ -20,6 +20,10 @@ dependencies = [
   "verge-api",
 ]
 
+[project.optional-dependencies]
+# The Postgres driver for the durable store (CI's postgres job; prod installs).
+postgres = ["psycopg[binary]>=3.2"]
+
 [dependency-groups]
 # httpx powers starlette's TestClient and the OpenAICompatProvider live path.
 dev = ["pytest>=8", "ruff>=0.6", "httpx>=0.27"]

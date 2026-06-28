@@ -23,15 +23,19 @@ from verge_schema.enums import FindingState as S
 from verge_schema.findings import RiskFinding
 from verge_schema.lifecycle import IllegalTransition
 
+from .factory import make_store
 from .seed import seed
-from .store import Store
 
 app = FastAPI(title="Verge API", version="0.3.0")
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
 
-store: Store = seed(Store())
+# Backend from VERGE_STORE (memory default; sql persists). Seed only when empty
+# so a durable store keeps its history across restarts.
+store = make_store()
+if not store.list_findings(shadow=None):
+    seed(store)
 llm = provider_from_env()
 
 
@@ -52,16 +56,15 @@ class FeedbackBody(BaseModel):
 def health() -> dict:
     """Liveness + degradation posture. The API stays healthy even when the LLM
     narrative layer is degraded (P1, §10.6)."""
-    audit_ok = True
-    try:
-        store.audit.verify()
-    except Exception:
-        audit_ok = False
     return {
         "status": "ok",
         "llm": {"provider": llm.name, "degraded": not llm.healthy()},
-        "audit": {"entries": len(store.audit), "head": store.audit.head, "verified": audit_ok},
-        "findings": len(store.findings),
+        "audit": {
+            "entries": store.audit_len(),
+            "head": store.audit_head(),
+            "verified": store.audit_verify(),
+        },
+        "findings": len(store.list_findings(shadow=None)),
     }
 
 
@@ -88,7 +91,7 @@ def ingest_finding(finding: RiskFinding) -> dict:
 
 @app.get("/api/findings/{finding_id}")
 def get_finding(finding_id: str) -> dict:
-    f = store.findings.get(finding_id)
+    f = store.get_finding(finding_id)
     if not f:
         raise HTTPException(404, "finding not found")
     return f.model_dump(by_alias=True, mode="json")
@@ -96,7 +99,7 @@ def get_finding(finding_id: str) -> dict:
 
 @app.post("/api/findings/{finding_id}/transition")
 def transition_finding(finding_id: str, body: TransitionBody) -> dict:
-    if finding_id not in store.findings:
+    if store.get_finding(finding_id) is None:
         raise HTTPException(404, "finding not found")
     try:
         f = store.transition(finding_id, body.to, body.actor, body.reasonCode, body.reasonText)
@@ -107,7 +110,7 @@ def transition_finding(finding_id: str, body: TransitionBody) -> dict:
 
 @app.post("/api/findings/{finding_id}/feedback")
 def feedback(finding_id: str, body: FeedbackBody) -> dict:
-    if finding_id not in store.findings:
+    if store.get_finding(finding_id) is None:
         raise HTTPException(404, "finding not found")
     fb = store.add_feedback(finding_id, body.actor, body.verdict, body.reasonCode)
     return {"feedback": fb.model_dump(by_alias=True, mode="json"), "fpr": store.fpr()}
@@ -118,12 +121,12 @@ def respond_to_finding(finding_id: str) -> dict:
     """Draft the coordinated response (Act 3): advisory action + multilingual
     alert + evidence pack + report draft. Verge executes nothing (P8); it
     hash-chains the recommendation and returns it for the operator to Approve."""
-    f = store.findings.get(finding_id)
+    f = store.get_finding(finding_id)
     if not f:
         raise HTTPException(404, "finding not found")
     r = respond(f, at=datetime.now(UTC), provider=llm)
     for payload in r.audit_payloads():
-        store.audit.append(
+        store.audit_append(
             actor="orchestrator", kind=payload["kind"], payload=payload,
             timestamp=datetime.now(UTC),
         )
@@ -142,13 +145,14 @@ def respond_to_finding(finding_id: str) -> dict:
 
 @app.get("/api/sensors/ribbon")
 def sensor_ribbon() -> dict:
-    counts = {q.value: n for q, n in store.sensor_health.items()}
-    return {"text": health_ribbon(store.sensor_health), "counts": counts}
+    health = store.get_sensor_health()
+    counts = {q.value: n for q, n in health.items()}
+    return {"text": health_ribbon(health), "counts": counts}
 
 
 @app.get("/api/audit")
 def audit(limit: int = 50) -> list[dict]:
-    return [e.to_dict() for e in list(store.audit)][-limit:]
+    return store.audit_entries(limit)
 
 
 @app.get("/api/stream")

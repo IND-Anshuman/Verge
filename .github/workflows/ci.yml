@@ -30,6 +30,31 @@ jobs:
           name: replay-report
           path: eval/out/
 
+  postgres:
+    # Verify the durable store against a real Postgres, not only SQLite.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: verge
+          POSTGRES_PASSWORD: verge
+          POSTGRES_DB: verge
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --frozen --extra postgres
+      - name: Store contract on Postgres
+        env:
+          VERGE_TEST_DB_URL: postgresql+psycopg://verge:verge@localhost:5432/verge
+        run: uv run pytest services/api/tests/test_store_contract.py -q
+
   frontend:
     runs-on: ubuntu-latest
     steps:

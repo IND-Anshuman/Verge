@@ -26,6 +26,8 @@ node_modules/
 
 # Data / artifacts
 *.log
+*.db
+*.sqlite
 eval/out/
 data/
 .DS_Store

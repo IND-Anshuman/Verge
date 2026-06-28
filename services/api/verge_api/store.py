@@ -1,7 +1,9 @@
-"""In-memory store backing the API (a Postgres-backed store wraps this later).
+"""In-memory store (dev / tests / demo). Satisfies StoreProtocol.
 
-Owns the findings, the audit hash chain, operator feedback, and sensor-health
-counts. Every lifecycle transition and feedback event is hash-chained (P6).
+Owns findings, the audit hash chain, feedback, and sensor-health counts. The
+durable equivalent is SqlStore; both implement StoreProtocol so the API treats
+them interchangeably. Every lifecycle transition and feedback event is
+hash-chained (P6).
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-class Store:
+class InMemoryStore:
     def __init__(self) -> None:
         self.findings: dict[str, RiskFinding] = {}
         self.feedback: list[FindingFeedback] = []
@@ -29,11 +31,14 @@ class Store:
     # ── findings ──────────────────────────────────────────────────────────
     def add_finding(self, f: RiskFinding) -> RiskFinding:
         self.findings[f.finding_id] = f
-        self.audit.append(
+        self.audit_append(
             actor="risk-engine", kind="finding-created",
             payload={"findingId": f.finding_id, "title": f.title}, timestamp=f.created_at,
         )
         return f
+
+    def get_finding(self, finding_id: str) -> RiskFinding | None:
+        return self.findings.get(finding_id)
 
     def list_findings(
         self, state: str | None = None, shadow: bool | None = False
@@ -59,13 +64,12 @@ class Store:
         reason_code: str | None = None, reason_text: str | None = None,
     ) -> RiskFinding:
         f = self.findings[finding_id]
-        frm = S(f.state)
-        ev = transition(finding_id, frm, to, actor=actor, timestamp=_now(),
+        ev = transition(finding_id, S(f.state), to, actor=actor, timestamp=_now(),
                         reason_code=reason_code, reason_text=reason_text)
         f.state = to.value
         if to in (S.ASSIGNED, S.IN_PROGRESS) and actor:
             f.owner = actor
-        self.audit.append(actor=actor, kind="finding-event",
+        self.audit_append(actor=actor, kind="finding-event",
                           payload=ev.model_dump(by_alias=True, mode="json"),
                           timestamp=ev.timestamp)
         return f
@@ -76,7 +80,7 @@ class Store:
         fb = FindingFeedback(finding_id=finding_id, actor=actor, timestamp=_now(),
                              verdict=verdict, reason_code=reason_code)
         self.feedback.append(fb)
-        self.audit.append(actor=actor, kind="feedback",
+        self.audit_append(actor=actor, kind="feedback",
                           payload=fb.model_dump(by_alias=True, mode="json"),
                           timestamp=fb.timestamp)
         return fb
@@ -86,3 +90,36 @@ class Store:
             return None
         fa = sum(1 for f in self.feedback if f.verdict == FeedbackVerdict.FALSE_ALARM.value)
         return round(fa / len(self.feedback), 3)
+
+    # ── sensor health (spec §4.7) ─────────────────────────────────────────
+    def get_sensor_health(self) -> dict[DataQuality, int]:
+        return dict(self.sensor_health)
+
+    def set_sensor_health(self, counts: dict[DataQuality, int]) -> None:
+        self.sensor_health = dict(counts)
+
+    # ── audit (P6) ────────────────────────────────────────────────────────
+    def audit_append(self, actor: str, kind: str, payload: dict, timestamp: datetime) -> dict:
+        return self.audit.append(
+            actor=actor, kind=kind, payload=payload, timestamp=timestamp
+        ).to_dict()
+
+    def audit_entries(self, limit: int = 50) -> list[dict]:
+        return [e.to_dict() for e in list(self.audit)][-limit:]
+
+    def audit_head(self) -> str:
+        return self.audit.head
+
+    def audit_len(self) -> int:
+        return len(self.audit)
+
+    def audit_verify(self) -> bool:
+        try:
+            self.audit.verify()
+            return True
+        except Exception:
+            return False
+
+
+# Back-compat alias: `Store` is the in-memory implementation.
+Store = InMemoryStore

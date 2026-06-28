@@ -11,7 +11,11 @@ dependencies = [
     "verge-orchestrator",
     "fastapi>=0.111",
     "uvicorn>=0.30",
+    "sqlalchemy>=2.0",
 ]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2"]
 
 [build-system]
 requires = ["hatchling"]
