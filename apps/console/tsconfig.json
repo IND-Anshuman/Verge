@@ -15,7 +15,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
       "@verge/schema": ["../../packages/schema/js/index.ts"]
     }
   },
