@@ -1,7 +1,8 @@
 """Tests for the shared replay runtime (eval/runtime.py)."""
 
-from eval.runtime import band_calibrated, load_replay, run_verge_stream
 from verge_schema.enums import LeadTimeBand
+
+from eval.runtime import band_calibrated, load_replay, run_verge_stream
 
 
 def test_load_replay_vizag_events_sorted() -> None:

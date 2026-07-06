@@ -172,7 +172,8 @@ def main() -> int:
 
     results = [run_incident(i) for i in incidents]
     OUT.mkdir(exist_ok=True)
-    (OUT / "report.json").write_text(json.dumps(results, indent=2, default=str) + "\n", encoding="utf-8")
+    report_json = json.dumps(results, indent=2, default=str) + "\n"
+    (OUT / "report.json").write_text(report_json, encoding="utf-8")
     md = render_markdown(results)
     (OUT / "report.md").write_text(md + "\n", encoding="utf-8")
     print(md)

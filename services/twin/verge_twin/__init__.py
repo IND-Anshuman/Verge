@@ -1,5 +1,6 @@
 """Plant digital twin (spec §5 Pillar 3)."""
 
+from .export import demo_geojson, geojson_for_plant
 from .plant import (
     DEMO_PLANT,
     EquipmentNode,
@@ -8,7 +9,6 @@ from .plant import (
     ZoneNode,
     load_plant,
 )
-from .export import demo_geojson, geojson_for_plant
 
 __all__ = [
     "DEMO_PLANT",

@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 COMPOSE := docker compose -f deploy/docker-compose.yml --env-file deploy/.env
 
-.PHONY: help install up down logs seed dev api console eval test lint fmt demo-live
+.PHONY: help install up down logs seed dev api console eval test lint fmt demo-live ci
 
 install: ## Set up the workspace (uv sync + pnpm install)
 	uv sync
@@ -48,3 +48,11 @@ lint: ## Lint (ruff + console typecheck)
 
 fmt: ## Format (ruff format)
 	uv run ruff format .
+
+ci: ## Mirror GitHub Actions (lint, test, eval replays, console build)
+	uv run ruff check .
+	uv run pytest
+	@for f in eval/replays/*/generate.py; do uv run python "$$f"; done
+	uv run verge replay --all
+	pnpm --filter @verge/console typecheck
+	pnpm --filter @verge/console build

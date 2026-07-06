@@ -110,6 +110,4 @@ def band_calibrated(band: LeadTimeBand | None, lead_min: float | None) -> bool |
     lo, hi = BAND_BOUNDS_MIN[band]
     if lo is not None and lead_min < lo:
         return False
-    if hi is not None and lead_min >= hi:
-        return False
-    return True
+    return not (hi is not None and lead_min >= hi)
