@@ -1,0 +1,12 @@
+# Reconstructed plant slice for the BP Texas City replay (spec §10.1).
+name: bp-texas-raffinate
+
+zones:
+  - {id: RS-T, name: "Raffinate splitter tower", adjacent: []}
+
+equipment:
+  - {id: blowdown-stack, name: "Blowdown stack", kind: stack, zone: RS-T}
+
+sensors:
+  - {id: LEL-RS, kind: gas-lel, unit: "%LEL", zone: RS-T, threshold: 100, cadenceS: 30}
+  - {id: CO-RS, kind: gas-co, unit: ppm, zone: RS-T, threshold: 50, cadenceS: 30}

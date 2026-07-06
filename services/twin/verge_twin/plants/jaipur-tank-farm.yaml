@@ -1,0 +1,11 @@
+# Reconstructed plant slice for the Jaipur IOC replay (spec §10.1).
+name: jaipur-tank-farm
+
+zones:
+  - {id: TF-A, name: "Tank farm block A", adjacent: []}
+
+equipment:
+  - {id: tank-12, name: "Storage tank 12", kind: tank, zone: TF-A}
+
+sensors:
+  - {id: LEL-TF, kind: gas-lel, unit: "%LEL", zone: TF-A, threshold: 100, cadenceS: 30}
