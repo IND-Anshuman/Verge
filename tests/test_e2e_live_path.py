@@ -33,6 +33,14 @@ def test_dedup_emits_each_convergence_once() -> None:
     assert len(seen_titles) == len(set(seen_titles))
 
 
+def test_seeded_convergence_has_telemetry_for_console_chart() -> None:
+    """M8: finding detail chart reads real sensor series, not client-side mock."""
+    client = TestClient(app)
+    body = client.get("/api/findings/F-CONV-07/telemetry").json()
+    assert body["degraded"] is False
+    assert any(s["sensorId"] == "LEL-04" for s in body["series"])
+
+
 def test_runner_findings_ingest_into_api_and_show_on_console() -> None:
     client = TestClient(app)
     before = len(client.get("/api/findings").json())
