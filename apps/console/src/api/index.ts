@@ -27,5 +27,7 @@ export { submitVoiceHandover, transcribeVoice, textToHandoverWav } from './voice
 export type { VoiceResult, VoiceStructured } from './voice';
 export { getFleetSummary } from './fleet';
 export type { FleetPlant, FleetSummary } from './fleet';
+export { getFindingTelemetry } from './telemetry';
+export type { FindingTelemetry, TelemetrySeries, TelemetryPoint } from './telemetry';
 export { createSSEConnection } from './sse';
 export type { SSEEventHandler } from './sse';

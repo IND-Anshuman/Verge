@@ -122,7 +122,7 @@ export default function FindingsView() {
             </div>
           )}
 
-          {mobileTab === 'profile' && <MobileFieldWorkerPanel />}
+          {mobileTab === 'profile' && <MobileFieldWorkerPanel findings={filteredFindings} />}
         </div>
 
         <MobileNavigation activeTab={mobileTab} setActiveTab={setMobileTab} />
