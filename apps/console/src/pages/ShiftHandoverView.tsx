@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, Badge, Button } from '@/components/atoms';
 import { ArrowRightLeft, FileText, ClipboardList, CheckCircle2, Mic, Upload, AlertTriangle } from 'lucide-react';
 import { getFindings, transitionFinding } from '@/api';
+import { draftShiftHandoverReport } from '@/api/permits';
 import { submitVoiceHandover, textToHandoverWav, type VoiceResult } from '@/api/voice';
 import type { RiskFinding } from '@/types';
 
@@ -63,6 +64,8 @@ export default function ShiftHandoverView() {
         const wav = textToHandoverWav(logText.trim());
         await submitVoiceHandover(wav, 'maya');
       }
+
+      await draftShiftHandoverReport(logText.trim(), 'maya', voiceResult?.transcript);
 
       for (const finding of findings) {
         if (finding.state === 'new' || finding.state === 'acknowledged') {
