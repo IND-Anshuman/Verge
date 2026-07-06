@@ -347,7 +347,13 @@ tests/integration/test_memory_voice_path.py (new)
 - [x] SqlStore persists permits + sensor readings (same engine as findings)
 - [x] Edge gateway `--post-api` forwards readings/permits to API
 - [x] `make dev-sql` + deploy docs
-- [ ] Timescale bulk writer (production scale — later)
+- [x] Timescale optional writer on reading ingest (`TIMESCALE_DSN`)
+
+### M10 · Console Sprint B wiring (agent)
+
+- [x] Alert preview in ResponseOrchestrator
+- [x] Evidence export via `/api/evidence/{pack_id}`
+- [x] Memory status panel in Admin
 
 ### M7 · Infra (Arjun) — deploy env, make up
 
@@ -355,9 +361,9 @@ tests/integration/test_memory_voice_path.py (new)
 
 ## Agent queue (implementation priority)
 
-1. ~~M9 durable pilot stack~~ — sql permits/readings + edge forward
-2. ~~Dex Sprint B~~ — committed
-3. Timescale bulk ingest (optional)
+1. ~~M10 console Sprint B wiring~~ — done
+2. M7 deploy hardening (Arjun) — `make up`, API in compose (optional)
+3. Keycloak auth (later)
 
 **Do not** take Dex Sprint B lanes — check `WORK.lock`.
 
