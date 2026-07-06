@@ -34,3 +34,28 @@ export async function getFindingContext(
 ): Promise<FindingContext> {
   return request<FindingContext>(`/api/findings/${findingId}/context`, { signal });
 }
+
+export interface MemoryCitation {
+  id: string;
+  title: string;
+  excerpt: string;
+}
+
+export interface MemoryQueryResult {
+  answer: string;
+  citations: MemoryCitation[];
+  degraded: boolean;
+  reason?: string;
+}
+
+export async function queryMemory(
+  query: string,
+  findingId?: string,
+  signal?: AbortSignal,
+): Promise<MemoryQueryResult> {
+  return request<MemoryQueryResult>('/api/memory/query', {
+    method: 'POST',
+    body: { query, findingId },
+    signal,
+  });
+}

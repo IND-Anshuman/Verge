@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/atoms';
-import { AlertTriangle, FileText, History, Shield } from 'lucide-react';
-import { getFindingContext, type FindingContext } from '@/api/memory';
+import { Badge, Button } from '@/components/atoms';
+import { AlertTriangle, FileText, History, Search, Shield } from 'lucide-react';
+import { getFindingContext, queryMemory, type FindingContext, type MemoryQueryResult } from '@/api/memory';
 
 interface KnowledgePanelProps {
   /** Active finding to load memory context for; panel stays empty without one. */
@@ -40,11 +40,17 @@ export function KnowledgePanel({ findingId }: KnowledgePanelProps) {
   const [context, setContext] = useState<FindingContext | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [queryText, setQueryText] = useState('');
+  const [queryResult, setQueryResult] = useState<MemoryQueryResult | null>(null);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [queryError, setQueryError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!findingId) {
       setContext(null);
       setError(null);
+      setQueryResult(null);
+      setQueryError(null);
       return;
     }
 
@@ -70,6 +76,22 @@ export function KnowledgePanel({ findingId }: KnowledgePanelProps) {
       cancelled = true;
     };
   }, [findingId]);
+
+  const handleQuery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!findingId || !queryText.trim()) return;
+    setQueryLoading(true);
+    setQueryError(null);
+    try {
+      const result = await queryMemory(queryText.trim(), findingId);
+      setQueryResult(result);
+    } catch {
+      setQueryResult(null);
+      setQueryError('Memory query unavailable — check API connection.');
+    } finally {
+      setQueryLoading(false);
+    }
+  };
 
   if (!findingId) {
     return (
@@ -162,6 +184,51 @@ export function KnowledgePanel({ findingId }: KnowledgePanelProps) {
             />
           </>
         )}
+
+        <form onSubmit={handleQuery} className="flex flex-col gap-2 border-t border-line pt-3 shrink-0">
+          <div className="flex items-center gap-1.5 text-micro font-mono font-bold text-ink-dim uppercase">
+            <Search className="h-3.5 w-3.5" />
+            Ask memory
+          </div>
+          <textarea
+            value={queryText}
+            onChange={(e) => setQueryText(e.target.value)}
+            placeholder="e.g. What OISD clauses apply to hot work near rising LEL?"
+            className="h-16 p-2 rounded border border-line text-xs bg-panel text-ink placeholder:text-ink-dim/40 focus:outline-none resize-none"
+          />
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            disabled={!queryText.trim() || queryLoading}
+            className="self-end text-micro font-mono uppercase"
+          >
+            {queryLoading ? 'Searching…' : 'Query'}
+          </Button>
+          {queryError && (
+            <p className="text-xs text-imminent font-mono">{queryError}</p>
+          )}
+          {queryResult && (
+            <div className="flex flex-col gap-2 mt-1">
+              {queryResult.degraded && (
+                <p className="text-xs text-ink-dim font-mono">
+                  {queryResult.reason ?? 'Memory degraded — enable Cognee in .env'}
+                </p>
+              )}
+              {queryResult.answer && (
+                <p className="text-xs text-ink leading-relaxed font-mono whitespace-pre-wrap">
+                  {queryResult.answer}
+                </p>
+              )}
+              {queryResult.citations.map((c) => (
+                <div key={c.id} className="p-2 border border-line rounded bg-panel-2/30 text-xs">
+                  <div className="font-bold text-ink">{c.title}</div>
+                  <p className="text-ink-dim mt-1">{c.excerpt}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </form>
       </div>
     </div>
   );
