@@ -2,6 +2,7 @@
 the logic worth testing lives in normalize.py and buffer.py.
 
     python -m verge_edge.gateway --mqtt localhost --brokers localhost:19092
+    python -m verge_edge.gateway --mqtt localhost --post-api http://localhost:8000
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ import json
 import sys
 
 from .buffer import StoreAndForward
+from .forward import forward_to_api
 from .normalize import NormalizationError, normalize_mqtt
 
 CANONICAL_TOPIC = "verge.events"
@@ -27,6 +29,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--mqtt", default="localhost")
     ap.add_argument("--port", type=int, default=1883)
     ap.add_argument("--brokers", default="localhost:19092")
+    ap.add_argument(
+        "--post-api",
+        help="Also POST readings/permits to the Verge API, e.g. http://localhost:8000",
+    )
     args = ap.parse_args(argv)
 
     import paho.mqtt.client as mqtt  # lazy
@@ -37,6 +43,11 @@ def main(argv: list[str] | None = None) -> int:
     def to_bus(event: dict) -> None:
         producer.produce(CANONICAL_TOPIC, json.dumps(event).encode())
         producer.poll(0)
+        if args.post_api:
+            try:
+                forward_to_api(args.post_api, event)
+            except RuntimeError as exc:
+                print(f"api forward: {exc}", file=sys.stderr)
 
     def on_message(_client, _userdata, msg) -> None:
         try:
@@ -50,8 +61,10 @@ def main(argv: list[str] | None = None) -> int:
     client.on_message = on_message
     client.connect(args.mqtt, args.port, 60)
     client.subscribe("verge/#")
-    print(f"edge-gateway: mqtt://{args.mqtt}:{args.port} -> {args.brokers}/{CANONICAL_TOPIC}",
-          file=sys.stderr)
+    dest = f"{args.brokers}/{CANONICAL_TOPIC}"
+    if args.post_api:
+        dest = f"{dest} + {args.post_api.rstrip('/')}/api"
+    print(f"edge-gateway: mqtt://{args.mqtt}:{args.port} -> {dest}", file=sys.stderr)
     client.loop_forever()
     return 0
 
