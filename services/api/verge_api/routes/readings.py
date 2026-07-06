@@ -5,6 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from ..timescale_writer import maybe_write_timescale
+
 router = APIRouter(tags=["readings"])
 
 
@@ -22,7 +24,9 @@ class ReadingIngestBody(BaseModel):
 def ingest_reading(body: ReadingIngestBody, request: Request) -> dict:
     """Ingest a canonical reading event (live path from risk-engine or sim)."""
     buf = request.app.state.readings
-    buf.ingest(body.model_dump())
+    payload = body.model_dump()
+    buf.ingest(payload)
+    maybe_write_timescale(payload)
     return {"ok": True, "sensorId": body.sensorId}
 
 
