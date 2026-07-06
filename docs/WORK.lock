@@ -1,2 +1,4 @@
 # path | owner | task | until (optional)
-apps/console/src/components/organisms/MobileFieldWorkerPanel.tsx | agent | sensor ribbon + voice | session
+packages/memory | Dex | Sprint B — Intelligence Platform (B1-B7) | multi-day
+services/voice | Dex | Sprint B — near-miss + alert preview | multi-day
+tests/integration | Dex | Sprint B — integration test suite | multi-day

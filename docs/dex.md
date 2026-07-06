@@ -191,10 +191,40 @@ Stable response shape:
 
 ## Phase 2 — Intelligence depth (Dex, parallel heavy lifting)
 
-> **D1–D8 are done and committed.** Pick one lane, claim it in `WORK.lock`, run tests before handoff.  
-> These are **implementation** tasks (not demo polish). Same degradation rules as Phase 1.
+> **D1–D8 are done and committed.** D9 is done.  
+> **→ Dex: take Sprint B below** (multi-day, ~1–2 sessions). Claim all Sprint B paths in `WORK.lock` before starting.
 
-#### D9 · Memory query API (KnowledgePanel free-text)
+### Sprint B — Intelligence Platform (Dex, large parallel block)
+
+**Goal:** Production-grade intelligence layer — not demo polish. Same degradation rules as Phase 1.  
+**Estimate:** 1–2 full days. Do not pick individual D10–D16 tasks à la carte; deliver Sprint B as one handoff.
+
+| Step | Task | Deliverables |
+|---|---|---|
+| B1 | **D13** Cognee hardening | Retry/backoff + timeouts in `client.py`; `dataset_health()`; `GET /api/memory/status` |
+| B2 | **Corpus expansion** | `jaipur-2009-summary.md`, `bp-texas-2005-summary.md`, expand `oisd-stubs.json` to 15+ clauses; idempotent ingest |
+| B3 | **D12** Evidence retrieval | `routes/evidence.py` → `GET /api/evidence/{pack_id}` from MinIO; degrade when down |
+| B4 | **D11** Near-miss voice | `near_miss.py` + `POST /api/voice/near-miss` + audit append + tests |
+| B5 | **D14** Alert preview | `POST /api/findings/{id}/alert/preview` → `{ languages: { en, hi }, degraded }`; template fallback |
+| B6 | **D15** Integration tests | `tests/integration/test_memory_voice_path.py` — full HTTP path, mocked Cognee + Speechmatics |
+| B7 | **D10** Feedback loop | `ingest_feedback()` in memory; coordinate with main track — hook lives in `hooks.py` (ask before wiring) |
+
+**Sprint B paths (claim all in WORK.lock):**
+
+```
+packages/memory/**
+services/voice/**
+services/api/verge_api/routes/memory.py
+services/api/verge_api/routes/voice.py
+services/api/verge_api/routes/evidence.py   (new)
+services/api/tests/test_memory*.py
+services/api/tests/test_voice*.py
+tests/integration/test_memory_voice_path.py (new)
+```
+
+**Do not start Sprint B until you read `docs/WORK.lock` — main track may be on `hooks.py` or `main.py`.**
+
+---
 
 - [x] `POST /api/memory/query` — body `{ "query": "...", "findingId": "..." }`
 - [x] Uses Cognee search; returns `{ "answer", "citations", "degraded" }`
@@ -304,17 +334,26 @@ Stable response shape:
 
 ### M6 · API surface — [x] permits, reports, memory, voice
 
+### M8 · Console zero-mock checkpoint (agent)
+
+- [x] FleetView → `/api/fleet/summary`
+- [x] PermitsPanel → live API
+- [x] KnowledgePanel → context + free-text query
+- [x] MobileFieldWorkerPanel → sensor ribbon + voice handover + live findings
+- [x] TemporalConvergenceChart → `/api/findings/{id}/telemetry`
+- [x] E2E live path test update (`tests/test_e2e_live_path.py`)
+
 ### M7 · Infra (Arjun) — deploy env, make up
 
 ---
 
 ## Agent queue (implementation priority)
 
-1. Console fleet/mobile mock removal  
-2. Eval plantModel on remaining replays — [x] bp-texas + jaipur YAMLs
-3. Review Dex Phase 2 handoffs  
+1. ~~Console zero-mock (M8)~~ — telemetry + mobile done; e2e test next
+2. Review Dex Sprint B handoffs when landed
+3. SqlStore permit persistence (optional)
 
-**Do not** take Dex Phase 2 lanes — check `WORK.lock`.
+**Do not** take Dex Sprint B lanes — check `WORK.lock`.
 
 ---
 
@@ -323,7 +362,8 @@ Stable response shape:
 | Step | Status |
 |---|---|
 | Sim → API findings + permits | wired |
-| Console on real API | partial |
+| Console on real API | done (M8) |
+| Telemetry charts | done |
 | Memory / voice / audit / map | done |
 | Replay harness | done |
 
