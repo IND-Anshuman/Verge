@@ -36,3 +36,5 @@ data/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+.agents
+.kiro
