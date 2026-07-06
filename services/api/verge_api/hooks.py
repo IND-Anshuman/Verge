@@ -24,3 +24,17 @@ def maybe_ingest_closed_finding(finding: RiskFinding, *, to: S) -> None:
         ingest_closed_finding(client, dataset_name(dict(os.environ)), finding)
     except Exception:
         return
+
+
+def maybe_ingest_feedback(
+    finding: RiskFinding,
+    *,
+    verdict: str,
+    reason_code: str | None,
+    reason_text: str | None,
+) -> None:
+    """Hook for Dex D10 — ingest operator feedback rationale to Cognee.
+
+    No-op until Dex lands ingest_feedback.
+    """
+    _ = (finding, verdict, reason_code, reason_text)
