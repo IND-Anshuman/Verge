@@ -11,6 +11,29 @@ make logs                 # tail
 make down
 ```
 
+### Durable API mode (M9)
+
+With infra up, run the API against Postgres so findings, permits, readings, and
+audit survive restarts:
+
+```bash
+# Set POSTGRES_PASSWORD in deploy/.env first, then:
+make up
+make dev-sql    # VERGE_STORE=sql against localhost:5432/verge
+```
+
+Permits and sensor readings persist in the same DB as findings when
+`VERGE_STORE=sql`. Timescale (`5433`) is for high-volume OT telemetry at scale;
+the API buffer uses the SQL store table for pilot/dev parity.
+
+### Edge gateway → API
+
+Forward MQTT-normalized events directly to the API (alongside Redpanda):
+
+```bash
+uv run python -m verge_edge.gateway --mqtt localhost --post-api http://localhost:8000
+```
+
 | Service | Port | Purpose |
 |---------|------|---------|
 | Redpanda | 19092 | canonical event spine (Kafka API) |

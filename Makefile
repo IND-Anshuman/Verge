@@ -27,6 +27,9 @@ seed: ## (Re)generate the Vizag replay dataset
 dev: ## Run api + console (dev)
 	$(MAKE) -j2 api console
 
+dev-sql: ## Run API with SQL store (Postgres from make up)
+	VERGE_STORE=sql VERGE_DB_URL=postgresql+psycopg://verge:changeme@localhost:5432/verge uv run uvicorn verge_api.main:app --reload --port 8000
+
 api: ## Run the FastAPI gateway
 	uv run uvicorn verge_api.main:app --reload --port 8000
 

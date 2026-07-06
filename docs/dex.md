@@ -343,15 +343,22 @@ tests/integration/test_memory_voice_path.py (new)
 - [x] TemporalConvergenceChart → `/api/findings/{id}/telemetry`
 - [x] E2E live path test update (`tests/test_e2e_live_path.py`)
 
+### M9 · Durable pilot stack (agent)
+
+- [x] SqlStore persists permits + sensor readings (same engine as findings)
+- [x] Edge gateway `--post-api` forwards readings/permits to API
+- [x] `make dev-sql` + deploy docs
+- [ ] Timescale bulk writer (production scale — later)
+
 ### M7 · Infra (Arjun) — deploy env, make up
 
 ---
 
 ## Agent queue (implementation priority)
 
-1. ~~Console zero-mock (M8)~~ — telemetry + mobile done; e2e test next
+1. ~~M9 durable pilot stack~~ — sql permits/readings + edge forward
 2. Review Dex Sprint B handoffs when landed
-3. SqlStore permit persistence (optional)
+3. Timescale bulk ingest (optional)
 
 **Do not** take Dex Sprint B lanes — check `WORK.lock`.
 
