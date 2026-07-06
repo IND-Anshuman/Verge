@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from verge_memory import context_for_finding, query_memory
+from verge_memory import context_for_finding, dataset_health, query_memory
 
 router = APIRouter(tags=["memory"])
 
@@ -37,3 +37,9 @@ def memory_query(body: MemoryQueryBody, request: Request) -> dict:
         if finding is None:
             raise HTTPException(404, "finding not found")
     return query_memory(body.query, finding=finding)
+
+
+@router.get("/memory/status")
+def memory_status() -> dict:
+    """Cognee dataset health probe."""
+    return dataset_health()

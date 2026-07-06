@@ -68,3 +68,49 @@ def upload_evidence_manifest(
         return {"bucket": bucket, "key": key, "uploaded": True}
     except Exception:
         return None
+
+
+def get_evidence_manifest(
+    pack_id: str,
+    *,
+    finding_id: str | None = None,
+    env: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Fetch a manifest JSON from MinIO. Degrades instead of raising."""
+    env = env or dict(os.environ)
+    cfg = _settings(env)
+    if cfg is None:
+        return {"packId": pack_id, "degraded": True, "reason": "MINIO_* not configured"}
+
+    try:
+        from minio import Minio
+    except ImportError:
+        return {"packId": pack_id, "degraded": True, "reason": "minio package not installed"}
+
+    try:
+        client = Minio(
+            str(cfg["endpoint"]),
+            access_key=str(cfg["access"]),
+            secret_key=str(cfg["secret"]),
+            secure=bool(cfg["secure"]),
+        )
+        bucket = str(cfg["bucket"])
+        keys = [f"{finding_id}/{pack_id}.json"] if finding_id else []
+        keys.append(f"{pack_id}.json")
+        for key in keys:
+            try:
+                obj = client.get_object(bucket, key)
+                try:
+                    data = json.loads(obj.read().decode("utf-8"))
+                finally:
+                    obj.close()
+                    obj.release_conn()
+                data["degraded"] = False
+                data["objectStore"] = {"bucket": bucket, "key": key}
+                return data
+            except Exception:
+                continue
+        return {"packId": pack_id, "degraded": True, "reason": "manifest not found"}
+    except Exception as exc:
+        reason = f"minio failed: {type(exc).__name__}"
+        return {"packId": pack_id, "degraded": True, "reason": reason}

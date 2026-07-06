@@ -27,3 +27,38 @@ def test_voice_handover_appends_audit_even_when_degraded() -> None:
     after = client.get("/api/audit?limit=999").json()
     assert len(after) == before + 1
     assert after[-1]["kind"] == "voice-handover"
+
+
+def test_voice_near_miss_appends_audit_even_when_degraded() -> None:
+    before = len(client.get("/api/audit?limit=999").json())
+    r = client.post(
+        "/api/voice/near-miss",
+        data={"actor": "maya", "findingId": "F-CONV-07"},
+        files={"file": ("near-miss.wav", b"audio", "audio/wav")},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["auditAppended"] is True
+    assert body["kind"] == "voice-near-miss"
+    assert body["findingId"] == "F-CONV-07"
+    after = client.get("/api/audit?limit=999").json()
+    assert len(after) == before + 1
+    assert after[-1]["kind"] == "voice-near-miss"
+
+
+def test_voice_near_miss_unknown_finding_is_404() -> None:
+    r = client.post(
+        "/api/voice/near-miss",
+        data={"findingId": "NOPE"},
+        files={"file": ("near-miss.wav", b"audio", "audio/wav")},
+    )
+    assert r.status_code == 404
+
+
+def test_alert_preview_template_fallback() -> None:
+    r = client.post("/api/findings/F-CONV-07/alert/preview")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["degraded"] is True
+    assert "en" in body["languages"]
+    assert "hi" in body["languages"]
