@@ -55,3 +55,143 @@
     - type: shift_changeover
   forecast:
     sensor_kind: gas-co
+
+- id: hot-work-co-changeover
+  name: Hot work + rising CO during shift changeover
+  severity: critical
+  base_confidence: 0.82
+  all:
+    - type: permit_active
+      kind: hot-work
+    - type: gas_near_threshold
+      sensor_kind: gas-co
+      pct: 0.20
+    - type: shift_changeover
+  forecast:
+    sensor_kind: gas-co
+
+- id: hot-work-lel-fast-rise
+  name: Hot work with rapid LEL rise
+  severity: critical
+  base_confidence: 0.88
+  all:
+    - type: permit_active
+      kind: hot-work
+    - type: gas_near_threshold
+      sensor_kind: gas-lel
+      pct: 0.10
+      min_rise_per_min: 1.5
+  forecast:
+    sensor_kind: gas-lel
+
+- id: confined-space-changeover
+  name: Confined-space entry during shift changeover
+  severity: critical
+  base_confidence: 0.75
+  all:
+    - type: permit_active
+      kind: confined-space
+    - type: shift_changeover
+  forecast:
+    sensor_kind: gas-co
+
+- id: lel-drift-no-permit-changeover
+  name: LEL drift without permit during changeover
+  severity: warning
+  base_confidence: 0.65
+  all:
+    - type: gas_near_threshold
+      sensor_kind: gas-lel
+      pct: 0.20
+    - type: shift_changeover
+  forecast:
+    sensor_kind: gas-lel
+
+- id: co-elevated-changeover
+  name: Elevated CO during shift changeover
+  severity: warning
+  base_confidence: 0.62
+  all:
+    - type: gas_near_threshold
+      sensor_kind: gas-co
+      pct: 0.30
+    - type: shift_changeover
+  forecast:
+    sensor_kind: gas-co
+
+- id: hot-work-lel-near-threshold
+  name: Hot work with LEL near alarm threshold
+  severity: critical
+  base_confidence: 0.9
+  all:
+    - type: permit_active
+      kind: hot-work
+    - type: gas_near_threshold
+      sensor_kind: gas-lel
+      pct: 0.08
+      min_rise_per_min: 0.0
+  forecast:
+    sensor_kind: gas-lel
+
+- id: confined-space-co-near
+  name: Confined-space entry with CO approaching limit
+  severity: critical
+  base_confidence: 0.86
+  all:
+    - type: permit_active
+      kind: confined-space
+    - type: gas_near_threshold
+      sensor_kind: gas-co
+      pct: 0.15
+  forecast:
+    sensor_kind: gas-co
+
+- id: lel-sustained-rise
+  name: Sustained LEL rise without active permit
+  severity: warning
+  base_confidence: 0.7
+  all:
+    - type: gas_near_threshold
+      sensor_kind: gas-lel
+      pct: 0.12
+      min_rise_per_min: 0.8
+  forecast:
+    sensor_kind: gas-lel
+
+- id: hot-work-co-elevated
+  name: Hot work with elevated CO
+  severity: critical
+  base_confidence: 0.83
+  all:
+    - type: permit_active
+      kind: hot-work
+    - type: gas_near_threshold
+      sensor_kind: gas-co
+      pct: 0.18
+  forecast:
+    sensor_kind: gas-co
+
+- id: co-fast-rise-changeover
+  name: Rapid CO rise during shift changeover
+  severity: critical
+  base_confidence: 0.78
+  all:
+    - type: gas_near_threshold
+      sensor_kind: gas-co
+      pct: 0.15
+      min_rise_per_min: 1.0
+    - type: shift_changeover
+  forecast:
+    sensor_kind: gas-co
+
+- id: lel-pre-threshold-watch
+  name: LEL approaching threshold (watch band)
+  severity: warning
+  base_confidence: 0.55
+  all:
+    - type: gas_near_threshold
+      sensor_kind: gas-lel
+      pct: 0.25
+      min_rise_per_min: 0.3
+  forecast:
+    sensor_kind: gas-lel
