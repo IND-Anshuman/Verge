@@ -22,15 +22,19 @@ from verge_schema.enums import FeedbackVerdict
 from verge_schema.enums import FindingState as S
 from verge_schema.findings import RiskFinding
 from verge_schema.lifecycle import IllegalTransition
+from verge_twin import load_plant
+from verge_twin.plant import DEMO_PLANT
 
 from .evidence_store import upload_evidence_manifest
 from .factory import make_store
-from .hooks import maybe_ingest_closed_finding
+from .hooks import maybe_ingest_closed_finding, maybe_ingest_feedback
 from .permits_registry import PermitRegistry
+from .reading_buffer import ReadingBuffer
 from .routes.fleet import router as fleet_router
 from .routes.memory import router as memory_router
 from .routes.permits import router as permits_router
 from .routes.plant import router as plant_router
+from .routes.readings import router as readings_router
 from .routes.reports import router as reports_router
 from .routes.voice import router as voice_router
 from .seed import seed
@@ -41,6 +45,7 @@ app.add_middleware(
 )
 app.include_router(fleet_router, prefix="/api")
 app.include_router(plant_router, prefix="/api")
+app.include_router(readings_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 app.include_router(voice_router, prefix="/api")
 app.include_router(permits_router, prefix="/api")
@@ -56,6 +61,11 @@ app.state.llm = llm
 if not store.list_findings(shadow=None):
     seed(store)
 app.state.permits.seed_demo(datetime.now(UTC))
+
+_demo_plant = load_plant(DEMO_PLANT)
+app.state.readings = ReadingBuffer()
+app.state.readings.seed_from_replay()
+app.state.sensor_thresholds = _demo_plant.thresholds_by_kind()
 
 
 class TransitionBody(BaseModel):
@@ -133,6 +143,14 @@ def feedback(finding_id: str, body: FeedbackBody) -> dict:
     if store.get_finding(finding_id) is None:
         raise HTTPException(404, "finding not found")
     fb = store.add_feedback(finding_id, body.actor, body.verdict, body.reasonCode)
+    f = store.get_finding(finding_id)
+    if f:
+        maybe_ingest_feedback(
+            f,
+            verdict=body.verdict.value,
+            reason_code=body.reasonCode,
+            reason_text=getattr(body, "reasonText", None),
+        )
     return {"feedback": fb.model_dump(by_alias=True, mode="json"), "fpr": store.fpr()}
 
 
