@@ -87,22 +87,30 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"post failed: {exc}", file=sys.stderr)
 
     def on_event(e: dict) -> None:
-        if not args.post or e.get("type") != "permit":
+        if not args.post:
             return
-        body = json.dumps({
-            "permitId": e["permitId"],
-            "kind": e["kind"],
-            "zoneId": e["zoneId"],
-            "equipmentId": e.get("equipmentId"),
-            "validFrom": e["validFrom"],
-            "validTo": e["validTo"],
-            "status": e.get("status", "open"),
-        })
-        try:
-            _post_json(f"{args.post.rstrip('/')}/api/permits/upsert", body)
-            permits_posted["n"] += 1
-        except Exception as exc:  # noqa: BLE001
-            print(f"permit post failed: {exc}", file=sys.stderr)
+        base = args.post.rstrip("/")
+        if e.get("type") == "permit":
+            body = json.dumps({
+                "permitId": e["permitId"],
+                "kind": e["kind"],
+                "zoneId": e["zoneId"],
+                "equipmentId": e.get("equipmentId"),
+                "validFrom": e["validFrom"],
+                "validTo": e["validTo"],
+                "status": e.get("status", "open"),
+            })
+            try:
+                _post_json(f"{base}/api/permits/upsert", body)
+                permits_posted["n"] += 1
+            except Exception as exc:  # noqa: BLE001
+                print(f"permit post failed: {exc}", file=sys.stderr)
+        elif e.get("type") == "reading":
+            body = json.dumps(e)
+            try:
+                _post_json(f"{base}/api/readings/ingest", body)
+            except Exception as exc:  # noqa: BLE001
+                print(f"reading post failed: {exc}", file=sys.stderr)
 
     stream_kw = {
         "thresholds": thresholds,
