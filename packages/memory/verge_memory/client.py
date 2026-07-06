@@ -8,6 +8,7 @@ exceptions leaking into the API.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -22,6 +23,8 @@ class CogneeSettings:
     base_url: str | None = None
     api_key: str | None = None
     timeout_s: float = 20.0
+    retry_attempts: int = 2
+    retry_backoff_s: float = 0.2
 
     @classmethod
     def from_env(cls, env: dict[str, str]) -> CogneeSettings:
@@ -32,11 +35,15 @@ class CogneeSettings:
             or env.get("COGNEE_API_BASE_URL")
         )
         timeout = float(env.get("COGNEE_TIMEOUT_S", "20"))
+        retries = int(env.get("COGNEE_RETRY_ATTEMPTS", "2"))
+        backoff = float(env.get("COGNEE_RETRY_BACKOFF_S", "0.2"))
         return cls(
             enabled=enabled,
             base_url=base_url.rstrip("/") if base_url else None,
             api_key=env.get("COGNEE_API_KEY"),
             timeout_s=timeout,
+            retry_attempts=max(1, retries),
+            retry_backoff_s=max(0.0, backoff),
         )
 
     @property
@@ -116,13 +123,20 @@ class CogneeClient:
             close_after = True
 
         try:
-            response = client.request(method, path, **kwargs)
-            response.raise_for_status()
-            if not response.content:
-                return CogneeResult.success({})
-            return CogneeResult.success(response.json())
-        except Exception as exc:
-            return CogneeResult.fail(f"cognee {method} {path} failed: {type(exc).__name__}")
+            last_exc: Exception | None = None
+            for attempt in range(self.settings.retry_attempts):
+                try:
+                    response = client.request(method, path, **kwargs)
+                    response.raise_for_status()
+                    if not response.content:
+                        return CogneeResult.success({})
+                    return CogneeResult.success(response.json())
+                except Exception as exc:
+                    last_exc = exc
+                    if attempt < self.settings.retry_attempts - 1:
+                        time.sleep(self.settings.retry_backoff_s * (2**attempt))
+            assert last_exc is not None
+            return CogneeResult.fail(f"cognee {method} {path} failed: {type(last_exc).__name__}")
         finally:
             if close_after:
                 client.close()

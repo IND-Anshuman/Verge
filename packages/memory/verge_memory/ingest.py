@@ -30,3 +30,24 @@ def ingest_closed_finding(client: CogneeClient, dataset: str, finding: RiskFindi
         f"Lineage: {', '.join(finding.lineage)}\n"
     )
     return ingest_document(client, dataset, f"Closed finding {finding.finding_id}", body)
+
+
+def ingest_feedback(
+    client: CogneeClient,
+    dataset: str,
+    finding: RiskFinding,
+    *,
+    verdict: str,
+    reason_code: str | None = None,
+    reason_text: str | None = None,
+) -> CogneeResult:
+    body = (
+        f"Finding ID: {finding.finding_id}\n"
+        f"Zone: {finding.zone_id}\n"
+        f"Title: {finding.title}\n"
+        f"Verdict: {verdict}\n"
+        f"Reason code: {reason_code or 'none'}\n"
+        f"Reason text: {reason_text or 'none'}\n"
+        f"Lineage: {', '.join(finding.lineage)}\n"
+    )
+    return ingest_document(client, dataset, f"Feedback {finding.finding_id} {verdict}", body)

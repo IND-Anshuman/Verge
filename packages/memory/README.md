@@ -54,3 +54,25 @@ curl -X POST http://localhost:8000/api/memory/query \
   -H "Content-Type: application/json" \
   -d '{"query":"what clauses apply?","findingId":"F-CONV-07"}'
 ```
+
+## Sprint B Curl Matrix
+
+```bash
+# Memory status / Cognee dataset probe
+curl http://localhost:8000/api/memory/status
+
+# Free-text memory query
+curl -X POST http://localhost:8000/api/memory/query \
+  -H "Content-Type: application/json" \
+  -d '{"query":"what should the operator check?","findingId":"F-CONV-07"}'
+
+# Evidence manifest retrieval from MinIO when configured
+curl "http://localhost:8000/api/evidence/EP-F-CONV-07?findingId=F-CONV-07"
+
+# Voice near-miss evidence
+curl -F "file=@near-miss.wav" -F "actor=maya" -F "findingId=F-CONV-07" \
+  http://localhost:8000/api/voice/near-miss
+
+# Multilingual alert preview
+curl -X POST http://localhost:8000/api/findings/F-CONV-07/alert/preview
+```

@@ -1186,10 +1186,16 @@ version = "0.3.0"
 source = { editable = "services/voice" }
 dependencies = [
     { name = "httpx" },
+    { name = "verge-llm" },
+    { name = "verge-schema" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "httpx", specifier = ">=0.27" }]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "verge-llm", editable = "packages/llm" },
+    { name = "verge-schema", editable = "packages/schema" },
+]
 
 [[package]]
 name = "wait-for2"

@@ -3,8 +3,10 @@ from datetime import UTC, datetime
 import httpx
 from verge_memory.client import CogneeClient, CogneeSettings
 from verge_memory.datasets import dataset_name
+from verge_memory.ingest import ingest_feedback
 from verge_memory.query import query_memory
 from verge_memory.retrieve import context_for_finding
+from verge_memory.status import dataset_health
 from verge_schema.enums import EstimateQuality, FindingState, LeadTimeBand
 from verge_schema.findings import ContributingSignal, RiskFinding
 
@@ -156,3 +158,65 @@ def test_query_memory_with_mocked_cognee() -> None:
         }
     ]
     assert calls.count("/api/v1/search") == 1
+
+
+def test_client_retries_transient_failure() -> None:
+    attempts = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(503, json={"error": "try later"})
+        return httpx.Response(200, json={"ok": True})
+
+    client = httpx.Client(
+        base_url="https://tenant.aws.cognee.ai",
+        transport=httpx.MockTransport(handler),
+    )
+    cognee = CogneeClient(
+        CogneeSettings(
+            enabled=True,
+            base_url="https://tenant.aws.cognee.ai",
+            api_key="key",
+            retry_attempts=2,
+            retry_backoff_s=0,
+        ),
+        client=client,
+    )
+    assert cognee.create_dataset("verge-test").ok
+    assert attempts == 2
+
+
+def test_dataset_health_degrades_without_config() -> None:
+    body = dataset_health(env={})
+    assert body["degraded"] is True
+    assert body["configured"] is False
+
+
+def test_ingest_feedback_posts_document() -> None:
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.path)
+        return httpx.Response(200, json={"ok": True})
+
+    client = httpx.Client(
+        base_url="https://tenant.aws.cognee.ai",
+        headers={"X-Api-Key": "key"},
+        transport=httpx.MockTransport(handler),
+    )
+    cognee = CogneeClient(
+        CogneeSettings(enabled=True, base_url="https://tenant.aws.cognee.ai", api_key="key"),
+        client=client,
+    )
+    result = ingest_feedback(
+        cognee,
+        "verge-test",
+        _finding(),
+        verdict="false-alarm",
+        reason_code="noise",
+        reason_text="shift handover clarified the reading",
+    )
+    assert result.ok
+    assert seen == ["/api/v1/add"]

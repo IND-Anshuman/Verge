@@ -23,5 +23,55 @@
     "id": "OISD-STUB-EVIDENCE-01",
     "title": "Incident evidence preservation",
     "excerpt": "Safety events should preserve source readings, permit identifiers, timestamps, and operator actions for later review."
+  },
+  {
+    "id": "OISD-STUB-GAS-DRIFT-01",
+    "title": "Gas drift monitoring",
+    "excerpt": "Gas trends across adjacent zones should be reviewed for drift, not only threshold breach at a single sensor."
+  },
+  {
+    "id": "OISD-STUB-ISOLATION-01",
+    "title": "Energy isolation confirmation",
+    "excerpt": "Isolation status should be confirmed and linked to active permits before hazardous work continues."
+  },
+  {
+    "id": "OISD-STUB-STARTUP-01",
+    "title": "Startup abnormal condition review",
+    "excerpt": "Abnormal process startup conditions should be escalated when instrumentation trends diverge from expected operating envelopes."
+  },
+  {
+    "id": "OISD-STUB-TANKFARM-01",
+    "title": "Tank farm transfer vigilance",
+    "excerpt": "Tank farm transfers require monitoring for leak, overflow, vapor cloud, and ignition-source exposure."
+  },
+  {
+    "id": "OISD-STUB-EVAC-01",
+    "title": "Zone evacuation readiness",
+    "excerpt": "Escalation procedures should define when workers are moved out of affected and adjacent zones."
+  },
+  {
+    "id": "OISD-STUB-COMMS-01",
+    "title": "Emergency communications",
+    "excerpt": "Safety alerts should be delivered through multiple channels with clear zone, hazard, and action wording."
+  },
+  {
+    "id": "OISD-STUB-SENSOR-01",
+    "title": "Sensor health and trust",
+    "excerpt": "Stale, stuck, missing, or implausible sensor readings should degrade confidence and be visible to operators."
+  },
+  {
+    "id": "OISD-STUB-AUDIT-01",
+    "title": "Action auditability",
+    "excerpt": "Operator decisions, automated recommendations, and evidence snapshots should be attributable and tamper-evident."
+  },
+  {
+    "id": "OISD-STUB-FEEDBACK-01",
+    "title": "Operator feedback loop",
+    "excerpt": "False alarms, useful alerts, and operator rationale should be retained to tune safety intelligence without hiding uncertainty."
+  },
+  {
+    "id": "OISD-STUB-ADJACENCY-01",
+    "title": "Adjacent-zone risk",
+    "excerpt": "Spatial adjacency should be considered when active work in one zone can affect workers or equipment nearby."
   }
 ]

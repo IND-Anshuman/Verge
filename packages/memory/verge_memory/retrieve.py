@@ -98,9 +98,8 @@ def _history(items: list[Any]) -> list[dict]:
 
 def _corpus_docs() -> list[tuple[str, str]]:
     docs: list[tuple[str, str]] = []
-    summary = CORPUS / "vizag-2025-summary.md"
-    if summary.exists():
-        docs.append(("vizag-2025-summary", summary.read_text(encoding="utf-8")))
+    for summary in sorted(CORPUS.glob("*-summary.md")):
+        docs.append((summary.stem, summary.read_text(encoding="utf-8")))
     clauses = CORPUS / "oisd-stubs.json"
     if clauses.exists():
         raw = json.loads(clauses.read_text(encoding="utf-8"))
