@@ -1,144 +1,168 @@
-import { useState } from 'react';
-import { Badge, Button } from '@/components/atoms';
-import { Send, FileText, ExternalLink } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Badge } from '@/components/atoms';
+import { AlertTriangle, FileText, History, Shield } from 'lucide-react';
+import { getFindingContext, type FindingContext } from '@/api/memory';
 
-interface QuestionMessage {
-  sender: 'operator' | 'rag';
-  text: string;
-  timestamp: string;
-  citations?: string[];
-  confidence?: number;
+interface KnowledgePanelProps {
+  /** Active finding to load memory context for; panel stays empty without one. */
+  findingId?: string | null;
 }
 
-export function KnowledgePanel() {
-  const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState<QuestionMessage[]>([
-    {
-      sender: 'rag',
-      text: 'SYSTEM RECOMMENDATION: Based on convergence of methane and PTW hot-work welding, similar incident detected at Visakhapatnam Reformer (2025). The incident resulted in an ignition because gas migration from secondary lines was not isolated.',
-      timestamp: new Date(Date.now() - 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      confidence: 0.88,
-      citations: ['OISD-137 Clause 4.2', 'Factories Act Sec 38'],
-    },
-  ]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+function ContextSection({
+  title,
+  icon,
+  empty,
+  items,
+  renderItem,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  empty: string;
+  items: unknown[];
+  renderItem: (item: unknown, idx: number) => React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-1.5 text-micro font-mono font-bold text-ink-dim uppercase select-none">
+        {icon}
+        {title}
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs text-ink-dim italic font-mono">{empty}</p>
+      ) : (
+        <div className="flex flex-col gap-2">{items.map(renderItem)}</div>
+      )}
+    </div>
+  );
+}
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+export function KnowledgePanel({ findingId }: KnowledgePanelProps) {
+  const [context, setContext] = useState<FindingContext | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const userMessage: QuestionMessage = {
-      sender: 'operator',
-      text: query.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setQuery('');
-    setIsSubmitting(true);
-
-    try {
-      // Simulate RAG AI delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const ragResponse: QuestionMessage = {
-        sender: 'rag',
-        text: 'AI ANALYSIS: Section 4.2 of OISD-137 mandates positive physical isolation (blind flanges) for reformer line maintenance whenever adjacent hot work is authorized. RAG confidence high. No other conflicting regulations found.',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        confidence: 0.94,
-        citations: ['OISD-137 Clause 4.2 (Blinding/Isolation)'],
-      };
-
-      setMessages((prev) => [...prev, ragResponse]);
-    } finally {
-      setIsSubmitting(false);
+  useEffect(() => {
+    if (!findingId) {
+      setContext(null);
+      setError(null);
+      return;
     }
-  };
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    getFindingContext(findingId)
+      .then((data) => {
+        if (!cancelled) setContext(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setContext(null);
+          setError('Memory context unavailable — check API connection.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [findingId]);
+
+  if (!findingId) {
+    return (
+      <div className="flex items-center justify-center h-full text-xs font-mono text-ink-dim uppercase p-4 text-center">
+        Select or focus a finding to load incident memory context
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 text-ink h-full select-none">
-      {/* Messages Scroll viewport */}
-      <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 scrollbar select-text">
-        {messages.map((m, idx) => (
-          <div
-            key={idx}
-            className={`flex flex-col gap-2 p-3 rounded border ${
-              m.sender === 'rag'
-                ? 'bg-panel border-line text-ink'
-                : 'bg-panel-2 border-line/60 text-ink-dim'
-            }`}
-          >
-            {/* Header row */}
-            <div className="flex justify-between items-center text-micro font-mono text-ink-dim select-none">
-              <span className="font-bold uppercase tracking-wider">
-                {m.sender === 'rag' ? 'VERGE INTELLIGENCE (RAG)' : 'OPERATOR QUERY'}
-              </span>
-              <span>{m.timestamp}</span>
-            </div>
-
-            {/* Message text */}
-            <p className="text-xs leading-relaxed">{m.text}</p>
-
-            {/* Citations & Confidence badges */}
-            {m.sender === 'rag' && (
-              <div className="flex flex-wrap items-center gap-1.5 mt-1 select-none border-t border-line/40 pt-2 shrink-0">
-                {m.confidence !== undefined && (
-                  <Badge
-                    variant="generic"
-                    color={m.confidence >= 0.85 ? 'ok' : 'near'}
-                    className="text-micro font-mono font-bold"
-                  >
-                    CONF: {(m.confidence * 100).toFixed(0)}%
-                  </Badge>
-                )}
-                {m.citations?.map((cit) => (
-                  <a
-                    key={cit}
-                    href="#citation"
-                    className="inline-flex items-center gap-1 text-micro font-mono text-watch hover:text-accent border border-watch/20 hover:border-accent/40 bg-watch/5 px-2 py-0.5 rounded transition-all"
-                  >
-                    <FileText className="h-3 w-3" />
-                    {cit}
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {isSubmitting && (
-          <div className="p-3 border border-line bg-panel rounded flex flex-col gap-1.5 select-none shrink-0">
-            <span className="text-micro font-mono text-ink-dim uppercase animate-pulse">
-              AI Query Parsing...
-            </span>
-            <div className="h-2 bg-line rounded w-3/4 animate-pulse" />
-          </div>
+      <div className="flex items-center justify-between border-b border-line pb-2 shrink-0">
+        <span className="text-micro font-mono font-bold text-ink-dim uppercase">
+          Context · {findingId}
+        </span>
+        {context?.degraded && (
+          <Badge variant="generic" color="near" className="text-micro font-bold flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            DEGRADED
+          </Badge>
         )}
       </div>
 
-      {/* Query Text Input Bar */}
-      <form onSubmit={handleSend} className="flex gap-2 border-t border-line pt-3 shrink-0 select-none">
-        <input
-          type="text"
-          placeholder="Ask a question about OISD, Factories Act, or past incidents..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          disabled={isSubmitting}
-          className="flex-1 h-8 px-3 rounded border border-line text-xs bg-panel-2 text-ink placeholder:text-ink-dim/40 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-        />
-        <Button
-          variant="primary"
-          size="sm"
-          type="submit"
-          loading={isSubmitting}
-          disabled={!query.trim()}
-          icon={<Send className="h-3.5 w-3.5" />}
-          className="h-8 uppercase text-micro font-mono font-bold"
-        >
-          Send
-        </Button>
-      </form>
+      <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-1 scrollbar select-text">
+        {loading && (
+          <p className="text-xs font-mono text-ink-dim animate-pulse uppercase">Loading Cognee context...</p>
+        )}
+
+        {error && (
+          <div className="bg-imminent/10 border border-imminent/20 text-imminent text-xs p-2.5 rounded flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            {error}
+          </div>
+        )}
+
+        {context?.degraded && context.reason && (
+          <p className="text-xs text-ink-dim font-mono leading-relaxed">{context.reason}</p>
+        )}
+
+        {context && !loading && (
+          <>
+            <ContextSection
+              title="Similar incidents"
+              icon={<Shield className="h-3.5 w-3.5" />}
+              empty="No similar incidents in memory."
+              items={context.similarIncidents}
+              renderItem={(item, idx) => {
+                const incident = item as FindingContext['similarIncidents'][number];
+                return (
+                  <div key={idx} className="p-2.5 border border-line rounded bg-panel-2/30 text-xs">
+                    <div className="font-bold text-ink">{incident.title}</div>
+                    <p className="text-ink-dim mt-1 leading-relaxed">{incident.excerpt}</p>
+                    <span className="text-micro font-mono text-ink-dim mt-1 block">{incident.source}</span>
+                  </div>
+                );
+              }}
+            />
+
+            <ContextSection
+              title="Regulatory clauses"
+              icon={<FileText className="h-3.5 w-3.5" />}
+              empty="No regulatory clauses retrieved."
+              items={context.regulatoryClauses}
+              renderItem={(clause) => {
+                const c = clause as FindingContext['regulatoryClauses'][number];
+                return (
+                  <div key={c.id} className="p-2.5 border border-line rounded bg-panel-2/30 text-xs">
+                    <div className="font-mono font-bold text-accent">{c.id}</div>
+                    <div className="font-semibold text-ink mt-0.5">{c.title}</div>
+                    <p className="text-ink-dim mt-1 leading-relaxed">{c.excerpt}</p>
+                  </div>
+                );
+              }}
+            />
+
+            <ContextSection
+              title="Plant history"
+              icon={<History className="h-3.5 w-3.5" />}
+              empty="No closed findings in memory."
+              items={context.plantHistory}
+              renderItem={(entry, idx) => {
+                const h = entry as FindingContext['plantHistory'][number];
+                return (
+                  <div key={idx} className="p-2.5 border border-line rounded bg-panel-2/30 text-xs">
+                    <div className="font-mono font-bold text-ink">{h.findingId}</div>
+                    <p className="text-ink-dim mt-1 leading-relaxed">{h.summary}</p>
+                  </div>
+                );
+              }}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }

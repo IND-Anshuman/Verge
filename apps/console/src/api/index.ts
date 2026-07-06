@@ -12,5 +12,12 @@ export { getPlantGeoJson } from './plant';
 export type { PlantGeoJson, PlantSensor } from './plant';
 export { getAuditEntries } from './audit';
 export type { AuditEntryWire } from './audit';
+export { getFindingContext } from './memory';
+export type {
+  FindingContext,
+  SimilarIncident,
+  RegulatoryClause,
+  PlantHistoryEntry,
+} from './memory';
 export { createSSEConnection } from './sse';
 export type { SSEEventHandler } from './sse';

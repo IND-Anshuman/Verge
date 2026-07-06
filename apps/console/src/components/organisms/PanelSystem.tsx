@@ -49,6 +49,10 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
   const [currentPreset, setCurrentPreset] = useState<PresetType>('monitoring');
   const [layout, setLayout] = useState(PRESETS.monitoring);
 
+  const contextFindingId =
+    findings.find((f) => f.leadTimeBand === 'IMMINENT' && f.state !== 'closed' && f.state !== 'resolved')
+      ?.findingId ?? findings[0]?.findingId ?? null;
+
   // Load layout from localStorage on initial render if saved
   useEffect(() => {
     const savedLayout = localStorage.getItem(`verge-layout-${currentPreset}`);
@@ -219,7 +223,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
               </div>
               <div className="flex-1 overflow-hidden pt-2">
                 <ErrorBoundary>
-                  <KnowledgePanel />
+                  <KnowledgePanel findingId={contextFindingId} />
                 </ErrorBoundary>
               </div>
             </div>
