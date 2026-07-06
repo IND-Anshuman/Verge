@@ -23,7 +23,7 @@ node_modules/
 !.env.example
 *.pem
 *.key
-.agents
+
 # Data / artifacts
 *.log
 *.db
@@ -36,3 +36,5 @@ data/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+.agents
+.kiro
