@@ -1,6 +1,7 @@
 import { AlertFatigueMetrics } from '@/components/organisms/AlertFatigueMetrics';
 import { ThresholdConfig } from '@/components/organisms/ThresholdConfig';
 import { RulesEditor } from '@/components/organisms/RulesEditor';
+import { MemoryStatusPanel } from '@/components/organisms/MemoryStatusPanel';
 
 export default function AdminView() {
   return (
@@ -17,6 +18,8 @@ export default function AdminView() {
 
       {/* Main KPI and Recharts Dashboard */}
       <AlertFatigueMetrics />
+
+      <MemoryStatusPanel />
 
       {/* Configuration Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

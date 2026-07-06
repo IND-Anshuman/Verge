@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { RiskFinding } from '@/types';
 import { Card, Button } from '@/components/atoms';
 import {
@@ -8,6 +8,7 @@ import {
   Languages,
 } from 'lucide-react';
 import { transitionFinding, respondToFinding } from '@/api';
+import { getAlertPreview } from '@/api/intelligence';
 
 interface ResponseOrchestratorProps {
   activeFindings: RiskFinding[];
@@ -56,13 +57,35 @@ export function ResponseOrchestratorPanel({ activeFindings, onChange }: Response
   const [lang, setLang] = useState('en');
   const [template, setTemplate] = useState('gas-leak');
   const [customText, setCustomText] = useState('');
+  const [previewLanguages, setPreviewLanguages] = useState<Record<string, string>>({});
+  const [previewDegraded, setPreviewDegraded] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<Array<{ name: string; channel: string; status: string }>>([]);
 
-  if (imminentFindings.length === 0) return null;
-
-  // Primary active trigger finding
   const trigger = imminentFindings[0];
+
+  useEffect(() => {
+    if (!trigger) return;
+    let cancelled = false;
+    getAlertPreview(trigger.findingId)
+      .then((preview) => {
+        if (!cancelled) {
+          setPreviewLanguages(preview.languages);
+          setPreviewDegraded(preview.degraded);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPreviewLanguages({});
+          setPreviewDegraded(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [trigger?.findingId]);
+
+  if (imminentFindings.length === 0 || !trigger) return null;
 
   const handleChannelToggle = (channel: string) => {
     setSelectedChannels((prev) =>
@@ -72,6 +95,7 @@ export function ResponseOrchestratorPanel({ activeFindings, onChange }: Response
 
   const getMessageBody = () => {
     if (customText) return customText;
+    if (previewLanguages[lang]) return previewLanguages[lang];
     const body = TEMPLATES[template]?.[lang] || '';
     return body.replace('[Zone]', trigger.zoneId);
   };
@@ -216,7 +240,9 @@ export function ResponseOrchestratorPanel({ activeFindings, onChange }: Response
 
           {/* Text preview */}
           <div className="flex flex-col gap-1 mt-1">
-            <span className="text-micro font-mono text-ink-dim uppercase">Message Preview</span>
+            <span className="text-micro font-mono text-ink-dim uppercase">
+              Message Preview {previewDegraded ? '(template fallback)' : '(API draft)'}
+            </span>
             <div className="bg-bg border border-line p-2 rounded text-xs text-ink-dim leading-relaxed h-16 overflow-y-auto select-text font-mono">
               {getMessageBody()}
             </div>

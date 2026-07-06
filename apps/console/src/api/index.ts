@@ -29,5 +29,7 @@ export { getFleetSummary } from './fleet';
 export type { FleetPlant, FleetSummary } from './fleet';
 export { getFindingTelemetry } from './telemetry';
 export type { FindingTelemetry, TelemetrySeries, TelemetryPoint } from './telemetry';
+export { getMemoryStatus, getAlertPreview, getEvidenceManifest } from './intelligence';
+export type { MemoryStatus, AlertPreview, EvidenceManifest } from './intelligence';
 export { createSSEConnection } from './sse';
 export type { SSEEventHandler } from './sse';
