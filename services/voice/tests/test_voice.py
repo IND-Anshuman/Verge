@@ -1,4 +1,8 @@
 import httpx
+from verge_schema.enums import FindingState
+from verge_schema.findings import RiskFinding
+from verge_voice.alert_preview import alert_preview
+from verge_voice.near_miss import near_miss_from_transcript
 from verge_voice.transcribe import SpeechmaticsSettings, structure_handover, transcribe_audio
 
 
@@ -57,3 +61,24 @@ def test_speechmatics_flow_is_mocked() -> None:
     assert result["jobId"] == "job-1"
     assert result["transcript"] == "B-04 gas pause"
     assert calls == ["/v2/jobs", "/v2/jobs/job-1", "/v2/jobs/job-1/transcript"]
+
+
+def test_near_miss_from_transcript_links_finding() -> None:
+    body = near_miss_from_transcript("B-04 gas near miss, pause work", finding_id="F-1")
+    assert body["kind"] == "voice-near-miss"
+    assert body["findingId"] == "F-1"
+    assert "gas" in body["structured"]["hazards"]
+
+
+def test_alert_preview_degrades_with_template() -> None:
+    finding = RiskFinding(
+        finding_id="F-1",
+        created_at="2025-01-13T06:44:00Z",
+        zone_id="B-04",
+        title="Hot work + rising gas",
+        state=FindingState.NEW,
+        confidence=0.85,
+    )
+    body = alert_preview(finding)
+    assert body["degraded"] is True
+    assert "B-04" in body["languages"]["en"]
