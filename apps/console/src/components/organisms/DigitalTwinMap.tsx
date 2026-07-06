@@ -329,6 +329,31 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
           })}
         </div>
       )}
+
+      {/* Screen Reader accessible active findings table fallback */}
+      <div className="sr-only">
+        <table>
+          <caption>Active Plant Digital Twin Hazard Locations</caption>
+          <thead>
+            <tr>
+              <th>Finding ID</th>
+              <th>Location / Zone</th>
+              <th>Risk Severity</th>
+              <th>Model Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {findings.map((f) => (
+              <tr key={f.findingId}>
+                <td>{f.findingId}</td>
+                <td>{f.zoneId}</td>
+                <td>{f.leadTimeBand}</td>
+                <td>{(f.confidence * 100).toFixed(0)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
