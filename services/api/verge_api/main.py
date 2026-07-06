@@ -27,6 +27,7 @@ from .evidence_store import upload_evidence_manifest
 from .factory import make_store
 from .hooks import maybe_ingest_closed_finding
 from .permits_registry import PermitRegistry
+from .routes.fleet import router as fleet_router
 from .routes.memory import router as memory_router
 from .routes.permits import router as permits_router
 from .routes.plant import router as plant_router
@@ -38,6 +39,7 @@ app = FastAPI(title="Verge API", version="0.3.0")
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
+app.include_router(fleet_router, prefix="/api")
 app.include_router(plant_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 app.include_router(voice_router, prefix="/api")
