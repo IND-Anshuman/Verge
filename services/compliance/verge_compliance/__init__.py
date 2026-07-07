@@ -1,0 +1,32 @@
+"""Compliance: OISD / Factory Act / DGMS gap detection + evidence packs (spec §5).
+
+Deterministic, LLM-free gap detection over a commissioned plant and its adopted
+rules, plus regulator-ready, hash-chained evidence packs (P6). A gap is a legal
+claim, so it is reproducible by construction — never generated.
+"""
+
+from .changes import changes_since_prior, diff_clauses, library_fingerprint
+from .clauses import Clause, load_clauses
+from .evidence import CompliancePack, build_compliance_pack
+from .gaps import ClauseResult, ComplianceReport, assess, gap_findings
+from .incident_report import IncidentReport, build_incident_report, clauses_for_finding
+from .render import render_markdown
+
+__all__ = [
+    "Clause",
+    "ClauseResult",
+    "CompliancePack",
+    "ComplianceReport",
+    "IncidentReport",
+    "assess",
+    "build_compliance_pack",
+    "build_incident_report",
+    "changes_since_prior",
+    "clauses_for_finding",
+    "diff_clauses",
+    "gap_findings",
+    "library_fingerprint",
+    "load_clauses",
+    "render_markdown",
+]
+__version__ = "0.3.0"

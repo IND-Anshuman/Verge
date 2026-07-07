@@ -1,0 +1,130 @@
+[
+  {
+    "id": "VC-HOT-WORK",
+    "oisdRef": "OISD-STUB-HOT-WORK-01",
+    "standard": "OISD-STD-105",
+    "title": "Hot work near hydrocarbon or gas hazard",
+    "requirement": "Hot-work controls must account for nearby flammable gas readings and active permits before work proceeds.",
+    "capability": "hot-work-control"
+  },
+  {
+    "id": "VC-CONFINED-SPACE",
+    "oisdRef": "OISD-STUB-CONFINED-SPACE-01",
+    "standard": "OISD-STD-105",
+    "title": "Confined-space entry atmospheric checks",
+    "requirement": "Confined-space work requires atmospheric monitoring and escalation when toxic/flammable readings trend toward alarm.",
+    "capability": "confined-space-control"
+  },
+  {
+    "id": "VC-GAS-DETECTION",
+    "oisdRef": "OISD-STUB-CONFINED-SPACE-01",
+    "standard": "OISD-STD-144",
+    "title": "Combustible/toxic gas detection coverage",
+    "requirement": "Hazardous zones must be covered by combustible and toxic gas detection with defined alarm thresholds.",
+    "capability": "gas-detection"
+  },
+  {
+    "id": "VC-SIMOPS",
+    "oisdRef": "OISD-STUB-SIMOPS-01",
+    "standard": "OISD-GDN-178",
+    "title": "Simultaneous operations review",
+    "requirement": "Concurrent permits in the same or adjacent zones must be reviewed for spatial and temporal conflict.",
+    "capability": "simops-review"
+  },
+  {
+    "id": "VC-HANDOVER",
+    "oisdRef": "OISD-STUB-HANDOVER-01",
+    "standard": "OISD-STD-105",
+    "title": "Shift handover risk continuity",
+    "requirement": "Open hazards and active permits must be explicitly carried across shift handover.",
+    "capability": "shift-handover"
+  },
+  {
+    "id": "VC-GAS-DRIFT",
+    "oisdRef": "OISD-STUB-GAS-DRIFT-01",
+    "standard": "OISD-STD-144",
+    "title": "Gas drift monitoring across zones",
+    "requirement": "Gas trends across adjacent zones must be reviewed for drift, not only single-sensor threshold breach.",
+    "capability": "gas-drift-monitoring"
+  },
+  {
+    "id": "VC-ISOLATION",
+    "oisdRef": "OISD-STUB-ISOLATION-01",
+    "standard": "OISD-STD-105",
+    "title": "Energy isolation confirmation",
+    "requirement": "Isolation status must be confirmed and linked to active permits before hazardous work continues.",
+    "capability": "isolation-control"
+  },
+  {
+    "id": "VC-STARTUP",
+    "oisdRef": "OISD-STUB-STARTUP-01",
+    "standard": "OISD-STD-169",
+    "title": "Startup abnormal condition review",
+    "requirement": "Abnormal process startup conditions must be escalated when instrumentation diverges from expected envelopes.",
+    "capability": "startup-monitoring"
+  },
+  {
+    "id": "VC-TANK-FARM",
+    "oisdRef": "OISD-STUB-TANKFARM-01",
+    "standard": "OISD-STD-117",
+    "title": "Tank farm transfer vigilance",
+    "requirement": "Tank farm transfers require monitoring for leak, overflow, vapor cloud, and ignition-source exposure.",
+    "capability": "tank-farm-monitoring"
+  },
+  {
+    "id": "VC-ADJACENCY",
+    "oisdRef": "OISD-STUB-ADJACENCY-01",
+    "standard": "OISD-GDN-178",
+    "title": "Adjacent-zone risk",
+    "requirement": "Spatial adjacency must be considered when active work in one zone can affect workers or equipment nearby.",
+    "capability": "adjacency"
+  },
+  {
+    "id": "VC-EVACUATION",
+    "oisdRef": "OISD-STUB-EVAC-01",
+    "standard": "OISD-STD-105",
+    "title": "Zone evacuation readiness",
+    "requirement": "Escalation procedures must define when workers are moved out of affected and adjacent zones.",
+    "capability": "evacuation-advisory"
+  },
+  {
+    "id": "VC-COMMS",
+    "oisdRef": "OISD-STUB-COMMS-01",
+    "standard": "OISD-STD-105",
+    "title": "Emergency communications",
+    "requirement": "Safety alerts must be delivered through multiple channels with clear zone, hazard, and action wording.",
+    "capability": "multi-channel-alert"
+  },
+  {
+    "id": "VC-SENSOR-HEALTH",
+    "oisdRef": "OISD-STUB-SENSOR-01",
+    "standard": "OISD-STD-144",
+    "title": "Sensor health and trust",
+    "requirement": "Stale, stuck, missing, or implausible readings must degrade confidence and be visible to operators.",
+    "capability": "sensor-health"
+  },
+  {
+    "id": "VC-AUDIT",
+    "oisdRef": "OISD-STUB-AUDIT-01",
+    "standard": "Factory Act 1948 / DGMS",
+    "title": "Action auditability",
+    "requirement": "Operator decisions, recommendations, and evidence snapshots must be attributable and tamper-evident.",
+    "capability": "audit"
+  },
+  {
+    "id": "VC-EVIDENCE",
+    "oisdRef": "OISD-STUB-EVIDENCE-01",
+    "standard": "Factory Act 1948 / DGMS",
+    "title": "Incident evidence preservation",
+    "requirement": "Safety events must preserve source readings, permit identifiers, timestamps, and operator actions.",
+    "capability": "evidence"
+  },
+  {
+    "id": "VC-FEEDBACK",
+    "oisdRef": "OISD-STUB-FEEDBACK-01",
+    "standard": "OISD-GDN-178",
+    "title": "Operator feedback loop",
+    "requirement": "False alarms, useful alerts, and operator rationale must be retained to tune intelligence without hiding uncertainty.",
+    "capability": "feedback"
+  }
+]
