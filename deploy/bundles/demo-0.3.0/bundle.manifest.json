@@ -1,0 +1,16 @@
+{
+  "version": "0.3.0",
+  "builtAt": "2026-07-07T00:00:00+00:00",
+  "siteProfile": "pilot",
+  "sbom": "sbom.cdx.json",
+  "components": [
+    {
+      "path": "components/verge-api.tag",
+      "digest": "sha256:1301cfde5dac378441fa6407131f3cc2036f6f6f863c34db76705afba4fd379f"
+    },
+    {
+      "path": "sbom.cdx.json",
+      "digest": "sha256:38fd471181ceb712b70e8bd75d90220d35143908bc0b5397e9bedf9090cddf7e"
+    }
+  ]
+}

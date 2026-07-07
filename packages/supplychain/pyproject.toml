@@ -1,0 +1,13 @@
+[project]
+name = "verge-supplychain"
+version = "0.3.0"
+description = "Signed release bundle verification for air-gapped Verge installs (IEC 62443 SBOM)."
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["verge_supplychain"]
