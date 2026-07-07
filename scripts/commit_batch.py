@@ -16,7 +16,7 @@ def commit_batch(paths: list[str], msg: str) -> str:
     tree = run("write-tree")
     parent = run("rev-parse", "HEAD")
     new = run("commit-tree", tree, "-p", parent, "-m", msg)
-    run("reset", "--hard", new)
+    run("reset", "--mixed", new)
     print(f"{msg} -> {new}")
     return new
 

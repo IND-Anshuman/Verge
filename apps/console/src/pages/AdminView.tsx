@@ -5,6 +5,9 @@ import { MemoryStatusPanel } from '@/components/organisms/MemoryStatusPanel';
 import { OpsStatusPanel } from '@/components/organisms/OpsStatusPanel';
 import { CompliancePanel } from '@/components/organisms/CompliancePanel';
 import { CommissioningPanel } from '@/components/organisms/CommissioningPanel';
+import { EvalReportPanel } from '@/components/organisms/EvalReportPanel';
+import { StreamStatusPanel } from '@/components/organisms/StreamStatusPanel';
+import { GraphSyncPanel } from '@/components/organisms/GraphSyncPanel';
 import { ModelRegistryPanel } from '@/components/organisms/ModelRegistryPanel';
 
 export default function AdminView() {
@@ -31,7 +34,13 @@ export default function AdminView() {
         <ModelRegistryPanel />
       </div>
 
-      <CommissioningPanel />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CommissioningPanel />
+        <StreamStatusPanel />
+        <GraphSyncPanel />
+      </div>
+
+      <EvalReportPanel />
 
       {/* Configuration Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

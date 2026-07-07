@@ -128,3 +128,21 @@ export async function dispatchAlert(
     signal,
   });
 }
+
+export async function getEvalReport(signal?: AbortSignal): Promise<unknown[]> {
+  return request<unknown[]>('/api/eval/report', { signal });
+}
+
+export interface StreamStatus {
+  subscribers: number;
+  redpandaFanout: boolean;
+  fanoutConfigured: boolean;
+}
+
+export async function getStreamStatus(signal?: AbortSignal): Promise<StreamStatus> {
+  return request<StreamStatus>('/api/stream/status', { signal });
+}
+
+export async function syncPlantGraph(signal?: AbortSignal): Promise<Record<string, unknown>> {
+  return request<Record<string, unknown>>('/api/plant/graph-sync', { method: 'POST', signal });
+}

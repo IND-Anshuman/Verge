@@ -40,6 +40,9 @@ export {
   dispatchAlert,
   getCommissionSummary,
   getIncidentReport,
+  getEvalReport,
+  getStreamStatus,
+  syncPlantGraph,
 } from './platform';
 export type {
   DegradationBanner,
@@ -53,6 +56,7 @@ export type {
   AlertDispatchReceipt,
   CommissionCheck,
   CommissionSummary,
+  StreamStatus,
 } from './platform';
 export { createSSEConnection } from './sse';
 export type { SSEEventHandler } from './sse';
