@@ -8,11 +8,13 @@ drives a real Redpanda consumer (`consume_redpanda`, confluent imported lazily).
 
 State is a rolling window per sensor plus active permits and changeover windows;
 on each reading the engine re-evaluates and *new* qualifying findings are emitted
-once (deduped by zone+title) to a sink.
+once (deduped by zone+lineage+source event) to a sink.
 """
 
 from __future__ import annotations
 
+import json
+import os
 from collections import deque
 from collections.abc import Callable, Iterable
 from datetime import datetime
@@ -25,6 +27,7 @@ from .rules import Rule
 
 DEFAULT_THRESHOLDS = {"gas-lel": 100.0, "gas-co": 50.0}
 WINDOW = 12  # readings per sensor (~6 min at 30s cadence)
+MAX_PERMITS = 500
 
 
 def _dt(s: str) -> datetime:
@@ -43,6 +46,15 @@ class StreamState:
         self.changeovers: list[tuple[datetime, datetime, str]] = []
         self._pending: dict[str, datetime] = {}
         self.now: datetime | None = None
+
+    def _prune_permits(self) -> None:
+        """Drop expired permits so memory and SIMOPS state stay bounded (audit §2)."""
+        if self.now is None:
+            return
+        self.permits = [
+            p for p in self.permits
+            if p.valid_from <= self.now <= p.valid_to
+        ][-MAX_PERMITS:]
 
     def ingest(self, e: dict) -> str:
         ts = _dt(e["ts"])
@@ -63,6 +75,7 @@ class StreamState:
                 equipment_id=e.get("equipmentId"),
                 valid_from=_dt(e["validFrom"]), valid_to=_dt(e["validTo"]),
             ))
+            self._prune_permits()
         elif kind == "shift":
             if e["event"] == "changeover-start":
                 self._pending[e["zoneId"]] = ts
@@ -74,6 +87,7 @@ class StreamState:
         return self.now is not None and any(s <= self.now <= e for s, e, _ in self.changeovers)
 
     def context(self) -> RiskContext:
+        self._prune_permits()
         windowed = {sid: list(dq) for sid, dq in self.readings.items() if dq}
         return RiskContext(
             now=self.now, sensors=self.sensors, readings=windowed,
@@ -99,14 +113,19 @@ def run_stream(
     min_confidence: float = 0.8,
     window: int = WINDOW,
     event_hook: Callable[[dict], None] | None = None,
+    after_event: Callable[[dict], None] | None = None,
     enable_cep: bool = False,
     enable_ml: bool = False,
+    validate_contracts: bool = True,
 ) -> int:
     """Drive the engine over a live stream. Runs the gas rules plus any injected
     detectors (e.g. SIMOPS), emits each qualifying finding once (deduped by zone
-    + lineage), and tags findings shadow when running alongside an existing alarm
-    system (spec §14.5). Returns the number emitted."""
+    + lineage + source event id), and tags findings shadow when running alongside
+    an existing alarm system (spec §14.5). Returns the number emitted."""
     from .engine import evaluate  # local import avoids a cycle at module load
+
+    if validate_contracts:
+        from verge_contracts.envelope import validate_and_enrich
 
     detectors = detectors or []
     state = StreamState(thresholds, window=window)
@@ -117,12 +136,20 @@ def run_stream(
         cep_state = CepState()
     seen: set[tuple[str, tuple[str, ...]]] = set()
     emitted = 0
-    for e in events:
+    for raw in events:
+        e = raw
+        if validate_contracts:
+            try:
+                e = validate_and_enrich(raw, trace_id=raw.get("traceId"))
+            except Exception:
+                continue
         kind = state.ingest(e)
         if event_hook is not None:
             event_hook(e)
         # readings and permits both change the risk picture; re-evaluate on either.
         if kind not in ("reading", "permit"):
+            if after_event is not None:
+                after_event(e)
             continue
         findings = list(evaluate(state.context(), rules))
         for detect in detectors:
@@ -136,8 +163,6 @@ def run_stream(
         for f in findings:
             if f.confidence < min_confidence:
                 continue
-            # Lineage uniquely identifies a finding's contributors, so this dedups
-            # both gas findings (stable sensors) and SIMOPS (per permit pair).
             key = (f.zone_id, tuple(sorted(f.lineage)))
             if key in seen:
                 continue
@@ -146,28 +171,52 @@ def run_stream(
                 f.shadow = True
             sink(f)
             emitted += 1
+        if after_event is not None:
+            after_event(e)
     return emitted
 
 
 def consume_redpanda(brokers: str, topic: str, rules: list[Rule],
                      sink: Callable[[RiskFinding], None], **kw) -> None:  # pragma: no cover
-    """Bridge a Redpanda topic into run_stream. confluent imported lazily."""
-    import json
+    """Bridge a Redpanda topic into run_stream with explicit offset commits."""
 
-    from confluent_kafka import Consumer
+    from confluent_kafka import Consumer, Producer
 
-    consumer = Consumer({"bootstrap.servers": brokers, "group.id": "verge-risk-engine",
-                         "auto.offset.reset": "latest"})
+    group = os.environ.get("VERGE_RISK_GROUP", "verge-risk-engine")
+    offset_reset = os.environ.get("VERGE_KAFKA_OFFSET_RESET", "latest")
+    dlq_topic = os.environ.get("VERGE_EVENTS_DLQ", "verge.events.dlq")
+
+    consumer = Consumer({
+        "bootstrap.servers": brokers,
+        "group.id": group,
+        "auto.offset.reset": offset_reset,
+        "enable.auto.commit": False,
+    })
     consumer.subscribe([topic])
+    producer = Producer({"bootstrap.servers": brokers})
+    pending_msg = {"msg": None}
 
     def gen():
         while True:
             msg = consumer.poll(1.0)
             if msg is None or msg.error():
                 continue
-            yield json.loads(msg.value())
+            pending_msg["msg"] = msg
+            try:
+                yield json.loads(msg.value())
+            except json.JSONDecodeError:
+                producer.produce(dlq_topic, msg.value(), key=msg.key())
+                producer.poll(0)
+                consumer.commit(message=msg, asynchronous=False)
+                pending_msg["msg"] = None
+
+    def after_event(_e: dict) -> None:
+        msg = pending_msg["msg"]
+        if msg is not None:
+            consumer.commit(message=msg, asynchronous=False)
+            pending_msg["msg"] = None
 
     try:
-        run_stream(gen(), rules, sink, **kw)
+        run_stream(gen(), rules, sink, after_event=after_event, **kw)
     finally:
         consumer.close()

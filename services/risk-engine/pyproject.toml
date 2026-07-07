@@ -5,6 +5,7 @@ description = "Compound Risk Engine + sensor-health plane. LLM-independent (P1).
 requires-python = ">=3.11"
 dependencies = [
   "verge-schema",
+  "verge-contracts",
   "verge-forecaster",
   "verge-twin",
   "verge-permit",
@@ -24,6 +25,7 @@ packages = ["verge_risk"]
 
 [tool.uv.sources]
 verge-schema = { workspace = true }
+verge-contracts = { workspace = true }
 verge-forecaster = { workspace = true }
 verge-twin = { workspace = true }
 verge-permit = { workspace = true }
