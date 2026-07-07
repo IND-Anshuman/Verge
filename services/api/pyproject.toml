@@ -10,6 +10,7 @@ dependencies = [
     "verge-llm",
     "verge-memory",
     "verge-mlops",
+    "verge-supplychain",
     "verge-voice",
     "verge-risk-engine",
     "verge-orchestrator",
@@ -43,6 +44,7 @@ verge-contracts = { workspace = true }
 verge-llm = { workspace = true }
 verge-memory = { workspace = true }
 verge-mlops = { workspace = true }
+verge-supplychain = { workspace = true }
 verge-voice = { workspace = true }
 verge-risk-engine = { workspace = true }
 verge-orchestrator = { workspace = true }

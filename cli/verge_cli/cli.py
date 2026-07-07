@@ -258,6 +258,24 @@ def _cmd_backup(args) -> int:
     return 0 if report.get("verified") else 1
 
 
+def _cmd_bundle(args) -> int:
+    """Verify or inspect a signed release bundle directory."""
+    from pathlib import Path
+
+    from verge_supplychain import inspect_bundle, verify_bundle
+
+    root = Path(args.root)
+    if args.action == "inspect":
+        print(json.dumps(inspect_bundle(root), indent=2))
+        return 0
+    env = {}
+    if args.hmac_secret:
+        env["VERGE_BUNDLE_HMAC_SECRET"] = args.hmac_secret
+    report = verify_bundle(root, env=env or None)
+    print(json.dumps(report, indent=2))
+    return 0 if report.get("verified") else 1
+
+
 def _cmd_incident_report(args) -> int:
     """Generate a hash-chained incident report for a finding via the API (§14 P3)."""
     import urllib.request
@@ -409,6 +427,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_bv.add_argument("--file", required=True, help="snapshot JSON")
     p_bv.add_argument("--api", default="http://localhost:8000")
     p_bv.set_defaults(func=_cmd_backup)
+
+    p_bundle = sub.add_parser("bundle", help="verify signed release bundles (§14.6 SBOM)")
+    bundle_sub = p_bundle.add_subparsers(dest="bundle_cmd", required=True)
+    p_bverify = bundle_sub.add_parser("verify", help="verify manifest signature + digests")
+    p_bverify.add_argument("--root", required=True, help="bundle directory")
+    p_bverify.add_argument(
+        "--hmac-secret",
+        help="dev HMAC secret (else VERGE_BUNDLE_HMAC_SECRET env)",
+    )
+    p_bverify.add_argument("--json", action="store_true")
+    p_bverify.set_defaults(func=_cmd_bundle, action="verify")
+    p_binspect = bundle_sub.add_parser("inspect", help="show manifest metadata")
+    p_binspect.add_argument("--root", required=True)
+    p_binspect.set_defaults(func=_cmd_bundle, action="inspect")
 
     p_ir = sub.add_parser("incident-report", help="hash-chained incident report (§14 P3)")
     p_ir.add_argument("--finding", required=True, help="finding id")

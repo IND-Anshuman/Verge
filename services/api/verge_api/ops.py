@@ -69,6 +69,12 @@ def _vision_health(vision) -> dict:
         return {"backend": backend, "degraded": True, "reason": f"probe failed: {exc}"}
 
 
+def _bundle_verification(env: Mapping[str, str]) -> dict:
+    from verge_supplychain import verify_bundle
+
+    return verify_bundle(env=dict(env))
+
+
 def _audit_anchor_status(store, env: Mapping[str, str]) -> dict:
     from .audit_anchor import verify_anchored_head
 
@@ -96,6 +102,9 @@ def ops_snapshot(
 
     backup_ts = env.get("VERGE_LAST_BACKUP_TS") or None
     bundle_ts = env.get("VERGE_BUNDLE_BUILT_TS") or None
+    bundle_report = _bundle_verification(env)
+    if bundle_report.get("builtAt") and not bundle_ts:
+        bundle_ts = bundle_report["builtAt"]
 
     return {
         "version": version,
@@ -126,7 +135,11 @@ def ops_snapshot(
         "vision": _vision_health(vision),
         "modelRegistry": _model_registry(env),
         "backup": {"lastTs": backup_ts, "ageSeconds": _age_seconds(backup_ts, now)},
-        "signedBundle": {"builtTs": bundle_ts, "ageSeconds": _age_seconds(bundle_ts, now)},
+        "signedBundle": {
+            "builtTs": bundle_ts,
+            "ageSeconds": _age_seconds(bundle_ts, now),
+            "verification": bundle_report,
+        },
         "lastReplayRun": _last_replay_run(now),
         "timescale": timescale_status(env=env),
         "tracing": trace_index.stats() if trace_index is not None else None,
@@ -175,6 +188,10 @@ def render_prometheus(snap: dict) -> str:
             "Age of the last audit/backup snapshot")
     _metric(lines, "verge_signed_bundle_age_seconds", snap["signedBundle"]["ageSeconds"],
             "Age of the installed signed bundle")
+    bundle_verified = snap["signedBundle"].get("verification", {}).get("verified")
+    if bundle_verified is not None:
+        _metric(lines, "verge_bundle_verified", int(bundle_verified),
+                "Installed signed bundle verified (1 ok, 0 failed)")
 
     from . import metrics_counters
 

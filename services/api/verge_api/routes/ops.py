@@ -6,7 +6,11 @@ dashboards. JSON here; Prometheus text at ``/metrics``.
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, Request
+from verge_supplychain import inspect_bundle, verify_bundle
+from verge_supplychain.bundle import bundle_root
 
 from ..audit_anchor import anchor_audit_head, verify_anchored_head
 from ..backup import snapshot_audit, verify_snapshot
@@ -69,3 +73,18 @@ def ops_trace_lookup(trace_id: str, request: Request) -> dict:
         if entry.get("payload", {}).get("traceId") == trace_id
     ]
     return {"traceId": trace_id, "spans": spans, "auditHits": len(audit), "audit": audit[:20]}
+
+
+@router.get("/ops/bundle/verify")
+def ops_bundle_verify() -> dict:
+    """Verify the installed signed release bundle (manifest + digests + signature)."""
+    return verify_bundle(env=dict(os.environ))
+
+
+@router.get("/ops/bundle/inspect")
+def ops_bundle_inspect() -> dict:
+    """Return bundle manifest metadata without full verification."""
+    root = bundle_root(dict(os.environ))
+    if root is None:
+        return {"configured": False, "reason": "VERGE_BUNDLE_ROOT not configured"}
+    return {"configured": True, **inspect_bundle(root)}

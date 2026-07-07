@@ -25,3 +25,4 @@ data:
   VERGE_AUDIT_AUTO_ANCHOR: "true"
   VERGE_AUDIT_ANCHOR_INTERVAL_S: "300"
   VERGE_DEDUPE_STATE: /data/dedupe.json
+  VERGE_BUNDLE_ROOT: /opt/verge/bundle

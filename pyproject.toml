@@ -12,6 +12,7 @@ dependencies = [
   "verge-llm",
   "verge-memory",
   "verge-mlops",
+  "verge-supplychain",
   "verge-voice",
   "verge-risk-engine",
   "verge-forecaster",
@@ -33,7 +34,7 @@ postgres = ["psycopg[binary]>=3.2"]
 
 [dependency-groups]
 # httpx powers starlette's TestClient and the OpenAICompatProvider live path.
-dev = ["pytest>=8", "ruff>=0.6", "httpx>=0.27"]
+dev = ["pytest>=8", "ruff>=0.6", "httpx>=0.27", "joblib>=1.4", "scikit-learn>=1.5"]
 
 # The root is a virtual workspace root (an aggregator), not an installable package.
 [tool.uv]
@@ -47,6 +48,7 @@ members = [
   "packages/llm",
   "packages/memory",
   "packages/mlops",
+  "packages/supplychain",
   "services/api",
   "services/voice",
   "services/edge-gateway",
@@ -69,6 +71,7 @@ verge-contracts = { workspace = true }
 verge-llm = { workspace = true }
 verge-memory = { workspace = true }
 verge-mlops = { workspace = true }
+verge-supplychain = { workspace = true }
 verge-voice = { workspace = true }
 verge-risk-engine = { workspace = true }
 verge-forecaster = { workspace = true }

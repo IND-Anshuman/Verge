@@ -128,6 +128,9 @@ services:
       VERGE_AUDIT_AUTO_ANCHOR: ${VERGE_AUDIT_AUTO_ANCHOR:-true}
       VERGE_AUDIT_ANCHOR_INTERVAL_S: ${VERGE_AUDIT_ANCHOR_INTERVAL_S:-300}
       MINIO_BUCKET_AUDIT: verge-audit
+      VERGE_BUNDLE_ROOT: /bundles/demo-0.3.0
+      VERGE_BUNDLE_HMAC_SECRET: ${VERGE_BUNDLE_HMAC_SECRET:-verge-dev-bundle-secret}
+      VERGE_BUNDLE_BUILT_TS: ${VERGE_BUNDLE_BUILT_TS:-}
       AIMLAPI_API_KEY: ${AIMLAPI_API_KEY:-}
       SPEECHMATICS_API_KEY: ${SPEECHMATICS_API_KEY:-}
     depends_on:
@@ -137,6 +140,8 @@ services:
         condition: service_started
       redis:
         condition: service_started
+    volumes:
+      - ./bundles/demo-0.3.0:/bundles/demo-0.3.0:ro
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 15s

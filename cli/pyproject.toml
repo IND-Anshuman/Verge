@@ -5,7 +5,7 @@ description = "The verge CLI — replay, rules, sim, score."
 requires-python = ">=3.11"
 dependencies = [
     "verge-schema", "verge-risk-engine", "verge-twin", "verge-compliance", "verge-connectors",
-    "verge-mlops", "verge-contracts", "verge-edge-gateway",
+    "verge-mlops", "verge-contracts", "verge-edge-gateway", "verge-supplychain",
 ]
 
 [project.optional-dependencies]
@@ -30,3 +30,4 @@ verge-connectors = { workspace = true }
 verge-mlops = { workspace = true }
 verge-contracts = { workspace = true }
 verge-edge-gateway = { workspace = true }
+verge-supplychain = { workspace = true }
