@@ -121,9 +121,12 @@ def _run_migrations(url: str) -> None:
     from alembic import command
     from alembic.config import Config
 
-    ini = Path(__file__).resolve().parents[1] / "alembic.ini"
+    api_root = Path(__file__).resolve().parents[1]
+    ini = api_root / "alembic.ini"
     cfg = Config(str(ini))
     cfg.set_main_option("sqlalchemy.url", url)
+    # Alembic resolves script_location from process CWD unless anchored to the ini.
+    cfg.set_main_option("script_location", str(api_root / "alembic"))
     command.upgrade(cfg, "head")
 
 

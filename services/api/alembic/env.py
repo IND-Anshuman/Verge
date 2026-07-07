@@ -29,9 +29,11 @@ def _url() -> str:
 
 def run_migrations(url: str | None = None) -> None:
     """Apply Alembic migrations programmatically (production boot path)."""
-    ini = Path(__file__).resolve().parents[1] / "alembic.ini"
+    api_root = Path(__file__).resolve().parents[1]
+    ini = api_root / "alembic.ini"
     cfg = Config(str(ini))
     cfg.set_main_option("sqlalchemy.url", url or _url())
+    cfg.set_main_option("script_location", str(api_root / "alembic"))
     command.upgrade(cfg, "head")
 
 
