@@ -46,6 +46,12 @@ _ACTION_PHRASE = {
 }
 
 
+def phrase_for(finding: RiskFinding) -> str:
+    """The human recommended-action phrase for a finding (public helper so
+    callers need not import the private phrase table)."""
+    return _ACTION_PHRASE.get(recommend_action(finding).kind, "review the finding")
+
+
 @dataclass
 class Response:
     action: Action
