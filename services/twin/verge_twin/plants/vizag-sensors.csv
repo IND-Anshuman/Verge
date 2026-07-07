@@ -1,0 +1,5 @@
+sensorId,kind,unit,zone,lon,lat,threshold,cadenceS
+LEL-04,gas-lel,%LEL,B-04,,,100,30
+CO-04,gas-co,ppm,B-04,,,50,30
+LEL-05,gas-lel,%LEL,B-05,,,100,30
+CO-CTR,gas-co,ppm,,83.228,17.690,50,30
