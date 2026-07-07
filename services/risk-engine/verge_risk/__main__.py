@@ -65,13 +65,16 @@ def main(argv: list[str] | None = None) -> int:
     posted = {"n": 0}
     permits_posted = {"n": 0}
 
-    def _post_json(url: str, payload: str) -> None:
+    def _post_json(url: str, payload: str, *, extra_headers: dict | None = None) -> None:
         import urllib.request
 
+        headers = {"Content-Type": "application/json"}
+        if extra_headers:
+            headers.update(extra_headers)
         req = urllib.request.Request(
             url,
             data=payload.encode(),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             method="POST",
         )
         urllib.request.urlopen(req, timeout=5)  # noqa: S310
@@ -109,7 +112,11 @@ def main(argv: list[str] | None = None) -> int:
         elif e.get("type") == "reading":
             body = json.dumps(e)
             try:
-                _post_json(f"{base}/api/readings/ingest", body)
+                _post_json(
+                    f"{base}/api/readings/ingest",
+                    body,
+                    extra_headers={"X-Verge-Skip-Republish": "true"},
+                )
             except Exception as exc:  # noqa: BLE001
                 print(f"reading post failed: {exc}", file=sys.stderr)
 
