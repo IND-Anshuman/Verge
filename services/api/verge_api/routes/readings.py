@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
+from verge_contracts.envelope import ContractViolation, validate_and_enrich
 
+from .. import metrics_counters
 from ..stream_notify import notify_reading
 from ..telemetry import telemetry_for_finding
 from ..timescale_writer import maybe_write_timescale, timescale_status
+from ..trace import current_trace_id
 
 router = APIRouter(tags=["readings"])
 
@@ -20,17 +23,34 @@ class ReadingIngestBody(BaseModel):
     unit: str
     zoneId: str
     value: float
+    eventId: str | None = None
+    siteId: str | None = None
 
 
 @router.post("/readings/ingest")
 def ingest_reading(body: ReadingIngestBody, request: Request) -> dict:
     """Ingest a canonical reading event (live path from risk-engine or sim)."""
+    raw = body.model_dump(exclude_none=True)
+    try:
+        payload = validate_and_enrich(raw, trace_id=current_trace_id())
+    except ContractViolation as exc:
+        metrics_counters.contract_rejections += 1
+        raise HTTPException(422, {"errors": exc.result.errors}) from exc
+
     buf = request.app.state.readings
-    payload = body.model_dump()
     buf.ingest(payload)
-    maybe_write_timescale(payload)
+    ts_result = maybe_write_timescale(payload)
+    if not ts_result.get("written") and ts_result.get("configured"):
+        metrics_counters.timescale_write_failures += 1
+    elif ts_result.get("written"):
+        metrics_counters.timescale_writes += 1
     notify_reading(request.app, payload)
-    return {"ok": True, "sensorId": body.sensorId}
+    return {
+        "ok": True,
+        "sensorId": payload["sensorId"],
+        "eventId": payload.get("eventId"),
+        "timescale": ts_result,
+    }
 
 
 @router.get("/timescale/status")

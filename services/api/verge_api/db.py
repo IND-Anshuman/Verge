@@ -5,11 +5,14 @@ code runs on SQLite (tests, no Docker) and Postgres (production). The audit
 chain's integrity is enforced in application code (verge_audit), not by the DB,
 so it holds on either backend.
 
-This owns its own tables (checkfirst=True); a real deployment would manage
-migrations with Alembic — noted as future work, not blocking Horizon 0.
+Production installs should set ``VERGE_DB_MIGRATE=true`` so Alembic owns schema
+changes instead of runtime ``create_all`` (audit §4).
 """
 
 from __future__ import annotations
+
+import os
+from pathlib import Path
 
 from sqlalchemy import (
     JSON,
@@ -92,10 +95,37 @@ sensor_reading = Table(
 )
 
 
+def _boot_strategy(url: str) -> tuple[bool, bool]:
+    """Return (use_migrate, use_create_all) for this URL and environment."""
+    env = dict(os.environ)
+    if env.get("VERGE_DB_MIGRATE", "").lower() in {"1", "true", "yes"}:
+        return True, False
+    if env.get("VERGE_DB_CREATE_ALL", "").lower() in {"0", "false", "no"}:
+        return url.startswith("postgresql"), False
+    if env.get("VERGE_DB_CREATE_ALL", "").lower() in {"1", "true", "yes"}:
+        return False, True
+    # Default: Alembic for Postgres, create_all for SQLite tests.
+    return url.startswith("postgresql"), url.startswith("sqlite")
+
+
+def _run_migrations(url: str) -> None:
+    from alembic import command
+    from alembic.config import Config
+
+    ini = Path(__file__).resolve().parents[1] / "alembic.ini"
+    cfg = Config(str(ini))
+    cfg.set_main_option("sqlalchemy.url", url)
+    command.upgrade(cfg, "head")
+
+
 def make_engine(url: str) -> Engine:
     # check_same_thread=False lets the SQLite test/dev engine be shared by the
     # API's threads (TestClient/uvicorn). No effect on Postgres.
     connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
     engine = create_engine(url, future=True, connect_args=connect_args)
-    metadata.create_all(engine, checkfirst=True)
+    use_migrate, use_create_all = _boot_strategy(url)
+    if use_migrate:
+        _run_migrations(url)
+    elif use_create_all:
+        metadata.create_all(engine, checkfirst=True)
     return engine

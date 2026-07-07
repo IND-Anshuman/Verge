@@ -2546,6 +2546,7 @@ dependencies = [
     { name = "uvicorn" },
     { name = "verge-audit" },
     { name = "verge-compliance" },
+    { name = "verge-contracts" },
     { name = "verge-llm" },
     { name = "verge-memory" },
     { name = "verge-mlops" },
@@ -2578,6 +2579,7 @@ requires-dist = [
     { name = "uvicorn", specifier = ">=0.30" },
     { name = "verge-audit", editable = "packages/audit" },
     { name = "verge-compliance", editable = "services/compliance" },
+    { name = "verge-contracts", editable = "packages/contracts" },
     { name = "verge-llm", editable = "packages/llm" },
     { name = "verge-memory", editable = "packages/memory" },
     { name = "verge-mlops", editable = "packages/mlops" },
@@ -2680,6 +2682,7 @@ name = "verge-edge-gateway"
 version = "0.3.0"
 source = { editable = "services/edge-gateway" }
 dependencies = [
+    { name = "verge-contracts" },
     { name = "verge-schema" },
 ]
 
@@ -2699,6 +2702,7 @@ requires-dist = [
     { name = "asyncua", marker = "extra == 'opcua'", specifier = ">=1.1" },
     { name = "confluent-kafka", marker = "extra == 'kafka'", specifier = ">=2.5" },
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = ">=2.1" },
+    { name = "verge-contracts", editable = "packages/contracts" },
     { name = "verge-schema", editable = "packages/schema" },
 ]
 provides-extras = ["mqtt", "opcua", "kafka"]
@@ -2782,6 +2786,7 @@ version = "0.3.0"
 source = { editable = "services/risk-engine" }
 dependencies = [
     { name = "pyyaml" },
+    { name = "verge-contracts" },
     { name = "verge-forecaster" },
     { name = "verge-permit" },
     { name = "verge-schema" },
@@ -2804,6 +2809,7 @@ requires-dist = [
     { name = "numpy", marker = "extra == 'ml'", specifier = ">=1.26" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "scikit-learn", marker = "extra == 'ml'", specifier = ">=1.5" },
+    { name = "verge-contracts", editable = "packages/contracts" },
     { name = "verge-forecaster", editable = "services/forecaster" },
     { name = "verge-permit", editable = "services/permit" },
     { name = "verge-schema", editable = "packages/schema" },

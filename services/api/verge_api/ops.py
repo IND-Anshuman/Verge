@@ -163,6 +163,19 @@ def render_prometheus(snap: dict) -> str:
     _metric(lines, "verge_signed_bundle_age_seconds", snap["signedBundle"]["ageSeconds"],
             "Age of the installed signed bundle")
 
+    from . import metrics_counters
+
+    _metric(lines, "verge_contract_rejections_total", metrics_counters.contract_rejections,
+            "Events rejected by data contracts at API boundary")
+    _metric(lines, "verge_timescale_writes_total", metrics_counters.timescale_writes,
+            "Successful Timescale telemetry writes")
+    _metric(
+        lines,
+        "verge_timescale_write_failures_total",
+        metrics_counters.timescale_write_failures,
+        "Failed Timescale telemetry writes",
+    )
+
     # Sensor-health rollup as a labelled family.
     counts = snap["sensorHealth"]["counts"]
     if counts:

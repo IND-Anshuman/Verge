@@ -1,7 +1,10 @@
-"""Optional Keycloak OIDC bearer validation (disabled by default).
+"""Optional Keycloak OIDC bearer validation (disabled by default in local dev).
 
 Set VERGE_AUTH_ENABLED=true with KEYCLOAK_URL + KEYCLOAK_REALM to require a
 valid JWT on API routes. /health stays open for compose healthchecks.
+
+Production clusters should enable auth and set KEYCLOAK_AUDIENCE (or
+KEYCLOAK_CLIENT_ID) so audience verification is enforced (audit §1).
 """
 
 from __future__ import annotations
@@ -13,7 +16,9 @@ from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
-_OPEN_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
+from .rbac import authorize
+
+_OPEN_PATHS = {"/health", "/docs", "/openapi.json", "/redoc", "/metrics"}
 
 
 def auth_enabled(env: dict[str, str] | None = None) -> bool:
@@ -31,6 +36,10 @@ def _jwks_url(env: dict[str, str]) -> str:
     return f"{_issuer(env)}/protocol/openid-connect/certs"
 
 
+def _audience(env: dict[str, str]) -> str | None:
+    return env.get("KEYCLOAK_AUDIENCE") or env.get("KEYCLOAK_CLIENT_ID")
+
+
 def decode_bearer(token: str, *, env: dict[str, str] | None = None) -> dict[str, Any]:
     env = env or dict(os.environ)
     try:
@@ -39,16 +48,18 @@ def decode_bearer(token: str, *, env: dict[str, str] | None = None) -> dict[str,
     except ImportError as exc:
         raise HTTPException(503, "auth dependencies not installed") from exc
 
+    aud = _audience(env)
     try:
         client = PyJWKClient(_jwks_url(env), cache_keys=True)
         signing_key = client.get_signing_key_from_jwt(token)
-        return jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=["RS256"],
-            issuer=_issuer(env),
-            options={"verify_aud": False},
-        )
+        kwargs: dict[str, Any] = {
+            "algorithms": ["RS256"],
+            "issuer": _issuer(env),
+            "options": {"verify_aud": bool(aud)},
+        }
+        if aud:
+            kwargs["audience"] = aud
+        return jwt.decode(token, signing_key.key, **kwargs)
     except Exception as exc:
         raise HTTPException(401, "invalid or expired token") from exc
 
@@ -69,5 +80,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         auth = request.headers.get("authorization", "")
         if not auth.lower().startswith("bearer "):
             raise HTTPException(401, "missing bearer token")
-        decode_bearer(auth[7:].strip())
+        claims = decode_bearer(auth[7:].strip())
+        request.state.auth_claims = claims
+        authorize(request.method, request.url.path, claims)
         return await call_next(request)

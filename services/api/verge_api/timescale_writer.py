@@ -1,14 +1,17 @@
 """Optional TimescaleDB sink for high-volume sensor readings (M9/M10).
 
 When TIMESCALE_DSN or VERGE_TIMESCALE_DSN is set, ingested readings are
-best-effort copied to the Timescale hypertable defined in deploy/initdb/timescale.sql.
-Failures never block the API ingest path.
+copied to the Timescale hypertable defined in deploy/initdb/timescale.sql.
+Failures never block the API ingest path but are counted for ops visibility.
 """
 
 from __future__ import annotations
 
+import logging
 import os
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 def _dsn(env: dict[str, str]) -> str | None:
@@ -71,22 +74,24 @@ def query_sensor_series(
         return {}
 
 
-def maybe_write_timescale(event: dict, *, env: dict[str, str] | None = None) -> bool:
-    """Insert one canonical reading into Timescale; return True if written."""
+def maybe_write_timescale(event: dict, *, env: dict[str, str] | None = None) -> dict:
+    """Insert one canonical reading into Timescale; return structured result."""
     env = env or dict(os.environ)
     dsn = _dsn(env)
-    if not dsn or event.get("type") != "reading":
-        return False
+    if not dsn:
+        return {"configured": False, "written": False}
+    if event.get("type") != "reading":
+        return {"configured": True, "written": False, "reason": "not-reading"}
 
     sensor_id = event.get("sensorId")
     if not sensor_id:
-        return False
+        return {"configured": True, "written": False, "reason": "missing-sensorId"}
 
     try:
         ts = datetime.fromisoformat(event["ts"])
         value = float(event["value"])
-    except (KeyError, TypeError, ValueError):
-        return False
+    except (KeyError, TypeError, ValueError) as exc:
+        return {"configured": True, "written": False, "reason": type(exc).__name__}
 
     try:
         from sqlalchemy import create_engine, text
@@ -100,6 +105,7 @@ def maybe_write_timescale(event: dict, *, env: dict[str, str] | None = None) -> 
                 ),
                 {"sensor_id": sensor_id, "ts": ts, "value": value},
             )
-        return True
-    except Exception:
-        return False
+        return {"configured": True, "written": True}
+    except Exception as exc:
+        logger.warning("timescale write failed for %s: %s", sensor_id, exc)
+        return {"configured": True, "written": False, "reason": type(exc).__name__}

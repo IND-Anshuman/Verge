@@ -39,6 +39,7 @@ from .redpanda_fanout import start_redpanda_fanout
 from .routes.alerts import router as alerts_router
 from .routes.commission import router as commission_router
 from .routes.compliance import router as compliance_router
+from .routes.contracts import router as contracts_router
 from .routes.degradation import router as degradation_router
 from .routes.eval_report import router as eval_report_router
 from .routes.evidence import router as evidence_router
@@ -84,12 +85,33 @@ async def _lifespan(app: FastAPI):
         stop.set()
 
 
+def _cors_origins() -> list[str]:
+    raw = os.environ.get("VERGE_CORS_ORIGINS", "*")
+    if raw.strip() == "*":
+        return ["*"]
+    return [part.strip() for part in raw.split(",") if part.strip()]
+
+
+def _cors_methods() -> list[str]:
+    default = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    return os.environ.get("VERGE_CORS_METHODS", default).split(",")
+
+
+def _cors_headers() -> list[str]:
+    default = "Authorization,Content-Type,X-Verge-Trace-Id"
+    return os.environ.get("VERGE_CORS_HEADERS", default).split(",")
+
+
 app = FastAPI(title="Verge API", version="0.3.0", lifespan=_lifespan)
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=_cors_origins(),
+    allow_methods=_cors_methods(),
+    allow_headers=_cors_headers(),
 )
 app.add_middleware(TraceMiddleware)
 app.add_middleware(AuthMiddleware)
+app.include_router(contracts_router, prefix="/api")
 app.include_router(fleet_router, prefix="/api")
 app.include_router(alerts_router, prefix="/api")
 app.include_router(commission_router, prefix="/api")

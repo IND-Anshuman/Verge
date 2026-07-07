@@ -10,4 +10,4 @@ def test_timescale_writer_skips_without_dsn() -> None:
         "sensorId": "LEL-04",
         "value": 91.5,
     }
-    assert maybe_write_timescale(event, env={}) is False
+    assert maybe_write_timescale(event, env={}) == {"configured": False, "written": False}

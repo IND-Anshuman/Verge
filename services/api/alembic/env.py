@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import os
 from logging.config import fileConfig
+from pathlib import Path
 
-from alembic import context
+from alembic import command, context
+from alembic.config import Config
 from sqlalchemy import engine_from_config, pool
 from verge_api.db import metadata
 
@@ -23,6 +25,14 @@ target_metadata = metadata
 
 def _url() -> str:
     return os.environ.get("VERGE_DB_URL", config.get_main_option("sqlalchemy.url", "sqlite:///verge.db"))
+
+
+def run_migrations(url: str | None = None) -> None:
+    """Apply Alembic migrations programmatically (production boot path)."""
+    ini = Path(__file__).resolve().parents[1] / "alembic.ini"
+    cfg = Config(str(ini))
+    cfg.set_main_option("sqlalchemy.url", url or _url())
+    command.upgrade(cfg, "head")
 
 
 def run_migrations_offline() -> None:
