@@ -102,6 +102,11 @@ services:
       VERGE_STORE: sql
       VERGE_DB_URL: postgresql+psycopg://${POSTGRES_USER:-verge}:${POSTGRES_PASSWORD:-verge}@postgres:5432/${POSTGRES_DB:-verge}
       REDPANDA_BROKERS: redpanda:9092
+      VERGE_EVENTS_TOPIC: verge.events
+      VERGE_STREAM_FANOUT: ${VERGE_STREAM_FANOUT:-true}
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-vergeverge}
       REDIS_URL: redis://redis:6379/0
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-verge}
