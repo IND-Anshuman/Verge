@@ -28,7 +28,15 @@ def _parse_ts(raw: str | float | int | None) -> str:
     return dt.isoformat()
 
 
-def normalize_mqtt(topic: str, payload: bytes | str) -> dict:
+def _maybe_validate(event: dict, validate: bool) -> dict:
+    if not validate:
+        return event
+    from verge_contracts.envelope import validate_and_enrich
+
+    return validate_and_enrich(event)
+
+
+def normalize_mqtt(topic: str, payload: bytes | str, *, validate: bool = True) -> dict:
     """MQTT message -> canonical event.
 
     Topic convention: verge/{reading|permit|shift}/{zone}[/{sensor}].
@@ -44,7 +52,7 @@ def normalize_mqtt(topic: str, payload: bytes | str) -> dict:
         for f in ("sensorId", "value"):
             if f not in body:
                 raise NormalizationError(f"reading missing {f}")
-        return {
+        return _maybe_validate({
             "type": "reading",
             "ts": _parse_ts(body.get("ts")),
             "sensorId": body["sensorId"],
@@ -52,20 +60,20 @@ def normalize_mqtt(topic: str, payload: bytes | str) -> dict:
             "unit": body.get("unit", ""),
             "zoneId": body.get("zoneId", parts[2]),
             "value": float(body["value"]),
-        }
+        }, validate)
     if kind in ("permit", "shift"):
-        return {"type": kind, "ts": _parse_ts(body.get("ts")), **body}
+        return _maybe_validate({"type": kind, "ts": _parse_ts(body.get("ts")), **body}, validate)
     raise NormalizationError(f"unsupported event kind: {kind!r}")
 
 
 def normalize_opcua(node_id: str, value: float, *, ts: str | float | None = None,
-                    mapping: dict[str, dict]) -> dict:
+                    mapping: dict[str, dict], validate: bool = True) -> dict:
     """OPC-UA node update -> canonical reading, using a node->sensor mapping table
     (commissioned per plant). Unmapped nodes are rejected, not guessed."""
     meta = mapping.get(node_id)
     if meta is None:
         raise NormalizationError(f"unmapped OPC-UA node: {node_id!r}")
-    return {
+    return _maybe_validate({
         "type": "reading",
         "ts": _parse_ts(ts),
         "sensorId": meta["sensorId"],
@@ -73,4 +81,4 @@ def normalize_opcua(node_id: str, value: float, *, ts: str | float | None = None
         "unit": meta.get("unit", ""),
         "zoneId": meta["zoneId"],
         "value": float(value),
-    }
+    }, validate)
