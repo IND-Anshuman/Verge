@@ -2404,22 +2404,31 @@ dependencies = [
     { name = "verge-compliance" },
     { name = "verge-connectors" },
     { name = "verge-contracts" },
+    { name = "verge-edge-gateway" },
     { name = "verge-mlops" },
     { name = "verge-risk-engine" },
     { name = "verge-schema" },
     { name = "verge-twin" },
 ]
 
+[package.optional-dependencies]
+kafka = [
+    { name = "confluent-kafka" },
+]
+
 [package.metadata]
 requires-dist = [
+    { name = "confluent-kafka", marker = "extra == 'kafka'", specifier = ">=2.5" },
     { name = "verge-compliance", editable = "services/compliance" },
     { name = "verge-connectors", editable = "services/connectors" },
     { name = "verge-contracts", editable = "packages/contracts" },
+    { name = "verge-edge-gateway", editable = "services/edge-gateway" },
     { name = "verge-mlops", editable = "packages/mlops" },
     { name = "verge-risk-engine", editable = "services/risk-engine" },
     { name = "verge-schema", editable = "packages/schema" },
     { name = "verge-twin", editable = "services/twin" },
 ]
+provides-extras = ["kafka"]
 
 [[package]]
 name = "verge-compliance"
