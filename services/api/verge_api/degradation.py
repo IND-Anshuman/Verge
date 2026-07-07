@@ -31,6 +31,9 @@ def operator_banners(
     readings,
     env: Mapping[str, str] | None = None,
     now: datetime | None = None,
+    stream_fanout_active: bool = False,
+    stream_fanout_configured: bool = False,
+    timescale: dict | None = None,
 ) -> list[dict]:
     """Return active operator banners for the console ribbon."""
     env = env if env is not None else os.environ
@@ -137,6 +140,27 @@ def operator_banners(
             "message": (
                 f"Sensor ingest stale ({stale_min}m since last reading) — "
                 "check edge gateway connectivity."
+            ),
+        })
+
+    if stream_fanout_configured and not stream_fanout_active:
+        banners.append({
+            "code": "stream-fanout-degraded",
+            "severity": "warn",
+            "message": (
+                "Live stream fan-out: Redpanda consumer unavailable — "
+                "console updates on API ingest only."
+            ),
+        })
+
+    if timescale is not None and timescale.get("configured") and timescale.get("degraded"):
+        reason = timescale.get("reason", "connection failed")
+        banners.append({
+            "code": "timescale-degraded",
+            "severity": "warn",
+            "message": (
+                f"Timescale telemetry: degraded ({reason}) — "
+                "using in-memory ring buffer only."
             ),
         })
 
