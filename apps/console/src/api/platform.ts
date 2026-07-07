@@ -24,6 +24,7 @@ export interface OpsStatus {
   backup: { lastTs: string | null; ageSeconds: number | null };
   signedBundle: { builtTs: string | null; ageSeconds: number | null };
   lastReplayRun: { ts: string | null; ageSeconds: number | null };
+  timescale?: { configured: boolean; degraded: boolean; readings?: number; reason?: string };
 }
 
 export interface ComplianceGap {

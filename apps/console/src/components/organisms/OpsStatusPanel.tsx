@@ -60,6 +60,15 @@ export function OpsStatusPanel() {
             </span>{' '}
             ({status.vision.backend})
           </div>
+          {status.timescale?.configured && (
+            <div>
+              Timescale:{' '}
+              <span className={status.timescale.degraded ? 'text-near' : 'text-ok'}>
+                {status.timescale.degraded ? 'degraded' : 'ok'}
+              </span>{' '}
+              ({status.timescale.readings ?? 0} rows)
+            </div>
+          )}
           <p className="text-micro pt-1">
             Prometheus scrape: <code className="text-ink">GET /metrics</code>
           </p>
