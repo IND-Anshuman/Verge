@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 import httpx
+from verge_llm import Completion
 from verge_memory.client import CogneeClient, CogneeSettings
 from verge_memory.datasets import dataset_name
 from verge_memory.ingest import ingest_feedback
@@ -9,6 +10,57 @@ from verge_memory.retrieve import context_for_finding
 from verge_memory.status import dataset_health
 from verge_schema.enums import EstimateQuality, FindingState, LeadTimeBand
 from verge_schema.findings import ContributingSignal, RiskFinding
+
+
+class _FakeLLM:
+    def __init__(self, answer: str = "", degraded: bool = False) -> None:
+        self.name = "fake"
+        self.answer = answer
+        self.degraded = degraded
+        self.calls: list = []
+
+    def complete(self, messages, *, model=None, max_tokens=512, temperature=0.2):
+        self.calls.append(messages)
+        return Completion(text=self.answer, model=model or "fake", degraded=self.degraded)
+
+    def healthy(self) -> bool:
+        return True
+
+
+def _mocked_cognee_client(env_site: str) -> tuple[CogneeClient, dict, list]:
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        if request.url.path == "/api/v1/search":
+            return httpx.Response(
+                200,
+                json=[
+                    {
+                        "title": "Hot work control",
+                        "source": "oisd-stub",
+                        "text": "Pause hot work when gas readings rise near the zone.",
+                    }
+                ],
+            )
+        return httpx.Response(200, json={"ok": True})
+
+    http = httpx.Client(
+        base_url="https://tenant.aws.cognee.ai",
+        headers={"X-Api-Key": "key"},
+        transport=httpx.MockTransport(handler),
+    )
+    client = CogneeClient(
+        CogneeSettings(enabled=True, base_url="https://tenant.aws.cognee.ai", api_key="key"),
+        client=http,
+    )
+    env = {
+        "VERGE_COGNEE_ENABLED": "true",
+        "COGNEE_BASE_URL": "https://tenant.aws.cognee.ai",
+        "COGNEE_API_KEY": "key",
+        "VERGE_SITE_ID": env_site,
+    }
+    return client, env, calls
 
 
 def _finding() -> RiskFinding:
@@ -158,6 +210,42 @@ def test_query_memory_with_mocked_cognee() -> None:
         }
     ]
     assert calls.count("/api/v1/search") == 1
+
+
+def test_query_memory_synthesizes_a_grounded_answer_when_llm_reachable() -> None:
+    client, env, _calls = _mocked_cognee_client("synth-test")
+    llm = _FakeLLM(answer="Per [1], pause hot work as gas readings climb.")
+
+    body = query_memory(
+        "what should Maya check?", finding=_finding(), client=client, env=env, provider=llm,
+    )
+    assert body["degraded"] is False
+    assert body["narrativeDegraded"] is False
+    assert body["answer"] == "Per [1], pause hot work as gas readings climb."
+    # Citations are unchanged -- synthesis adds a narrative, never replaces lineage.
+    assert body["citations"][0]["excerpt"] == "Pause hot work when gas readings rise near the zone."
+    # The LLM only ever sees the retrieved excerpts, never asked to invent facts.
+    assert len(llm.calls) == 1
+    assert "Pause hot work" in llm.calls[0][1].content
+
+
+def test_query_memory_falls_back_to_raw_snippet_when_llm_degraded() -> None:
+    client, env, _calls = _mocked_cognee_client("synth-degraded-test")
+    llm = _FakeLLM(answer="ignored", degraded=True)
+
+    body = query_memory(
+        "what should Maya check?", finding=_finding(), client=client, env=env, provider=llm,
+    )
+    assert body["degraded"] is False
+    assert body["narrativeDegraded"] is True
+    assert body["answer"] == "Pause hot work when gas readings rise near the zone."
+
+
+def test_query_memory_without_provider_uses_raw_snippet_directly() -> None:
+    client, env, _calls = _mocked_cognee_client("no-provider-test")
+    body = query_memory("what should Maya check?", finding=_finding(), client=client, env=env)
+    assert body["narrativeDegraded"] is True
+    assert body["answer"] == "Pause hot work when gas readings rise near the zone."
 
 
 def test_client_retries_transient_failure() -> None:

@@ -5,11 +5,18 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from verge_llm import LLMProvider, Message
 from verge_schema.findings import RiskFinding
 
 from .client import CogneeClient
 from .datasets import dataset_name
 from .retrieve import _result_items, _text_from_result, ensure_seeded
+
+_SYNTHESIS_SYSTEM_PROMPT = (
+    "You answer a question using ONLY the numbered excerpts provided. Write "
+    "1-3 sentences and cite excerpts inline like [1], [2]. If the excerpts do "
+    "not contain enough to answer, say so plainly instead of guessing."
+)
 
 
 def _empty(*, degraded: bool, reason: str | None = None) -> dict:
@@ -44,11 +51,32 @@ def _answer_from_items(items: list[Any]) -> str:
     return "\n\n".join(part for part in parts if part)
 
 
+def _synthesize_answer(
+    provider: LLMProvider | None, query: str, citations: list[dict]
+) -> tuple[str, bool]:
+    """A real grounded answer over the retrieved citations when an LLM is
+    reachable (same "use only the provided facts" pattern as
+    ``orchestrator/report.py``); the caller's raw-snippet answer is the
+    fallback, never a crash or a fabricated claim (P1/P4)."""
+    if provider is None or not citations:
+        return "", True
+    excerpts = "\n".join(f"[{c['id']}] {c['title']}: {c['excerpt']}" for c in citations)
+    messages = [
+        Message(role="system", content=_SYNTHESIS_SYSTEM_PROMPT),
+        Message(role="user", content=f"Question: {query}\n\nExcerpts:\n{excerpts}"),
+    ]
+    completion = provider.complete(messages, max_tokens=220)
+    if completion.degraded or not completion.text.strip():
+        return "", True
+    return completion.text.strip(), False
+
+
 def query_memory(
     query: str,
     *,
     finding: RiskFinding | None = None,
     client: CogneeClient | None = None,
+    provider: LLMProvider | None = None,
     env: dict[str, str] | None = None,
 ) -> dict:
     env = env or dict(os.environ)
@@ -76,8 +104,15 @@ def query_memory(
         return _empty(degraded=True, reason=result.reason)
 
     items = _result_items(result)
+    citations = [_citation_from_item(item, i) for i, item in enumerate(items[:5], start=1)]
+
+    answer, narrative_degraded = _synthesize_answer(provider, cleaned, citations)
+    if narrative_degraded:
+        answer = _answer_from_items(items)  # raw-snippet fallback -- always available
+
     return {
-        "answer": _answer_from_items(items),
-        "citations": [_citation_from_item(item, i) for i, item in enumerate(items[:5], start=1)],
+        "answer": answer,
+        "citations": citations,
         "degraded": False,
+        "narrativeDegraded": narrative_degraded,
     }

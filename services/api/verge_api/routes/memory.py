@@ -36,7 +36,7 @@ def memory_query(body: MemoryQueryBody, request: Request) -> dict:
         finding = request.app.state.store.get_finding(body.findingId)
         if finding is None:
             raise HTTPException(404, "finding not found")
-    return query_memory(body.query, finding=finding)
+    return query_memory(body.query, finding=finding, provider=request.app.state.llm)
 
 
 @router.get("/memory/status")
