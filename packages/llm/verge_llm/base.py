@@ -20,7 +20,12 @@ from typing import Protocol, runtime_checkable
 @dataclass(frozen=True)
 class Message:
     role: str  # system | user | assistant
-    content: str
+    # str for text-only messages (every existing call site). A vision-capable
+    # caller (e.g. the PPE crop classifier in verge_vision) may pass the
+    # OpenAI-style multimodal content-parts list instead --
+    # ``[{"type": "text", ...}, {"type": "image_url", "image_url": {...}}]``
+    # -- which OpenAICompatProvider forwards to the API verbatim either way.
+    content: str | list[dict]
 
 
 @dataclass(frozen=True)

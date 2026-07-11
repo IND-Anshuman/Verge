@@ -3,12 +3,11 @@ name = "verge-vision"
 version = "0.3.0"
 description = "PPE/person/zone-intrusion CV detector plane; degraded-by-default (spec §5)."
 requires-python = ">=3.11"
-dependencies = ["verge-schema"]
-
-[project.optional-dependencies]
-# The production on-prem backend (plant GPU box). Absent on the dev/CI host,
-# where the plane degrades to the stub instead of raising.
-gpu = ["ultralytics>=8.2"]
+# ultralytics runs real CPU inference fine for periodic-sample industrial CCTV
+# use -- it was never actually GPU-only, so it is a normal dependency, not an
+# optional "gpu" extra. Pillow backs the PPE crop step (also an ultralytics
+# transitive dep, declared explicitly since verge_vision imports it directly).
+dependencies = ["verge-schema", "verge-llm", "ultralytics>=8.2", "pillow>=10.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -19,6 +18,8 @@ packages = ["verge_vision"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "verge_vision/samples/vizag-ppe.json" = "verge_vision/samples/vizag-ppe.json"
+"verge_vision/samples/vizag-cameras.json" = "verge_vision/samples/vizag-cameras.json"
 
 [tool.uv.sources]
 verge-schema = { workspace = true }
+verge-llm = { workspace = true }
