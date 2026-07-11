@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import httpx
+from verge_llm import LLMProvider, Message
 
 
 @dataclass(frozen=True)
@@ -142,11 +143,78 @@ def structure_handover(transcript: str) -> dict[str, Any]:
     return {"summary": summary, "hazards": hazards, "zones": zones, "actions": actions}
 
 
+_EXTRACTION_SYSTEM_PROMPT = (
+    "Extract structured facts from an industrial shift-handover or near-miss "
+    "transcript. Reply with exactly four labeled lines, nothing else:\n"
+    "summary: <one sentence>\n"
+    "hazards: <comma-separated, from: gas, hot-work, confined-space, "
+    "sensor-health, or none>\n"
+    "zones: <comma-separated zone ids mentioned, or none>\n"
+    "actions: <comma-separated, from: pause, evacuate, inspect, escalate, "
+    "close permit, or none>\n"
+    "Use only what the transcript actually says. Never invent a zone, hazard, "
+    "or action that isn't there."
+)
+
+
+def _parse_extraction_lines(text: str) -> dict[str, Any] | None:
+    """Parse the labeled-line format above; None if it doesn't look right."""
+    fields: dict[str, str] = {}
+    for raw in text.splitlines():
+        if ":" not in raw:
+            continue
+        key, _, value = raw.partition(":")
+        key = key.strip().lower()
+        if key in {"summary", "hazards", "zones", "actions"}:
+            fields[key] = value.strip()
+    if "summary" not in fields:
+        return None
+
+    def _csv(key: str) -> list[str]:
+        raw = fields.get(key, "")
+        if not raw or raw.lower() == "none":
+            return []
+        return [item.strip() for item in raw.split(",") if item.strip()]
+
+    return {
+        "summary": fields["summary"],
+        "hazards": _csv("hazards"),
+        "zones": _csv("zones"),
+        "actions": _csv("actions"),
+    }
+
+
+def enrich_structured_with_llm(
+    transcript: str, baseline: dict[str, Any], *, provider: LLMProvider | None
+) -> dict[str, Any]:
+    """Layer an LLM extraction pass on top of the deterministic regex
+    ``baseline`` -- never a replacement. Any failure (no provider, degraded,
+    or an answer that doesn't parse) returns ``baseline`` unchanged, tagged
+    ``source: "regex"``; a well-formed LLM answer is tagged ``source: "llm"``
+    so callers can see which path produced it (P3/P4 — the regex path is the
+    permanent safety net, never silently dropped)."""
+    tagged_baseline = {**baseline, "source": "regex"}
+    if provider is None or not transcript.strip():
+        return tagged_baseline
+    messages = [
+        Message(role="system", content=_EXTRACTION_SYSTEM_PROMPT),
+        Message(role="user", content=transcript),
+    ]
+    completion = provider.complete(messages, max_tokens=200)
+    if completion.degraded or not completion.text.strip():
+        return tagged_baseline
+    parsed = _parse_extraction_lines(completion.text)
+    if parsed is None:
+        return tagged_baseline
+    return {**parsed, "source": "llm"}
+
+
 def transcribe_audio(
     audio: bytes,
     *,
     filename: str = "handover.wav",
     content_type: str = "application/octet-stream",
+    provider: LLMProvider | None = None,
     env: dict[str, str] | None = None,
     client: httpx.Client | None = None,
     settings: SpeechmaticsSettings | None = None,
@@ -194,9 +262,12 @@ def transcribe_audio(
                 transcript = http.get(f"/jobs/{job_id}/transcript", params={"format": "json-v2"})
                 transcript.raise_for_status()
                 text = _transcript_text(transcript.json())
+                structured = enrich_structured_with_llm(
+                    text, structure_handover(text), provider=provider
+                )
                 return VoiceResult(
                     transcript=text,
-                    structured=structure_handover(text),
+                    structured=structured,
                     degraded=False,
                     job_id=job_id,
                 )

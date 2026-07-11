@@ -7,6 +7,8 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from verge_voice import alert_preview, near_miss_from_audio, transcribe_audio
 
+from ..hooks import maybe_ingest_near_miss
+
 router = APIRouter(tags=["voice"])
 VOICE_FILE = File(...)
 ACTOR_FORM = Form("operator")
@@ -14,12 +16,13 @@ FINDING_FORM = Form(None)
 
 
 @router.post("/voice/transcribe")
-async def voice_transcribe(file: UploadFile = VOICE_FILE) -> dict:
+async def voice_transcribe(request: Request, file: UploadFile = VOICE_FILE) -> dict:
     audio = await file.read()
     result = transcribe_audio(
         audio,
         filename=file.filename or "handover.wav",
         content_type=file.content_type or "application/octet-stream",
+        provider=request.app.state.llm,
     )
     return result.to_dict()
 
@@ -35,6 +38,7 @@ async def voice_handover(
         audio,
         filename=file.filename or "handover.wav",
         content_type=file.content_type or "application/octet-stream",
+        provider=request.app.state.llm,
     )
     payload = {
         "kind": "voice-handover",
@@ -97,12 +101,18 @@ async def voice_near_miss(
         filename=file.filename or "near-miss.wav",
         content_type=file.content_type or "application/octet-stream",
         finding_id=findingId,
+        provider=request.app.state.llm,
     )
     request.app.state.store.audit_append(
         actor=actor,
         kind="voice-near-miss",
         payload=dict(body),
         timestamp=datetime.now(UTC),
+    )
+    maybe_ingest_near_miss(
+        body.get("transcript", ""),
+        structured=body.get("structured") or {},
+        finding_id=findingId,
     )
     body["auditAppended"] = True
     return body

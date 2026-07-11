@@ -5,7 +5,7 @@ client = TestClient(app)
 
 
 def test_memory_voice_full_http_path(monkeypatch) -> None:
-    def fake_query(query, *, finding=None):
+    def fake_query(query, *, finding=None, provider=None):
         return {
             "answer": f"answer for {query}",
             "citations": [{"id": "stub", "title": "Stub", "excerpt": "mocked Cognee"}],
@@ -13,7 +13,7 @@ def test_memory_voice_full_http_path(monkeypatch) -> None:
             "finding": finding.finding_id if finding else None,
         }
 
-    def fake_near_miss(audio, *, filename, content_type, finding_id=None):
+    def fake_near_miss(audio, *, filename, content_type, finding_id=None, provider=None):
         return {
             "kind": "voice-near-miss",
             "findingId": finding_id,
