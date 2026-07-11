@@ -2618,6 +2618,8 @@ name = "verge-cli"
 version = "0.3.0"
 source = { editable = "cli" }
 dependencies = [
+    { name = "httpx" },
+    { name = "opencv-python" },
     { name = "verge-compliance" },
     { name = "verge-connectors" },
     { name = "verge-contracts" },
@@ -2637,6 +2639,8 @@ kafka = [
 [package.metadata]
 requires-dist = [
     { name = "confluent-kafka", marker = "extra == 'kafka'", specifier = ">=2.5" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "opencv-python", specifier = ">=4.9" },
     { name = "verge-compliance", editable = "services/compliance" },
     { name = "verge-connectors", editable = "services/connectors" },
     { name = "verge-contracts", editable = "packages/contracts" },
@@ -2749,12 +2753,14 @@ version = "0.3.0"
 source = { editable = "packages/memory" }
 dependencies = [
     { name = "httpx" },
+    { name = "verge-llm" },
     { name = "verge-schema" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
+    { name = "verge-llm", editable = "packages/llm" },
     { name = "verge-schema", editable = "packages/schema" },
 ]
 
@@ -2897,20 +2903,19 @@ name = "verge-vision"
 version = "0.3.0"
 source = { editable = "services/vision" }
 dependencies = [
-    { name = "verge-schema" },
-]
-
-[package.optional-dependencies]
-gpu = [
+    { name = "pillow" },
     { name = "ultralytics" },
+    { name = "verge-llm" },
+    { name = "verge-schema" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "ultralytics", marker = "extra == 'gpu'", specifier = ">=8.2" },
+    { name = "pillow", specifier = ">=10.0" },
+    { name = "ultralytics", specifier = ">=8.2" },
+    { name = "verge-llm", editable = "packages/llm" },
     { name = "verge-schema", editable = "packages/schema" },
 ]
-provides-extras = ["gpu"]
 
 [[package]]
 name = "verge-voice"
