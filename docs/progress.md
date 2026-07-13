@@ -771,3 +771,62 @@ accordingly (verify before acting on it).
   aggregate FNR table.
 - Manual end-to-end: `verge vision watch` against a live API with a real
   video produced real YOLOv8n detections (see above).
+
+## 2026-07-13 - W1-W4: problem-statement gap closure (agent)
+
+Architecture re-audit against ET PS#1 found four judge-visible gaps; all four
+built, tested, and smoke-verified live this session. 453 tests green, ruff
+clean, console tsc + build green.
+
+### W1 · Worker location plane (omlox-aligned)
+
+- `worker-location` canonical event contract (omlox zone-presence vocabulary;
+  precise x/y stays in the RTLS hub — Verge consumes zone-level presence).
+- `verge_twin.occupancy.OccupancyTracker`: latest-fix-wins with out-of-order
+  rejection, staleness flagged never dropped, per-zone rosters, exposure math
+  (a stale tag inside a risk zone counts as *bigger* concern).
+- Deterministic worker crews in `verge_sims` scenarios; edge forward path;
+  `POST /api/workers/ingest`, `GET /api/workers`,
+  `GET /api/findings/{id}/exposure` (zone + adjacent headcount).
+- Console: map worker layer (zone count chips + stale flags), personnel
+  exposure block in the finding detail modal.
+
+### W2 · Emergency mode (spec §4.4 — the confirmed-trigger choreography)
+
+- Muster points in the plant model; `verge_twin.muster.evacuation_plan`:
+  BFS on zone adjacency avoiding affected zones, honest `trapped` flags
+  (never routes through gas — fuzz of the linear demo plant proves it).
+- `EmergencyManager`: P8 approver gate (refused attempts audited), evidence
+  freeze FIRST (telemetry + roster snapshot, sha256 over canonical JSON),
+  muster roll-call (expected vs accounted, missing with last-known zone),
+  stand-down. Declare/check-in/stand-down all hash-chained.
+- Console: EmergencyPanel (declare → live muster board → stand down).
+
+### W3 · Agentic investigation layer (`packages/agents`)
+
+- Tool-calling added to the LLMProvider contract (OpenAI wire shape — works
+  verbatim on aimlapi/Ollama/vLLM). Hand-rolled deterministic tool loop, no
+  LangChain (P2 sovereignty).
+- Investigator agent: read-only tools over live app state (telemetry, permits,
+  zone context, equipment-permit-risk graph, Cognee memory, OISD clauses) →
+  cited JSON brief. Degrades to a deterministic fact sheet that still runs
+  every tool (P4: facts only, no fabricated synthesis).
+- `POST /api/findings/{id}/investigate`, audit-chained; console brief with
+  evidence trail. `VERGE_LLM_AGENT_MODEL` env.
+
+### W4 · CAPA corrective actions (ISO 45001 clause 10.2)
+
+- State machine open → in-progress → pending-verification →
+  closed-effective | reopened; closing REQUIRES a verification note;
+  reopened recovers through in-progress. Hierarchy-of-controls suggestions.
+- Idempotent generation from compliance gaps (one live action per clause);
+  `GET/POST /api/compliance/actions*`; every transition audit-chained.
+- Console: CAPA board inside the compliance panel drill-down.
+
+### Also
+
+- Lineage tab honesty fix: fake `Math.random()` ref-ids and wall-clock
+  timestamps replaced with real ContributingSignal ts/summary.
+- Live smoke: ingest → exposure → declare (freeze hash, route B-04→B-05 ⇒
+  MP-EAST) → check-in (missing worker with last-known zone) → investigate
+  (6 tools) → CAPA generate (2 actions for the 2 honest gaps) → stand-down.
