@@ -40,8 +40,25 @@ export interface ComplianceGaps {
   gaps: ComplianceGap[];
 }
 
-export interface ComplianceReport extends ComplianceGaps {
+export interface ComplianceClause {
+  clauseId: string;
+  oisdRef: string;
+  standard: string;
+  title: string;
+  requirement: string;
+  capability: string;
+  isPlatform: boolean;
+  status: 'satisfied' | 'gap';
+  reason: string;
+}
+
+export interface ComplianceReport {
+  plant: string;
   coverageRatio: number;
+  satisfied: number;
+  gaps: number;
+  total: number;
+  clauses: ComplianceClause[];
   evidencePack?: Record<string, unknown>;
 }
 
