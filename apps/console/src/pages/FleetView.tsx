@@ -144,18 +144,18 @@ export default function FleetView() {
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                  <CartesianGrid stroke="#2a323d" strokeDasharray="3 3" />
-                  <XAxis dataKey="name" stroke="#8b949e" tickLine={false} />
-                  <YAxis stroke="#8b949e" tickLine={false} />
+                  <CartesianGrid stroke="#262E39" strokeDasharray="3 3" />
+                  <XAxis dataKey="name" stroke="#8C96A3" tickLine={false} />
+                  <YAxis stroke="#8C96A3" tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#161b22',
-                      borderColor: '#2a323d',
-                      color: '#e6edf3',
+                      backgroundColor: '#12161D',
+                      borderColor: '#262E39',
+                      color: '#E8EDF4',
                     }}
                   />
-                  <Bar dataKey="TRIR" fill="#e8a33d" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="Active Alarms" fill="#f06363" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="TRIR" fill="#F0A83E" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="Active Alarms" fill="#FF5C5C" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

@@ -103,14 +103,14 @@ export function AlertFatigueMetrics() {
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                  <CartesianGrid stroke="#2a323d" strokeDasharray="3 3" />
-                  <XAxis dataKey="date" stroke="#8b949e" tickLine={false} />
-                  <YAxis stroke="#8b949e" tickLine={false} />
+                  <CartesianGrid stroke="#262E39" strokeDasharray="3 3" />
+                  <XAxis dataKey="date" stroke="#8C96A3" tickLine={false} />
+                  <YAxis stroke="#8C96A3" tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#161b22',
-                      borderColor: '#2a323d',
-                      color: '#e6edf3',
+                      backgroundColor: '#12161D',
+                      borderColor: '#262E39',
+                      color: '#E8EDF4',
                       borderRadius: '4px',
                     }}
                   />
@@ -118,7 +118,7 @@ export function AlertFatigueMetrics() {
                     name="False Alarms"
                     type="monotone"
                     dataKey="falseAlarms"
-                    stroke="#f06363"
+                    stroke="#FF5C5C"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
@@ -126,7 +126,7 @@ export function AlertFatigueMetrics() {
                     name="Useful Alerts"
                     type="monotone"
                     dataKey="useful"
-                    stroke="#4ec98a"
+                    stroke="#43C989"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />

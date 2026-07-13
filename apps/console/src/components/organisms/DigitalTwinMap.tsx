@@ -31,7 +31,7 @@ const DEFAULT_CENTER: [number, number] = [83.228, 17.69];
 const LOCAL_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {},
-  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0e1116' } }],
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0B0E13' } }],
 };
 
 export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
@@ -170,7 +170,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
             'rgba(79, 163, 199, 0.15)',
             'rgba(42, 50, 61, 0.25)',
           ],
-          'fill-outline-color': '#2a323d',
+          'fill-outline-color': '#262E39',
         },
       });
 
@@ -183,12 +183,12 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
             'match',
             ['get', 'alertState'],
             'imminent',
-            '#f06363',
+            '#FF5C5C',
             'near',
-            '#e8a33d',
+            '#F0A83E',
             'watch',
-            '#4fa3c7',
-            '#2a323d',
+            '#4FA3C7',
+            '#262E39',
           ],
           'line-width': 1.5,
         },
@@ -204,7 +204,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
         source: 'exclusion-plume',
         paint: {
           'fill-color': 'rgba(240, 99, 99, 0.35)',
-          'fill-outline-color': '#f06363',
+          'fill-outline-color': '#FF5C5C',
         },
       });
       map.addLayer({
@@ -212,7 +212,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
         type: 'line',
         source: 'exclusion-plume',
         paint: {
-          'line-color': '#f06363',
+          'line-color': '#FF5C5C',
           'line-width': 2,
           'line-dasharray': [2, 1],
         },
@@ -320,6 +320,26 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
             </span>
           )}
         </Card>
+
+        {/* Band legend — same scale the LeadTimeGauge tape uses */}
+        <Card className="p-2.5 bg-panel/90 border-line shadow-none flex flex-col gap-1.5 w-48">
+          <span className="text-micro font-mono font-bold text-ink-dim uppercase tracking-wider border-b border-line pb-1.5">
+            Lead-time bands
+          </span>
+          <div className="flex flex-col gap-1 font-mono text-micro">
+            {[
+              { label: 'IMMINENT · T−<15 MIN', color: 'var(--imminent)' },
+              { label: 'NEAR · T−15–45 MIN', color: 'var(--near)' },
+              { label: 'WATCH · T−45+ MIN', color: 'var(--watch)' },
+              { label: 'NO ACTIVE FINDING', color: 'var(--line)' },
+            ].map((b) => (
+              <span key={b.label} className="flex items-center gap-1.5 text-ink-dim">
+                <span className="h-2 w-3.5 rounded-sm shrink-0" style={{ backgroundColor: b.color, opacity: 0.75 }} />
+                {b.label}
+              </span>
+            ))}
+          </div>
+        </Card>
       </div>
 
       {selectedSensor && (
@@ -360,7 +380,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
                 style={{
                   left: pos.x,
                   top: pos.y,
-                  backgroundColor: '#4ec98a',
+                  backgroundColor: '#43C989',
                 }}
                 title={`${sensor.id}: ${sensor.value}`}
               />
@@ -374,17 +394,19 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
           {findings.map((finding) => {
             const pos = markerPositions[finding.findingId];
             if (!pos) return null;
-            const color = finding.leadTimeBand === 'IMMINENT' ? '#f06363' : '#e8a33d';
+            const color = finding.leadTimeBand === 'IMMINENT' ? '#FF5C5C' : '#F0A83E';
             return (
               <div
                 key={finding.findingId}
                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1"
                 style={{ left: pos.x, top: pos.y }}
               >
-                <div
-                  className="h-6 w-6 rounded-full flex items-center justify-center animate-ping absolute opacity-30"
-                  style={{ backgroundColor: color }}
-                />
+                {finding.leadTimeBand === 'IMMINENT' && (
+                  <div
+                    className="h-6 w-6 rounded-full flex items-center justify-center animate-ping absolute opacity-30"
+                    style={{ backgroundColor: color }}
+                  />
+                )}
                 <div
                   className="h-4 w-4 rounded-full border border-bg flex items-center justify-center relative shadow-sm"
                   style={{ backgroundColor: color }}
