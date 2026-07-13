@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { RiskFinding } from '@/types';
-import { Modal, Button, Badge } from '@/components/atoms';
+import { Modal, Button } from '@/components/atoms';
 import { transitionFinding } from '@/api';
 import { TemporalConvergenceChart } from './TemporalConvergenceChart';
+import { LeadTimeGauge } from '@/components/molecules/LeadTimeGauge';
 import { ExportEvidenceButton } from '@/components/molecules/ExportEvidenceButton';
 import { ExportIncidentReportButton } from '@/components/molecules/ExportIncidentReportButton';
 import { FindingAuditTab } from '@/components/molecules/FindingAuditTab';
@@ -49,10 +50,8 @@ export function FindingDetailModal({ finding, isOpen, onClose, onSuccess }: Find
         {/* Left column: Summary Stats Card */}
         <div className="w-full md:w-60 flex flex-col gap-3 border-r border-line pr-4 select-none">
           <div className="flex flex-col gap-1">
-            <span className="text-micro font-mono text-ink-dim uppercase">Urgency</span>
-            <Badge variant="band" band={finding.leadTimeBand} className="justify-center py-1">
-              {finding.leadTimeBand}
-            </Badge>
+            <span className="text-micro font-mono text-ink-dim uppercase">Lead time to breach</span>
+            <LeadTimeGauge band={finding.leadTimeBand} basis={finding.leadTimeBasis} size="md" />
           </div>
 
           <div className="flex flex-col gap-1 font-mono text-xs">

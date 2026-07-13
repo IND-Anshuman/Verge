@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { RiskFinding, FeedbackVerdict } from '@/types';
 import { transitionFinding } from '@/api';
 import { Badge, Button, Card } from '@/components/atoms';
+import { LeadTimeGauge } from '@/components/molecules/LeadTimeGauge';
 import {
   AlertTriangle,
   User,
@@ -89,20 +90,20 @@ export function FindingCard({
       {/* Card Header metadata */}
       <header className="flex items-center justify-between gap-2 text-xs font-mono select-none">
         <div className="flex items-center gap-1.5">
-          <Badge variant="band" band={finding.leadTimeBand}>
-            {finding.leadTimeBand}
-          </Badge>
+          <span className="text-ink font-semibold">{finding.zoneId}</span>
           {finding.shadow && (
             <Badge variant="generic" color="near" className="text-micro font-bold border-dashed">
               SHADOW
             </Badge>
           )}
-          <span className="text-ink font-semibold">{finding.zoneId}</span>
         </div>
         <div className="flex items-center gap-1.5 text-ink-dim">
           <span className="tabular-nums">CONF: {(finding.confidence * 100).toFixed(0)}%</span>
         </div>
       </header>
+
+      {/* Signature lead-time tape (replaces the band badge) */}
+      <LeadTimeGauge band={finding.leadTimeBand} basis={finding.leadTimeBasis} size="sm" />
 
       {/* Card Title */}
       <div>
