@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
-from .base import Completion, Message
+import json
+
+from .base import Completion, Message, ToolCall
 
 
 class NullProvider:
@@ -30,6 +32,22 @@ class NullProvider:
         last = messages[-1].content if messages else ""
         return Completion(
             text=f"[null-provider] narrative unavailable; echo: {last[:160]}",
+            model=model or "null",
+            degraded=True,
+            reason="null provider (no LLM configured)",
+        )
+
+    def chat(
+        self,
+        messages: list[Message],
+        *,
+        tools: list[dict] | None = None,
+        model: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.2,
+    ) -> Completion:
+        return Completion(
+            text="",
             model=model or "null",
             degraded=True,
             reason="null provider (no LLM configured)",
@@ -70,6 +88,18 @@ class OpenAICompatProvider:
             headers["Authorization"] = f"Bearer {self._api_key}"
         return httpx.Client(base_url=self._base_url, headers=headers, timeout=self._timeout_s)
 
+    @staticmethod
+    def _wire_messages(messages: list[Message]) -> list[dict]:
+        wire: list[dict] = []
+        for m in messages:
+            d: dict = {"role": m.role, "content": m.content}
+            if m.tool_call_id is not None:
+                d["tool_call_id"] = m.tool_call_id
+            if m.tool_calls is not None:
+                d["tool_calls"] = list(m.tool_calls)
+            wire.append(d)
+        return wire
+
     def complete(
         self,
         messages: list[Message],
@@ -81,7 +111,7 @@ class OpenAICompatProvider:
         mdl = model or self._default_model
         body = {
             "model": mdl,
-            "messages": [{"role": m.role, "content": m.content} for m in messages],
+            "messages": self._wire_messages(messages),
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
@@ -93,6 +123,64 @@ class OpenAICompatProvider:
             text = data["choices"][0]["message"]["content"]
             return Completion(text=text, model=mdl, usage=data.get("usage", {}))
         except Exception as exc:  # degrade, never raise into the safety path (P1)
+            return Completion(
+                text="",
+                model=mdl,
+                degraded=True,
+                reason=f"{self.name} unreachable: {type(exc).__name__}",
+            )
+
+    def chat(
+        self,
+        messages: list[Message],
+        *,
+        tools: list[dict] | None = None,
+        model: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.2,
+    ) -> Completion:
+        """Chat-completions with optional OpenAI-style function calling.
+
+        aimlapi, Ollama, and vLLM all speak this wire shape; the arguments
+        JSON string is parsed here so callers get dicts (a malformed blob
+        becomes an empty dict + the raw string under ``_raw`` — degrading a
+        single call, never crashing the loop).
+        """
+        mdl = model or self._default_model
+        body: dict = {
+            "model": mdl,
+            "messages": self._wire_messages(messages),
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }
+        if tools:
+            body["tools"] = tools
+            body["tool_choice"] = "auto"
+        try:
+            with self._client() as client:
+                resp = client.post("/chat/completions", json=body)
+                resp.raise_for_status()
+                data = resp.json()
+            msg = data["choices"][0]["message"]
+            calls: list[ToolCall] = []
+            for tc in msg.get("tool_calls") or []:
+                fn = tc.get("function", {})
+                try:
+                    args = json.loads(fn.get("arguments") or "{}")
+                    if not isinstance(args, dict):
+                        args = {"_raw": fn.get("arguments")}
+                except (ValueError, TypeError):
+                    args = {"_raw": fn.get("arguments")}
+                calls.append(
+                    ToolCall(id=tc.get("id", ""), name=fn.get("name", ""), arguments=args, raw=tc)
+                )
+            return Completion(
+                text=msg.get("content") or "",
+                model=mdl,
+                usage=data.get("usage", {}),
+                tool_calls=tuple(calls),
+            )
+        except Exception as exc:  # degrade, never raise (P1)
             return Completion(
                 text="",
                 model=mdl,

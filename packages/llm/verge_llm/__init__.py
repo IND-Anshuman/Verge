@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-from .base import Completion, LLMProvider, Message
+from .base import Completion, LLMProvider, Message, ToolCall
 from .providers import NullProvider, OpenAICompatProvider
 
 __all__ = [
@@ -13,6 +13,7 @@ __all__ = [
     "Message",
     "NullProvider",
     "OpenAICompatProvider",
+    "ToolCall",
     "provider_from_env",
 ]
 __version__ = "0.3.0"

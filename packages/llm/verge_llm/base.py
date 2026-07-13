@@ -19,13 +19,28 @@ from typing import Protocol, runtime_checkable
 
 @dataclass(frozen=True)
 class Message:
-    role: str  # system | user | assistant
+    role: str  # system | user | assistant | tool
     # str for text-only messages (every existing call site). A vision-capable
     # caller (e.g. the PPE crop classifier in verge_vision) may pass the
     # OpenAI-style multimodal content-parts list instead --
     # ``[{"type": "text", ...}, {"type": "image_url", "image_url": {...}}]``
     # -- which OpenAICompatProvider forwards to the API verbatim either way.
     content: str | list[dict]
+    # Tool-calling plumbing (OpenAI wire shape). ``tool_call_id`` marks a
+    # role="tool" result message; ``tool_calls`` echoes an assistant turn that
+    # requested tools (the API requires it in the follow-up transcript).
+    tool_call_id: str | None = None
+    tool_calls: tuple[dict, ...] | None = None
+
+
+@dataclass(frozen=True)
+class ToolCall:
+    """One tool invocation requested by the model (arguments already parsed)."""
+
+    id: str
+    name: str
+    arguments: dict
+    raw: dict = field(default_factory=dict)  # verbatim wire form for echo-back
 
 
 @dataclass(frozen=True)
@@ -35,6 +50,7 @@ class Completion:
     degraded: bool = False
     reason: str | None = None
     usage: dict[str, int] = field(default_factory=dict)
+    tool_calls: tuple[ToolCall, ...] = ()
 
 
 @runtime_checkable
@@ -47,6 +63,16 @@ class LLMProvider(Protocol):
         *,
         model: str | None = None,
         max_tokens: int = 512,
+        temperature: float = 0.2,
+    ) -> Completion: ...
+
+    def chat(
+        self,
+        messages: list[Message],
+        *,
+        tools: list[dict] | None = None,
+        model: str | None = None,
+        max_tokens: int = 1024,
         temperature: float = 0.2,
     ) -> Completion: ...
 
