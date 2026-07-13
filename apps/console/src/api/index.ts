@@ -53,6 +53,7 @@ export type {
   OpsStatus,
   ComplianceGap,
   ComplianceGaps,
+  ComplianceClause,
   ComplianceReport,
   ModelCard,
   ModelRegistry,
@@ -68,3 +69,5 @@ export type {
 } from './platform';
 export { createSSEConnection } from './sse';
 export type { SSEEventHandler } from './sse';
+export { listReplays, getReplay } from './replays';
+export type { ReplaySummary, ReplayEvent, ReplayTimeline } from './replays';
