@@ -127,6 +127,23 @@ SHIFT_V1 = EventContract(
     ),
 )
 
+# Worker positioning uses omlox vocabulary (the open locating standard,
+# omlox.com): a *trackable* (badge/tag) is placed in a *zone* by a *location
+# provider* (UWB/BLE/GPS/access-control). Verge consumes zone-level presence,
+# not coordinates — precise x/y stays in the RTLS hub; the safety layer only
+# needs "who is in which zone, how recently".
+WORKER_LOCATION_V1 = EventContract(
+    "worker-location", "1.0.0",
+    (
+        FieldSpec("ts", "iso-datetime"),
+        FieldSpec("workerId", "str"),
+        FieldSpec("zoneId", "str"),
+        FieldSpec("name", "str", required=False),
+        FieldSpec("role", "str", required=False),
+        FieldSpec("source", "str", required=False),  # omlox location-provider id
+    ),
+)
+
 
 @dataclass
 class ContractResult:
@@ -149,7 +166,7 @@ class ContractRegistry:
 
     def __init__(self, contracts: Iterable[EventContract] | None = None) -> None:
         self._by_type: dict[str, list[EventContract]] = {}
-        for c in contracts or (READING_V1, PERMIT_V1, SHIFT_V1):
+        for c in contracts or (READING_V1, PERMIT_V1, SHIFT_V1, WORKER_LOCATION_V1):
             self.register(c)
 
     def register(self, contract: EventContract) -> None:
