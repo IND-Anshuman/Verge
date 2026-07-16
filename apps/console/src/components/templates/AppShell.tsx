@@ -3,10 +3,24 @@ import { useFindingsStore } from '@/stores/findings';
 import { useConnectionStore } from '@/stores/connection';
 import { SensorRibbon } from '@/components/organisms/SensorRibbon';
 import { DegradationBannerStrip } from '@/components/organisms/DegradationBannerStrip';
-import { Shield, Activity, BarChart2, Settings, History, ArrowRightLeft } from 'lucide-react';
-import { Logo } from '@/components/atoms';
+import { CommandPalette } from '@/components/organisms/CommandPalette';
+import { Activity, BarChart2, Settings, History, ArrowRightLeft, Shield, Search } from 'lucide-react';
+import { Logo, Toaster, Kbd } from '@/components/atoms';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+
+const NAV = [
+  { to: '/', key: 'board', icon: Activity },
+  { to: '/replay', key: 'replay', icon: History },
+  { to: '/fleet', key: 'fleet', icon: BarChart2 },
+  { to: '/audit', key: 'audit', icon: Shield },
+  { to: '/admin', key: 'config', icon: Settings },
+  { to: '/handover', key: 'handover', icon: ArrowRightLeft },
+] as const;
+
+function openPalette() {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
+}
 
 export default function AppShell() {
   const { shadow, setShadow } = useFindingsStore();
@@ -16,112 +30,55 @@ export default function AppShell() {
   return (
     <div className="min-h-screen bg-bg text-ink flex flex-col font-sans select-none">
       {/* Top Header Navigation */}
-      <header className="h-12 border-b border-line bg-panel flex items-center justify-between px-4 shrink-0 z-30">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center" aria-label="Verge home">
+      <header className="h-12 border-b border-line bg-panel flex items-center justify-between px-4 shrink-0 z-30 gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <Link to="/" className="flex items-center shrink-0" aria-label="Verge home">
             <Logo size={22} />
           </Link>
-          <span className="h-4 w-[1px] bg-line" />
-          <span className="text-xs text-ink-dim font-mono tracking-[0.12em] hidden md:inline">
-            LEAD-TIME INTELLIGENCE &middot; OPERATOR CONSOLE
+          <span className="h-4 w-[1px] bg-line shrink-0" />
+          <span className="text-micro text-ink-dim/70 font-mono tracking-[0.14em] hidden xl:inline truncate">
+            LEAD-TIME INTELLIGENCE · OPERATOR CONSOLE
           </span>
         </div>
 
-        {/* Global Navigation Links */}
-        <nav className="flex items-center gap-1">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-1.5 h-8 px-3 rounded text-xs font-semibold font-mono transition-colors',
-                isActive
-                  ? 'bg-panel-2 text-ink border border-line'
-                  : 'text-ink-dim hover:text-ink hover:bg-panel-2 border border-transparent'
-              )
-            }
-          >
-            <Activity className="h-3.5 w-3.5" />
-            {t('board')}
-          </NavLink>
-          <NavLink
-            to="/replay"
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-1.5 h-8 px-3 rounded text-xs font-semibold font-mono transition-colors',
-                isActive
-                  ? 'bg-panel-2 text-ink border border-line'
-                  : 'text-ink-dim hover:text-ink hover:bg-panel-2 border border-transparent'
-              )
-            }
-          >
-            <History className="h-3.5 w-3.5" />
-            {t('replay')}
-          </NavLink>
-          <NavLink
-            to="/fleet"
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-1.5 h-8 px-3 rounded text-xs font-semibold font-mono transition-colors',
-                isActive
-                  ? 'bg-panel-2 text-ink border border-line'
-                  : 'text-ink-dim hover:text-ink hover:bg-panel-2 border border-transparent'
-              )
-            }
-          >
-            <BarChart2 className="h-3.5 w-3.5" />
-            {t('fleet')}
-          </NavLink>
-          <NavLink
-            to="/audit"
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-1.5 h-8 px-3 rounded text-xs font-semibold font-mono transition-colors',
-                isActive
-                  ? 'bg-panel-2 text-ink border border-line'
-                  : 'text-ink-dim hover:text-ink hover:bg-panel-2 border border-transparent'
-              )
-            }
-          >
-            <Shield className="h-3.5 w-3.5" />
-            {t('audit')}
-          </NavLink>
-          <NavLink
-            to="/admin"
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-1.5 h-8 px-3 rounded text-xs font-semibold font-mono transition-colors',
-                isActive
-                  ? 'bg-panel-2 text-ink border border-line'
-                  : 'text-ink-dim hover:text-ink hover:bg-panel-2 border border-transparent'
-              )
-            }
-          >
-            <Settings className="h-3.5 w-3.5" />
-            {t('config')}
-          </NavLink>
-          <NavLink
-            to="/handover"
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-1.5 h-8 px-3 rounded text-xs font-semibold font-mono transition-colors',
-                isActive
-                  ? 'bg-panel-2 text-ink border border-line'
-                  : 'text-ink-dim hover:text-ink hover:bg-panel-2 border border-transparent'
-              )
-            }
-          >
-            <ArrowRightLeft className="h-3.5 w-3.5" />
-            {t('handover')}
-          </NavLink>
+        {/* Global Navigation */}
+        <nav className="flex items-center gap-0.5" aria-label="Primary">
+          {NAV.map(({ to, key, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-medium font-mono transition-colors duration-fast',
+                  isActive
+                    ? 'bg-panel-2 text-ink border border-line'
+                    : 'text-ink-dim hover:text-ink hover:bg-panel-2/60 border border-transparent'
+                )
+              }
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline">{t(key)}</span>
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Live/Shadow Toggle & Status Indicators */}
-        <div className="flex items-center gap-4">
-          {/* Language selector select box */}
+        {/* Right cluster: search, language, connection, mode */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={openPalette}
+            className="hidden md:flex items-center gap-2 h-7 pl-2 pr-1.5 rounded border border-line bg-bg text-ink-dim hover:text-ink hover:border-line-2 transition-colors duration-fast text-xs cursor-pointer"
+            aria-label="Open command palette"
+          >
+            <Search className="h-3 w-3" />
+            <span className="font-sans">Search</span>
+            <Kbd>⌘K</Kbd>
+          </button>
+
           <select
             value={i18n.language}
             onChange={(e) => i18n.changeLanguage(e.target.value)}
-            className="h-7 px-1 rounded border border-line text-micro bg-bg text-ink focus:outline-none font-mono font-bold cursor-pointer"
+            className="h-7 px-1 rounded border border-line text-micro bg-bg text-ink-dim hover:text-ink focus:outline-none font-mono cursor-pointer"
+            aria-label="Language"
           >
             <option value="en">EN</option>
             <option value="hi">HI</option>
@@ -130,26 +87,25 @@ export default function AppShell() {
             <option value="kn">KN</option>
           </select>
 
-          {/* Connection status */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" title={`Stream ${status}`}>
             <span
               className={clsx(
-                'h-2 w-2 rounded-full',
+                'h-1.5 w-1.5 rounded-full',
                 status === 'connected' ? 'bg-ok' : status === 'reconnecting' ? 'bg-near animate-pulse' : 'bg-unknown'
               )}
             />
-            <span className="text-micro font-mono text-ink-dim uppercase">{status}</span>
+            <span className="text-micro font-mono text-ink-dim/70 uppercase hidden sm:inline">{status}</span>
           </div>
 
           <span className="h-4 w-[1px] bg-line" />
 
-          {/* Mode selector */}
-          <div className="flex bg-bg border border-line p-0.5 rounded">
+          {/* Live / Shadow mode */}
+          <div className="flex bg-bg border border-line p-0.5 rounded" role="group" aria-label="Mode">
             <button
               onClick={() => setShadow(false)}
               className={clsx(
-                'px-2.5 py-1 text-micro font-mono font-bold uppercase rounded-sm transition-colors cursor-pointer',
-                !shadow ? 'bg-panel text-ink border border-line shadow-sm' : 'text-ink-dim hover:text-ink'
+                'px-2.5 h-6 text-micro font-mono font-medium uppercase rounded-sm transition-colors duration-fast cursor-pointer',
+                !shadow ? 'bg-panel-2 text-ink border border-line' : 'text-ink-dim hover:text-ink'
               )}
             >
               {t('live')}
@@ -157,8 +113,8 @@ export default function AppShell() {
             <button
               onClick={() => setShadow(true)}
               className={clsx(
-                'px-2.5 py-1 text-micro font-mono font-bold uppercase rounded-sm transition-colors cursor-pointer',
-                shadow ? 'bg-near/20 text-near border border-near/30 shadow-sm' : 'text-ink-dim hover:text-near'
+                'px-2.5 h-6 text-micro font-mono font-medium uppercase rounded-sm transition-colors duration-fast cursor-pointer',
+                shadow ? 'bg-near/15 text-near border border-near/30' : 'text-ink-dim hover:text-near'
               )}
             >
               {t('shadow')}
@@ -183,6 +139,9 @@ export default function AppShell() {
       <main className="flex-1 overflow-hidden relative">
         <Outlet />
       </main>
+
+      <CommandPalette />
+      <Toaster />
     </div>
   );
 }
