@@ -34,13 +34,13 @@ export function Modal({
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
         {/* Overlay */}
-        <Dialog.Overlay className="fixed inset-0 bg-bg/85 backdrop-blur-[2px] transition-opacity duration-fast z-50" />
-        
+        <Dialog.Overlay className="fixed inset-0 bg-[color:var(--scrim)] transition-opacity duration-fast z-50" />
+
         {/* Content Container */}
         <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
           <Dialog.Content
             className={clsx(
-              'w-full bg-panel border border-line rounded-lg shadow-none',
+              'w-full bg-panel border border-line rounded-lg float-layer',
               'flex flex-col max-h-[85vh]',
               'focus:outline-none',
               sizeClasses[size]

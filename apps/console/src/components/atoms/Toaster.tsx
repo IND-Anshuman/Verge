@@ -25,7 +25,7 @@ export function Toaster() {
           <div
             key={t.id}
             className={clsx(
-              'flex items-start gap-2 bg-panel border rounded-md px-3 py-2 shadow-lg shadow-bg/60',
+              'flex items-start gap-2 bg-panel border rounded-md px-3 py-2 float-layer',
               'animate-[toast-in_150ms_ease-out]',
               meta.border,
             )}

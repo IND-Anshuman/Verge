@@ -41,18 +41,19 @@ export default function AppShell() {
           </span>
         </div>
 
-        {/* Global Navigation */}
-        <nav className="flex items-center gap-0.5" aria-label="Primary">
+        {/* Global Navigation — editorial: 2px ink underline marks the active
+            view; no chips, no fills (docs/design-system.md) */}
+        <nav className="flex items-center gap-1 h-full" aria-label="Primary">
           {NAV.map(({ to, key, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-medium font-mono transition-colors duration-fast',
+                  'flex items-center gap-1.5 h-full px-2.5 text-xs font-medium border-b-2 -mb-px transition-colors duration-fast',
                   isActive
-                    ? 'bg-panel-2 text-ink border border-line'
-                    : 'text-ink-dim hover:text-ink hover:bg-panel-2/60 border border-transparent'
+                    ? 'text-ink border-ink'
+                    : 'text-ink-dim border-transparent hover:text-ink'
                 )
               }
             >
@@ -99,13 +100,14 @@ export default function AppShell() {
 
           <span className="h-4 w-[1px] bg-line" />
 
-          {/* Live / Shadow mode */}
-          <div className="flex bg-bg border border-line p-0.5 rounded" role="group" aria-label="Mode">
+          {/* Live / Shadow mode — active LIVE inverts to ink (the instrument's
+              power switch); SHADOW is the orange-signal state */}
+          <div className="flex bg-panel-2 border border-line p-0.5 rounded" role="group" aria-label="Mode">
             <button
               onClick={() => setShadow(false)}
               className={clsx(
                 'px-2.5 h-6 text-micro font-mono font-medium uppercase rounded-sm transition-colors duration-fast cursor-pointer',
-                !shadow ? 'bg-panel-2 text-ink border border-line' : 'text-ink-dim hover:text-ink'
+                !shadow ? 'bg-ink text-panel' : 'text-ink-dim hover:text-ink'
               )}
             >
               {t('live')}
@@ -114,7 +116,7 @@ export default function AppShell() {
               onClick={() => setShadow(true)}
               className={clsx(
                 'px-2.5 h-6 text-micro font-mono font-medium uppercase rounded-sm transition-colors duration-fast cursor-pointer',
-                shadow ? 'bg-near/15 text-near border border-near/30' : 'text-ink-dim hover:text-near'
+                shadow ? 'bg-near/12 text-near border border-near/35' : 'text-ink-dim hover:text-near'
               )}
             >
               {t('shadow')}

@@ -61,9 +61,9 @@ export function CommandPalette() {
       label="Command palette"
       className="fixed inset-0 z-50"
     >
-      <div className="fixed inset-0 bg-bg/70" onClick={() => setOpen(false)} aria-hidden="true" />
+      <div className="fixed inset-0 bg-[color:var(--scrim)]" onClick={() => setOpen(false)} aria-hidden="true" />
       <div className="fixed left-1/2 top-[18vh] -translate-x-1/2 w-[560px] max-w-[calc(100vw-32px)]">
-        <div className="bg-panel border border-line-2 rounded-lg shadow-2xl shadow-bg overflow-hidden">
+        <div className="bg-panel border border-line-2 rounded-lg float-layer overflow-hidden">
           <Command.Input
             placeholder="Jump to a view, search findings…"
             className="w-full h-11 px-4 bg-transparent text-sm text-ink placeholder:text-ink-dim/60 border-b border-line focus:outline-none font-sans"

@@ -13,15 +13,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children?: ReactNode;
 }
 
+// Color is signal (see docs/design-system.md): the primary action is INK,
+// never orange — orange only ever warns or brands.
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'bg-accent text-bg hover:bg-accent/90 border-accent/30 active:bg-accent/80',
+    'bg-ink text-panel hover:bg-ink/85 border-ink active:bg-ink/75',
   secondary:
-    'bg-panel-2 text-ink hover:bg-line/50 border-line active:bg-line/70',
+    'bg-panel text-ink hover:bg-panel-2 border-line hover:border-line-2 active:bg-line/40',
   ghost:
-    'bg-transparent text-ink-dim hover:text-ink hover:bg-panel-2 border-transparent active:bg-line/30',
+    'bg-transparent text-ink-dim hover:text-ink hover:bg-panel-2 border-transparent active:bg-line/40',
   danger:
-    'bg-imminent/10 text-imminent hover:bg-imminent/20 border-imminent/30 active:bg-imminent/30',
+    'bg-imminent/10 text-imminent hover:bg-imminent/15 border-imminent/30 active:bg-imminent/20',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
