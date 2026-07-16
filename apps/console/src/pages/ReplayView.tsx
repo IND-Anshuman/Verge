@@ -376,8 +376,8 @@ export default function ReplayView() {
                     {breachTime !== null && (
                       <ReferenceLine
                         x={breachTime}
-                        stroke="#FF5C5C"
-                        label={{ value: 'BREACH', fill: '#FF5C5C', fontSize: 9, position: 'insideTopRight' }}
+                        stroke="#C92A2A"
+                        label={{ value: 'BREACH', fill: '#C92A2A', fontSize: 9, position: 'insideTopRight' }}
                       />
                     )}
                     {chart.sensors.map((sensor, i) => (

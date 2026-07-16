@@ -32,7 +32,7 @@ const DEFAULT_CENTER: [number, number] = [83.228, 17.69];
 const LOCAL_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {},
-  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0B0E13' } }],
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#E9E7E1' } }],
 };
 
 export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
@@ -192,14 +192,14 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
             'match',
             ['get', 'alertState'],
             'imminent',
-            'rgba(240, 99, 99, 0.15)',
+            'rgba(201, 42, 42, 0.14)',
             'near',
-            'rgba(232, 163, 61, 0.15)',
+            'rgba(217, 72, 15, 0.14)',
             'watch',
-            'rgba(79, 163, 199, 0.15)',
-            'rgba(42, 50, 61, 0.25)',
+            'rgba(24, 100, 171, 0.12)',
+            'rgba(255, 255, 255, 0.85)',
           ],
-          'fill-outline-color': '#262E39',
+          'fill-outline-color': '#D8D5CE',
         },
       });
 
@@ -212,12 +212,12 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
             'match',
             ['get', 'alertState'],
             'imminent',
-            '#FF5C5C',
+            '#C92A2A',
             'near',
-            '#F0A83E',
+            '#D9480F',
             'watch',
-            '#4FA3C7',
-            '#262E39',
+            '#1864AB',
+            '#C6C3BA',
           ],
           'line-width': 1.5,
         },
@@ -232,8 +232,8 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
         type: 'fill',
         source: 'exclusion-plume',
         paint: {
-          'fill-color': 'rgba(240, 99, 99, 0.35)',
-          'fill-outline-color': '#FF5C5C',
+          'fill-color': 'rgba(201, 42, 42, 0.22)',
+          'fill-outline-color': '#C92A2A',
         },
       });
       map.addLayer({
@@ -241,7 +241,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
         type: 'line',
         source: 'exclusion-plume',
         paint: {
-          'line-color': '#FF5C5C',
+          'line-color': '#C92A2A',
           'line-width': 2,
           'line-dasharray': [2, 1],
         },
@@ -410,7 +410,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
                 style={{
                   left: pos.x,
                   top: pos.y,
-                  backgroundColor: '#43C989',
+                  backgroundColor: '#2B8A3E',
                 }}
                 title={`${sensor.id}: ${sensor.value}`}
               />
@@ -452,7 +452,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
           {findings.map((finding) => {
             const pos = markerPositions[finding.findingId];
             if (!pos) return null;
-            const color = finding.leadTimeBand === 'IMMINENT' ? '#FF5C5C' : '#F0A83E';
+            const color = finding.leadTimeBand === 'IMMINENT' ? '#C92A2A' : '#D9480F';
             return (
               <div
                 key={finding.findingId}

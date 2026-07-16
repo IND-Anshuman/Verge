@@ -58,7 +58,7 @@ export function KnowledgeGraphViz() {
                 y1={sourceNode.y}
                 x2={targetNode.x}
                 y2={targetNode.y}
-                stroke="#262E39"
+                stroke="#DEDCD5"
                 strokeWidth={1.5}
                 className="transition-colors duration-fast"
               />
@@ -70,10 +70,10 @@ export function KnowledgeGraphViz() {
             const isSelected = selectedNode?.id === node.id;
             const color =
               node.type === 'risk'
-                ? '#FF5C5C'
+                ? '#C92A2A'
                 : node.type === 'permit'
-                ? '#4FA3C7'
-                : '#F0A83E';
+                ? '#1864AB'
+                : '#D9480F';
 
             return (
               <g
@@ -94,7 +94,7 @@ export function KnowledgeGraphViz() {
                 )}
                 <circle
                   r={7}
-                  fill="#12161D"
+                  fill="#FFFFFF"
                   stroke={color}
                   strokeWidth={isSelected ? 2.5 : 1.5}
                   className="group-hover:fill-panel-2 transition-all"
@@ -102,7 +102,7 @@ export function KnowledgeGraphViz() {
                 <text
                   x={10}
                   y={4}
-                  fill="#8C96A3"
+                  fill="#6E7178"
                   fontSize={8}
                   fontFamily="monospace"
                   className="group-hover:fill-ink transition-colors"

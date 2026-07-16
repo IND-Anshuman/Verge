@@ -114,7 +114,7 @@ export function AlertFatigueMetrics() {
                     name="False Alarms"
                     type="monotone"
                     dataKey="falseAlarms"
-                    stroke="#FF5C5C"
+                    stroke="#C92A2A"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
@@ -122,7 +122,7 @@ export function AlertFatigueMetrics() {
                     name="Useful Alerts"
                     type="monotone"
                     dataKey="useful"
-                    stroke="#43C989"
+                    stroke="#2B8A3E"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
