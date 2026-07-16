@@ -8,6 +8,7 @@ import {
   Tooltip,
   CartesianGrid,
   ReferenceLine,
+  Legend,
 } from 'recharts';
 import { AlertCircle } from 'lucide-react';
 import type { RiskFinding } from '@/types';
@@ -17,7 +18,7 @@ interface TemporalChartProps {
   finding: RiskFinding;
 }
 
-const SERIES_COLORS = ['#FF5C5C', '#F0A83E', '#4FA3C7', '#43C989'];
+import { seriesColor, CHART_GRID, chartAxisProps, chartTooltipStyle } from '@/lib/chartTheme';
 
 function formatTime(ts: string): string {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -80,7 +81,7 @@ export function TemporalConvergenceChart({ finding }: TemporalChartProps) {
             <span key={key} className="flex items-center gap-1">
               <span
                 className="h-1.5 w-1.5 rounded-full"
-                style={{ backgroundColor: SERIES_COLORS[i % SERIES_COLORS.length] }}
+                style={{ backgroundColor: seriesColor(i) }}
               />
               {key}
             </span>
@@ -103,23 +104,17 @@ export function TemporalConvergenceChart({ finding }: TemporalChartProps) {
         <div className="h-56 w-full font-mono text-micro select-text">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-              <CartesianGrid stroke="#262E39" strokeDasharray="3 3" />
-              <XAxis dataKey="time" stroke="#8C96A3" tickLine={false} />
-              <YAxis stroke="#8C96A3" tickLine={false} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#12161D',
-                  borderColor: '#262E39',
-                  color: '#E8EDF4',
-                  borderRadius: '4px',
-                }}
-              />
+              <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="time" {...chartAxisProps} />
+              <YAxis {...chartAxisProps} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Legend wrapperStyle={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" }} iconType="plainline" />
               {seriesKeys.map((key, i) =>
                 thresholds[key] != null ? (
                   <ReferenceLine
                     key={`${key}-thresh`}
                     y={thresholds[key]}
-                    stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
+                    stroke={seriesColor(i)}
                     strokeDasharray="4 4"
                     strokeWidth={1}
                   />
@@ -130,7 +125,7 @@ export function TemporalConvergenceChart({ finding }: TemporalChartProps) {
                   key={key}
                   type="monotone"
                   dataKey={key}
-                  stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
+                  stroke={seriesColor(i)}
                   strokeWidth={2}
                   dot={{ r: 2 }}
                   activeDot={{ r: 4 }}

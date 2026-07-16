@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Badge, Button } from '@/components/atoms';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { CHART_SERIES, CHART_GRID, chartAxisProps, chartTooltipStyle } from '@/lib/chartTheme';
 import { AlertTriangle, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { getFleetSummary, type FleetPlant } from '@/api/fleet';
 
@@ -144,18 +145,14 @@ export default function FleetView() {
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                  <CartesianGrid stroke="#262E39" strokeDasharray="3 3" />
-                  <XAxis dataKey="name" stroke="#8C96A3" tickLine={false} />
-                  <YAxis stroke="#8C96A3" tickLine={false} />
+                  <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" {...chartAxisProps} />
+                  <YAxis {...chartAxisProps} />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#12161D',
-                      borderColor: '#262E39',
-                      color: '#E8EDF4',
-                    }}
+                    contentStyle={chartTooltipStyle}
                   />
-                  <Bar dataKey="TRIR" fill="#F0A83E" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="Active Alarms" fill="#FF5C5C" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="TRIR" fill={CHART_SERIES[0]} radius={[4, 4, 0, 0]} maxBarSize={28} />
+                  <Bar dataKey="Active Alarms" fill={CHART_SERIES[1]} radius={[4, 4, 0, 0]} maxBarSize={28} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

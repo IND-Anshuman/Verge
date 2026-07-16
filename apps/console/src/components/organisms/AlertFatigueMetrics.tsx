@@ -8,6 +8,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
+import { CHART_GRID, chartAxisProps, chartTooltipStyle } from '@/lib/chartTheme';
 import { Card } from '@/components/atoms';
 import { TrendingDown, ShieldAlert, Award } from 'lucide-react';
 import { getFatigueMetrics, type FatigueMetrics } from '@/api/platform';
@@ -103,16 +104,11 @@ export function AlertFatigueMetrics() {
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                  <CartesianGrid stroke="#262E39" strokeDasharray="3 3" />
-                  <XAxis dataKey="date" stroke="#8C96A3" tickLine={false} />
-                  <YAxis stroke="#8C96A3" tickLine={false} />
+                  <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="date" {...chartAxisProps} />
+                  <YAxis {...chartAxisProps} />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#12161D',
-                      borderColor: '#262E39',
-                      color: '#E8EDF4',
-                      borderRadius: '4px',
-                    }}
+                    contentStyle={chartTooltipStyle}
                   />
                   <Line
                     name="False Alarms"

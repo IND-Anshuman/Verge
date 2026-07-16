@@ -13,13 +13,14 @@ import {
   CartesianGrid,
   ReferenceLine,
 } from 'recharts';
+import { CHART_SERIES, CHART_GRID, chartAxisProps, chartTooltipStyle } from '@/lib/chartTheme';
 
 /* Historical incident replay over the REAL eval fixtures (spec §10).
    Events, telemetry, the Verge alert marker, and the breach marker all come
    from /api/replays — the same data the eval harness scores. Nothing is
    simulated in the frontend. */
 
-const SERIES_COLORS = ['#F0A83E', '#4FA3C7', '#43C989', '#B48EDE', '#FF8FA3'];
+const SERIES_COLORS = CHART_SERIES;
 
 function fmtClock(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds));
@@ -351,19 +352,18 @@ export default function ReplayView() {
               <div className="h-72 border border-line bg-panel p-3 rounded-md font-mono text-micro">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={visibleChartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                    <CartesianGrid stroke="#262E39" strokeDasharray="3 3" />
+                    <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="time"
                       type="number"
                       domain={[0, duration]}
                       tickFormatter={(t: number) => fmtClock(t)}
-                      stroke="#8C96A3"
-                      tickLine={false}
+                      {...chartAxisProps}
                     />
-                    <YAxis stroke="#8C96A3" tickLine={false} domain={[0, 100]} />
+                    <YAxis {...chartAxisProps} domain={[0, 100]} />
                     <Tooltip
                       labelFormatter={(t) => fmtClock(Number(t))}
-                      contentStyle={{ backgroundColor: '#12161D', borderColor: '#262E39', color: '#E8EDF4' }}
+                      contentStyle={chartTooltipStyle}
                     />
                     {vergeAlertTime !== null && (
                       <ReferenceLine
