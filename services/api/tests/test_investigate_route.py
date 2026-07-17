@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi.testclient import TestClient
 from verge_api.main import app
+from verge_llm import NullProvider
 
 client = TestClient(app)
 
@@ -13,7 +16,8 @@ def test_investigate_unknown_finding_404():
 
 
 def test_investigate_degraded_returns_fact_sheet_with_real_tools():
-    # Default test env has the NullProvider → specialists + fact sheet (P4).
+    # Force NullProvider — shell may have aimlapi keys from local demo runs.
+    app.state.llm = NullProvider()
     r = client.post("/api/findings/F-CONV-07/investigate")
     assert r.status_code == 200, r.text
     body = r.json()
@@ -25,20 +29,19 @@ def test_investigate_degraded_returns_fact_sheet_with_real_tools():
         "telemetry", "knowledge", "compliance"
     }
     assert "validation" in body
+    assert "documentHops" in json.loads(
+        next(e for e in body["evidence"] if e["tool"] == "query_zone_graph")["result"]
+    )
 
     tools_called = [e["tool"] for e in body["evidence"]]
     for tool in ("get_finding", "get_zone_context", "get_recent_telemetry",
                  "get_active_permits", "search_plant_docs", "query_zone_graph"):
         assert tool in tools_called, f"{tool} missing from evidence"
 
-    # Zone context tool must reflect the real twin (B-04 adjacency).
-    import json
-
     zone_step = next(e for e in body["evidence"] if e["tool"] == "get_zone_context")
     zone = json.loads(zone_step["result"])
     assert zone["zoneId"] == "B-04"
     assert "B-03" in zone["adjacentZones"] and "B-05" in zone["adjacentZones"]
 
-    # The run itself is audit-chained.
     kinds = [e["kind"] for e in client.get("/api/audit?limit=10").json()]
     assert "investigation-run" in kinds

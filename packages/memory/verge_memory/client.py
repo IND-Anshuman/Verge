@@ -15,6 +15,26 @@ from typing import Any
 import httpx
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
+FALSE_VALUES = {"0", "false", "no", "off"}
+
+
+def cognee_enabled_from_env(env: dict[str, str]) -> bool:
+    """Explicit true/false wins; otherwise auto-on when API key + base URL exist.
+
+    Phase 2.5: operators should not need a second flag once credentials are set.
+    Set ``VERGE_COGNEE_ENABLED=false`` to force off even with keys present.
+    """
+    flag = env.get("VERGE_COGNEE_ENABLED", "").strip().lower()
+    if flag in FALSE_VALUES:
+        return False
+    if flag in TRUE_VALUES:
+        return True
+    base_url = (
+        env.get("COGNEE_BASE_URL")
+        or env.get("COGNEE_SERVICE_URL")
+        or env.get("COGNEE_API_BASE_URL")
+    )
+    return bool(env.get("COGNEE_API_KEY") and base_url)
 
 
 @dataclass(frozen=True)
@@ -28,7 +48,6 @@ class CogneeSettings:
 
     @classmethod
     def from_env(cls, env: dict[str, str]) -> CogneeSettings:
-        enabled = env.get("VERGE_COGNEE_ENABLED", "").lower() in TRUE_VALUES
         base_url = (
             env.get("COGNEE_BASE_URL")
             or env.get("COGNEE_SERVICE_URL")
@@ -38,7 +57,7 @@ class CogneeSettings:
         retries = int(env.get("COGNEE_RETRY_ATTEMPTS", "2"))
         backoff = float(env.get("COGNEE_RETRY_BACKOFF_S", "0.2"))
         return cls(
-            enabled=enabled,
+            enabled=cognee_enabled_from_env(env),
             base_url=base_url.rstrip("/") if base_url else None,
             api_key=env.get("COGNEE_API_KEY"),
             timeout_s=timeout,
@@ -52,7 +71,7 @@ class CogneeSettings:
 
     def missing_reason(self) -> str | None:
         if not self.enabled:
-            return "VERGE_COGNEE_ENABLED is not true"
+            return "cognee disabled (set COGNEE_API_KEY+COGNEE_BASE_URL or VERGE_COGNEE_ENABLED=true)"
         if not self.base_url:
             return "missing COGNEE_BASE_URL or COGNEE_SERVICE_URL"
         if not self.api_key:

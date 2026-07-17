@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/atoms';
 import { investigateFinding, type InvestigationResult } from '@/api/investigate';
-import { Bot, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Bot, AlertTriangle, ChevronRight, ShieldCheck, ShieldAlert } from 'lucide-react';
 import clsx from 'clsx';
 
-/* On-demand investigation brief. Every claim is backed by a tool call shown
-   in the evidence trail; a degraded run is labeled a fact sheet, never
-   dressed up as analysis (P4). */
+/* Advisory orchestrator brief. Specialists gather; validator gates what may
+   be shown as recommended. Degraded runs stay honest fact sheets (P4). */
 
 const LIKELIHOOD_COLOR: Record<string, string> = {
   high: 'text-imminent border-imminent/30 bg-imminent/10',
@@ -25,6 +24,7 @@ export function InvestigationPanel({ findingId }: { findingId: string }) {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showEvidence, setShowEvidence] = useState(false);
+  const [showSpecialists, setShowSpecialists] = useState(false);
 
   const run = async () => {
     setRunning(true);
@@ -41,11 +41,11 @@ export function InvestigationPanel({ findingId }: { findingId: string }) {
   if (!result) {
     return (
       <div className="bg-panel-2/30 border border-line p-3 rounded flex items-center justify-between gap-3">
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 min-w-0">
           <Bot className="h-4 w-4 text-ink-dim shrink-0 mt-0.5" />
           <p className="text-xs text-ink-dim leading-normal">
-            Run the investigator agent: it works telemetry, permits, plant graph,
-            incident memory, and OISD clauses — and cites every tool call.
+            Run the advisory orchestrator: telemetry, knowledge, compliance, and
+            multimodal specialists gather digests; a twin validator gates recommendations.
           </p>
         </div>
         <Button
@@ -62,13 +62,19 @@ export function InvestigationPanel({ findingId }: { findingId: string }) {
     );
   }
 
-  const { brief } = result;
+  const { brief, validation, specialists } = result;
+  const validationOk = validation?.ok !== false;
+  const invented = validation?.inventedTags ?? [];
+  const demoted = validation?.demotedBarriers?.length ?? 0;
+
   return (
     <div className="bg-panel-2/30 border border-line p-3 rounded flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-micro font-mono font-semibold text-ink-dim uppercase tracking-[0.08em] flex items-center gap-1.5">
           <Bot className="h-3.5 w-3.5" />
-          {result.degraded ? 'Fact sheet (LLM unavailable)' : `Investigation brief · ${result.model}`}
+          {result.degraded
+            ? 'Fact sheet (LLM unavailable)'
+            : `Advisory brief · ${result.model || 'orchestrator'}`}
         </span>
         <Button variant="ghost" size="sm" onClick={run} loading={running} className="text-micro h-6">
           Re-run
@@ -82,7 +88,42 @@ export function InvestigationPanel({ findingId }: { findingId: string }) {
         </div>
       )}
 
-      <p className="text-xs text-ink leading-relaxed">{brief.summary}</p>
+      {/* Twin validator disposition — always visible when present */}
+      {validation && (
+        <div
+          className={clsx(
+            'flex items-start gap-1.5 text-micro rounded p-2 border',
+            validationOk
+              ? 'bg-ok/5 border-ok/20 text-ink'
+              : 'bg-near/5 border-near/25 text-ink',
+          )}
+        >
+          {validationOk ? (
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-ok mt-0.5" />
+          ) : (
+            <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-near mt-0.5" />
+          )}
+          <div className="min-w-0 leading-normal">
+            <span className="font-mono uppercase tracking-[0.08em] font-semibold text-ink-dim">
+              Validator {validationOk ? 'cleared' : 'gated'}
+            </span>
+            {!validationOk && (
+              <span className="text-ink-dim ml-1">
+                {invented.length > 0 && (
+                  <>unknown twin tags: <span className="font-mono text-ink">{invented.join(', ')}</span></>
+                )}
+                {invented.length > 0 && demoted > 0 && ' · '}
+                {demoted > 0 && `${demoted} barrier${demoted === 1 ? '' : 's'} demoted`}
+              </span>
+            )}
+            {validationOk && (
+              <span className="text-ink-dim ml-1">no invented tags; barriers cited</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <p className="text-sm text-ink leading-relaxed">{brief.summary}</p>
 
       {brief.hypotheses.length > 0 && (
         <div className="flex flex-col gap-1.5">
@@ -121,6 +162,9 @@ export function InvestigationPanel({ findingId }: { findingId: string }) {
               </span>
               <span className="text-ink leading-normal" title={b.rationale}>
                 {b.action}
+                {b.supportedBy && (
+                  <span className="text-ink-dim font-mono text-micro"> — {b.supportedBy}</span>
+                )}
               </span>
             </div>
           ))}
@@ -145,12 +189,47 @@ export function InvestigationPanel({ findingId }: { findingId: string }) {
         <div className="flex flex-col gap-0.5">
           <span className="ruled-label">Could not verify</span>
           {brief.openQuestions.map((q, i) => (
-            <span key={i} className="text-micro text-ink-dim font-mono leading-normal">↳ {q}</span>
+            <span key={i} className="text-micro text-ink-dim leading-normal">↳ {q}</span>
           ))}
         </div>
       )}
 
+      {specialists && specialists.length > 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => setShowSpecialists(!showSpecialists)}
+            className="flex items-center gap-1 text-micro font-mono text-ink-dim hover:text-ink cursor-pointer select-none"
+            aria-expanded={showSpecialists}
+          >
+            <ChevronRight className={clsx('h-3 w-3 transition-transform', showSpecialists && 'rotate-90')} />
+            Specialists — {specialists.map((s) => s.name).join(', ')}
+          </button>
+          {showSpecialists && (
+            <div className="flex flex-col gap-1.5">
+              {specialists.map((s) => (
+                <div key={s.name} className="bg-panel border border-line rounded p-2">
+                  <div className="flex items-baseline justify-between gap-2 mb-1">
+                    <span className="text-micro font-mono uppercase tracking-[0.08em] text-ink-dim font-semibold">
+                      {s.name}
+                    </span>
+                    <span className="text-micro font-mono text-ink-dim/70 tabular-nums">
+                      {s.evidence.length} tools · {s.refs.length} refs
+                    </span>
+                  </div>
+                  <pre className="text-micro font-mono text-ink-dim whitespace-pre-wrap break-all max-h-24 overflow-y-auto leading-normal">
+                    {JSON.stringify(s.digest, null, 0).slice(0, 400)}
+                    {JSON.stringify(s.digest).length > 400 ? '…' : ''}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
       <button
+        type="button"
         onClick={() => setShowEvidence(!showEvidence)}
         className="flex items-center gap-1 text-micro font-mono text-ink-dim hover:text-ink cursor-pointer select-none"
         aria-expanded={showEvidence}
@@ -164,7 +243,10 @@ export function InvestigationPanel({ findingId }: { findingId: string }) {
             <div key={i} className="bg-panel border border-line rounded p-1.5 font-mono text-micro">
               <span className="text-ink font-semibold">{e.tool}</span>
               <span className="text-ink-dim">({JSON.stringify(e.arguments)})</span>
-              <p className="text-ink-dim mt-0.5 break-all leading-normal">{e.result.slice(0, 300)}{e.result.length > 300 ? '…' : ''}</p>
+              <p className="text-ink-dim mt-0.5 break-all leading-normal">
+                {e.result.slice(0, 300)}
+                {e.result.length > 300 ? '…' : ''}
+              </p>
             </div>
           ))}
         </div>

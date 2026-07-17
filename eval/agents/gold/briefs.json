@@ -30,9 +30,7 @@
       "regulatoryRefs": [
         {"clauseId": "VC-HOT-WORK", "relevance": "Hot work controls"}
       ],
-      "openQuestions": [
-        "Confirm purge completeness on the work package"
-      ]
+      "openQuestions": ["Confirm purge completeness on the work package"]
     },
     "digestTokens": "B-04 hot work LEL-04A permit changeover EQ-OVEN-1"
   },
@@ -96,5 +94,267 @@
     },
     "expectInvented": ["GHOST-99"],
     "digestTokens": "B-04 EQ-OVEN-1"
+  },
+  {
+    "id": "gold-co-drift-b05",
+    "findingId": "F-CO-DRIFT",
+    "zoneId": "B-05",
+    "title": "ambient CO sensor drift",
+    "catalog": {
+      "zoneIds": ["B-05", "B-04"],
+      "equipmentIds": ["EQ-FAN-2"],
+      "sensorIds": ["CO-05A"]
+    },
+    "evidenceTools": ["get_recent_telemetry", "get_zone_context"],
+    "brief": {
+      "summary": "WATCH band for CO-05A drift in B-05 near EQ-FAN-2 — readings trending without a hard trip.",
+      "hypotheses": [
+        {
+          "cause": "Ventilation imbalance or calibration drift on CO-05A",
+          "likelihood": "medium",
+          "supportedBy": "get_recent_telemetry"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Verify EQ-FAN-2 duty and bump CO-05A calibration check in B-05",
+          "urgency": "this-shift",
+          "rationale": "Confirm sensing integrity before escalating band",
+          "supportedBy": "get_zone_context"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": ["Last calibration date for CO-05A?"]
+    },
+    "digestTokens": "B-05 CO-05A EQ-FAN-2 drift ventilation"
+  },
+  {
+    "id": "gold-permit-signoff",
+    "findingId": "F-PTW-OPEN",
+    "zoneId": "B-04",
+    "title": "open night-shift permit awaiting sign-off",
+    "catalog": {
+      "zoneIds": ["B-04", "B-03"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": []
+    },
+    "evidenceTools": ["get_active_permits", "get_compliance_clauses"],
+    "brief": {
+      "summary": "Administrative finding: open permit on EQ-OVEN-1 in B-04 awaiting night-shift sign-off creates SIMOPS exposure.",
+      "hypotheses": [
+        {
+          "cause": "Permit left open across shift boundary",
+          "likelihood": "high",
+          "supportedBy": "get_active_permits"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Require B-04 permit owner sign-off or suspend EQ-OVEN-1 work until closed",
+          "urgency": "immediate",
+          "rationale": "Close the administrative gap before concurrent work",
+          "supportedBy": "get_active_permits"
+        }
+      ],
+      "regulatoryRefs": [
+        {"clauseId": "VC-HOT-WORK", "relevance": "Permit control"}
+      ],
+      "openQuestions": []
+    },
+    "digestTokens": "B-04 permit sign-off EQ-OVEN-1 SIMOPS"
+  },
+  {
+    "id": "gold-lel-spike-escalated",
+    "findingId": "F-LEL-ESC",
+    "zoneId": "B-04",
+    "title": "escalated: repeated LEL spikes",
+    "catalog": {
+      "zoneIds": ["B-04"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": ["LEL-04A"]
+    },
+    "evidenceTools": ["get_recent_telemetry", "get_finding", "search_incident_memory"],
+    "brief": {
+      "summary": "IMMINENT escalation on repeated LEL-04A spikes in B-04 around EQ-OVEN-1 after prior near-miss pattern.",
+      "hypotheses": [
+        {
+          "cause": "Recurring flammable release path not closed after prior events",
+          "likelihood": "high",
+          "supportedBy": "search_incident_memory"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Stop ignition sources and hold entry to B-04 until LEL-04A is below watch for 15 minutes",
+          "urgency": "immediate",
+          "rationale": "Repeated spikes justify higher control level",
+          "supportedBy": "get_recent_telemetry"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": ["Was the prior CAPA closed?"]
+    },
+    "digestTokens": "B-04 LEL-04A EQ-OVEN-1 spikes escalation"
+  },
+  {
+    "id": "gold-voice-near-miss",
+    "findingId": "F-VOICE-01",
+    "zoneId": "B-03",
+    "title": "radio near-miss: smell of gas reported",
+    "catalog": {
+      "zoneIds": ["B-03", "B-04"],
+      "equipmentIds": [],
+      "sensorIds": ["CO-03A"]
+    },
+    "evidenceTools": ["get_recent_voice_events", "get_zone_context"],
+    "brief": {
+      "summary": "Voice event near B-03 reports gas smell; correlate with CO-03A and adjacent B-04 occupancy.",
+      "hypotheses": [
+        {
+          "cause": "Localized release detected by operators before sensors trip",
+          "likelihood": "medium",
+          "supportedBy": "get_recent_voice_events"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Increase monitoring on CO-03A and restrict non-essential entry to B-03",
+          "urgency": "this-shift",
+          "rationale": "Treat radio report as contributing lineage until cleared",
+          "supportedBy": "get_recent_voice_events"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": ["Was the radio call translated to English ops text?"]
+    },
+    "digestTokens": "B-03 radio gas smell CO-03A voice"
+  },
+  {
+    "id": "gold-vision-ppe",
+    "findingId": "F-VIS-01",
+    "zoneId": "B-04",
+    "title": "vision: missing PPE in hot-work zone",
+    "catalog": {
+      "zoneIds": ["B-04"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": []
+    },
+    "evidenceTools": ["get_recent_vision_events", "get_active_permits"],
+    "brief": {
+      "summary": "Vision detection of missing PPE in B-04 while EQ-OVEN-1 hot-work permit is active.",
+      "hypotheses": [
+        {
+          "cause": "Field discipline lapse under active permit",
+          "likelihood": "high",
+          "supportedBy": "get_recent_vision_events"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Stop work in B-04 until PPE verified for all workers under the active permit",
+          "urgency": "immediate",
+          "rationale": "Administrative + PPE controls before ignition work continues",
+          "supportedBy": "get_active_permits"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": []
+    },
+    "digestTokens": "B-04 PPE vision EQ-OVEN-1 hot work permit"
+  },
+  {
+    "id": "gold-knowledge-purge",
+    "findingId": "F-SOP-GAP",
+    "zoneId": "B-04",
+    "title": "procedure gap: purge steps unclear",
+    "catalog": {
+      "zoneIds": ["B-04"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": ["LEL-04A"]
+    },
+    "evidenceTools": ["search_plant_docs", "get_compliance_clauses"],
+    "brief": {
+      "summary": "Knowledge specialist finds SOP ambiguity for purge before hot work on EQ-OVEN-1 in B-04 with LEL-04A.",
+      "hypotheses": [
+        {
+          "cause": "Procedure gap between SOP and observed work package",
+          "likelihood": "medium",
+          "supportedBy": "search_plant_docs"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Require documented purge verification against SOP before restarting hot work near EQ-OVEN-1",
+          "urgency": "this-shift",
+          "rationale": "Close knowledge gap with attested evidence",
+          "supportedBy": "search_plant_docs"
+        }
+      ],
+      "regulatoryRefs": [
+        {"clauseId": "VC-HOT-WORK", "relevance": "Purge before hot work"}
+      ],
+      "openQuestions": ["Which SOP revision is controlled?"]
+    },
+    "digestTokens": "B-04 purge SOP EQ-OVEN-1 LEL-04A knowledge"
+  },
+  {
+    "id": "gold-adjacent-simops",
+    "findingId": "F-SIMOPS-ADJ",
+    "zoneId": "B-04",
+    "title": "adjacent-zone SIMOPS conflict",
+    "catalog": {
+      "zoneIds": ["B-04", "B-03", "B-05"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": ["LEL-04A"]
+    },
+    "evidenceTools": ["get_active_permits", "get_equipment_graph", "query_zone_graph"],
+    "brief": {
+      "summary": "SIMOPS conflict: active work in B-04 on EQ-OVEN-1 adjacent to B-03/B-05 permits with LEL-04A watch.",
+      "hypotheses": [
+        {
+          "cause": "Insufficient isolation between adjacent hot work packages",
+          "likelihood": "high",
+          "supportedBy": "get_equipment_graph"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Sequentially authorize only one hot-work package across B-04 and adjacent zones until LEL-04A clears",
+          "urgency": "immediate",
+          "rationale": "Eliminate concurrent ignition sources across adjacency",
+          "supportedBy": "query_zone_graph"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": []
+    },
+    "digestTokens": "B-04 B-03 B-05 SIMOPS EQ-OVEN-1 LEL-04A adjacency"
+  },
+  {
+    "id": "gold-uncited-demote",
+    "findingId": "F-UNCITED",
+    "zoneId": "B-04",
+    "title": "uncited barrier should demote",
+    "catalog": {
+      "zoneIds": ["B-04"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": []
+    },
+    "evidenceTools": ["get_finding"],
+    "brief": {
+      "summary": "Synthetic case: barrier in B-04 lacks citation.",
+      "hypotheses": [],
+      "recommendedBarriers": [
+        {
+          "action": "Increase patrols near EQ-OVEN-1",
+          "urgency": "planned",
+          "rationale": "gut feel only"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": []
+    },
+    "expectDemoted": true,
+    "digestTokens": "B-04 EQ-OVEN-1 patrol"
   }
 ]

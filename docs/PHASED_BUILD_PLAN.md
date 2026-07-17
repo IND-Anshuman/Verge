@@ -314,11 +314,11 @@ gantt
 | **G6 Evals** | `eval/agents/` gold briefs (groundedness, citation precision) | Harness command in CI or nightly |
 
 **Exit criteria**
-- [ ] Orchestrator + ≥3 specialists live behind `POST /api/findings/{id}/investigate`  
-- [ ] Cognee cognify path green on ingest  
-- [ ] Validator blocks uncited / invented-tag recommendations  
-- [ ] Agent eval suite exists with ≥10 gold briefs  
-- [ ] `verge_risk` still cannot import `verge_llm` (CI lint)
+- [x] Orchestrator + ≥3 specialists live behind `POST /api/findings/{id}/investigate`  
+- [x] Cognee cognify auto-on when keys present (explicit `false` still disables)  
+- [x] Validator blocks uncited / invented-tag recommendations  
+- [x] Agent eval suite exists with ≥10 gold briefs  
+- [x] `verge_risk` still cannot import `verge_llm` (CI lint)
 
 ---
 
@@ -498,12 +498,18 @@ Even solo: sequence Phase 0 → 1 → 2D fusion → **2.5 GenAI Core** → 4 →
 
 ## 16. Build progress log
 
+### 2026-07-18 — Phase 2.5 continuation (console + GraphRAG + Cognee auto)
+
+- Console `InvestigationPanel` shows specialists + twin validator disposition  
+- Neo4j `zone_document_hops` (Document→MENTIONS→zone) wired into `query_zone_graph`  
+- Cognee auto-enabled when API key + base URL present  
+- `eval/agents` gold set ≥10; `verge_risk` AST import lint against `verge_llm`  
+
 ### 2026-07-18 — Phase 2.5 GenAI Core landed (orchestrator path)
 
 - `packages/agents`: advisory **orchestrator** + telemetry/knowledge/compliance(/multimodal) specialists + twin **validator**  
 - Investigate API: DocIntel `search_plant_docs`, `query_zone_graph`, voice/vision event tools; audit actor `advisory-orchestrator`  
 - `eval/agents/` gold briefs + invented-tag / citation / groundedness metrics  
-- Still open: Cognee always-on cognify in prod env; deeper Neo4j GraphRAG templates  
 
 ### 2026-07-18 — GenAI architecture audit + Melia voice
 

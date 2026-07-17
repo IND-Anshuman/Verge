@@ -1,6 +1,6 @@
 """Cognee-backed memory context for Verge findings."""
 
-from .client import CogneeClient, CogneeResult, CogneeSettings
+from .client import CogneeClient, CogneeResult, CogneeSettings, cognee_enabled_from_env
 from .datasets import dataset_name
 from .ingest import ingest_closed_finding, ingest_document, ingest_feedback
 from .query import query_memory
@@ -11,6 +11,7 @@ __all__ = [
     "CogneeClient",
     "CogneeResult",
     "CogneeSettings",
+    "cognee_enabled_from_env",
     "context_for_finding",
     "dataset_health",
     "dataset_name",

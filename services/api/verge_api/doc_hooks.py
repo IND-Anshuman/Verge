@@ -10,21 +10,30 @@ from verge_memory.client import CogneeClient
 from verge_memory.datasets import dataset_name
 from verge_schema.documents import DocumentAsset, DocumentStatus, EntityKind
 
-_TRUE = {"1", "true", "yes", "on"}
-
 
 def maybe_cognify_document(store: DocIntelStore, asset: DocumentAsset) -> dict:
-    """Push ready document text into Cognee when configured."""
+    """Push ready document text into Cognee when configured.
+
+    Enabled when ``VERGE_COGNEE_ENABLED=true`` **or** when API key + base URL
+    are present (auto). Explicit ``false`` always disables.
+    """
     if asset.status != DocumentStatus.READY:
         return {"degraded": True, "reason": "not-ready"}
-    if os.environ.get("VERGE_COGNEE_ENABLED", "").lower() not in _TRUE:
-        return {"degraded": True, "reason": "cognee-disabled"}
     text = store.texts.get(asset.document_id, "")
     if not text.strip():
         return {"degraded": True, "reason": "empty-text"}
     try:
+        from verge_memory.client import cognee_enabled_from_env
+
         env = dict(os.environ)
+        if not cognee_enabled_from_env(env):
+            return {"degraded": True, "reason": "cognee-disabled"}
         client = CogneeClient.from_env(env)
+        if not client.settings.ready:
+            return {
+                "degraded": True,
+                "reason": client.settings.missing_reason() or "cognee-not-ready",
+            }
         result = ingest_document(client, dataset_name(env), asset.title, text)
         return {
             "degraded": bool(getattr(result, "degraded", False)),
