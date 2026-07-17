@@ -495,6 +495,9 @@ Even solo: sequence Phase 0 → 1 → 2D fusion → 4 → 5; defer 3A depth if t
 - Predicates: `sensor_near_threshold`, `maintenance_open`, `worker_in_zone`, `voice_hazard_mention`, `vision_detection`
 - Schema: `VoiceEvent`, `VisionDetection`; stream runner ingests voice/vision/maintenance/worker events
 - Starter rules for radio gas smell, vision PPE, vibration+MO, worker+LEL
-- API: `POST/GET /api/voice/events` + near-miss → voice-event buffer
+- API: `POST/GET /api/voice/events`, `POST/GET /api/vision/events`, `POST /api/risk/fuse`
+- Twin entity resolve on ingest (`resolvedEntityCount`); neo4j driver in workspace
 
-**Stack quality check this phase:** keep Docling OSS optional extras; Cognee+aimlapi already wired for ask synthesis; add `pypdf` when PDF corpus arrives. CI green on `dad42e5`+follow-ups.
+**Next:** Phase 2 depth (RTSP/YOLO polish, Speechmatics radio path) → Phase 3 agents (RCA / compliance gaps / lessons push).
+
+**Stack quality check this phase:** keep Docling OSS optional extras; Cognee+aimlapi already wired for ask synthesis; set `VERGE_COGNEE_ENABLED=true` for live cognify. CI green through fusion endpoint.
