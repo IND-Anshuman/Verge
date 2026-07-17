@@ -16,3 +16,8 @@ def test_fleet_summary_lists_all_plants() -> None:
     assert vizag["activeRisks"] >= 1
     assert vizag["sensorHealth"] is not None
     assert vizag["measured"]["activeRisks"] is True
+    # Unmeasured fleet KPIs stay null (truth gate) — never ship baseline fiction.
+    assert vizag["trir"] is None
+    assert vizag["alertFatigueRate"] is None
+    assert vizag["measured"]["trir"] is False
+    assert vizag.get("connected") is True

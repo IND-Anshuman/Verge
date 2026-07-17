@@ -43,9 +43,11 @@ def fleet_summary(request: Request) -> dict:
                 "location": entry.location,
                 "activeRisks": len(active),
                 "sensorHealth": vizag_health if entry.plant_id == "PLT-VIZAG" else None,
-                "alertFatigueRate": entry.alert_fatigue_baseline,
-                "trir": entry.trir_baseline,
+                # Unmeasured baselines stay null — console must not render fiction.
+                "alertFatigueRate": None,
+                "trir": None,
                 "status": risk_status(len(active), bands),
+                "connected": entry.plant_id == "PLT-VIZAG",
                 "measured": {
                     "activeRisks": True,
                     "sensorHealth": entry.plant_id == "PLT-VIZAG" and vizag_health is not None,

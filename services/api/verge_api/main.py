@@ -46,6 +46,7 @@ from .routes.commission import router as commission_router
 from .routes.compliance import router as compliance_router
 from .routes.contracts import router as contracts_router
 from .routes.degradation import router as degradation_router
+from .routes.docs import router as docs_router
 from .routes.emergency import router as emergency_router
 from .routes.eval_report import router as eval_report_router
 from .routes.evidence import router as evidence_router
@@ -66,6 +67,9 @@ from .routes.stream import router as stream_router
 from .routes.vision import router as vision_router
 from .routes.voice import router as voice_router
 from .routes.workers import router as workers_router
+from verge_docintel import DocIntelStore
+
+from .demo_seed import seed_enabled, seed_mode
 from .seed import seed
 from .state_factory import make_permits_registry, make_reading_buffer
 from .stream_bus import StreamBus
@@ -165,14 +169,15 @@ app.include_router(vision_router, prefix="/api")
 app.include_router(models_router, prefix="/api")
 app.include_router(ops_router, prefix="/api")
 app.include_router(degradation_router, prefix="/api")
+app.include_router(docs_router, prefix="/api")
 app.include_router(permits_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
 app.include_router(fatigue_router, prefix="/api")
 app.include_router(plume_router, prefix="/api")
 app.include_router(stream_router, prefix="/api")
 
-# Backend from VERGE_STORE (memory default; sql persists). Seed only when empty
-# so a durable store keeps its history across restarts.
+# Backend from VERGE_STORE (memory default; sql persists). Demo seed is gated by
+# VERGE_SEED (default demo for local/tests; set off for truth boots).
 store = make_store()
 app.state.store = store
 app.state.trace_index = TraceIndex()
@@ -185,9 +190,11 @@ app.state.canary_zones = parse_canary_zones(
     os.environ.get("VERGE_ML_CANARY_ZONES", "compound-risk:B-04,B-05"),
 )
 app.state.started_at = datetime.now(UTC)
-if not store.list_findings(shadow=None):
+app.state.seed_mode = seed_mode()
+if seed_enabled() and not store.list_findings(shadow=None):
     seed(store)
-app.state.permits.seed_demo(datetime.now(UTC))
+if seed_enabled():
+    app.state.permits.seed_demo(datetime.now(UTC))
 
 _demo_plant = load_plant(DEMO_PLANT)
 app.state.plant = _demo_plant
@@ -195,8 +202,10 @@ app.state.occupancy = OccupancyTracker()
 app.state.emergency = EmergencyManager()
 app.state.actions = ActionsLog()
 app.state.readings = make_reading_buffer(store=store)
-app.state.readings.seed_from_replay()
+if seed_enabled():
+    app.state.readings.seed_from_replay()
 app.state.sensor_thresholds = _demo_plant.thresholds_by_kind()
+app.state.docintel = DocIntelStore()
 
 
 class TransitionBody(BaseModel):
@@ -218,6 +227,7 @@ def health() -> dict:
     narrative layer is degraded (P1, §10.6)."""
     return {
         "status": "ok",
+        "seedMode": getattr(app.state, "seed_mode", seed_mode()),
         "llm": {"provider": llm.name, "degraded": not llm.healthy()},
         "audit": {
             "entries": store.audit_len(),
