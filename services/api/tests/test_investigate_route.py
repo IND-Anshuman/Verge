@@ -13,18 +13,22 @@ def test_investigate_unknown_finding_404():
 
 
 def test_investigate_degraded_returns_fact_sheet_with_real_tools():
-    # Default test env has the NullProvider → the deterministic fact-sheet
-    # path runs, which still exercises every bound tool against app state.
+    # Default test env has the NullProvider → specialists + fact sheet (P4).
     r = client.post("/api/findings/F-CONV-07/investigate")
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["findingId"] == "F-CONV-07"
     assert body["degraded"] is True
     assert body["brief"]["hypotheses"] == []  # no fabricated synthesis (P4)
+    assert body["orchestrator"] == "advisory-v1"
+    assert {s["name"] for s in body["specialists"]} >= {
+        "telemetry", "knowledge", "compliance"
+    }
+    assert "validation" in body
 
     tools_called = [e["tool"] for e in body["evidence"]]
     for tool in ("get_finding", "get_zone_context", "get_recent_telemetry",
-                 "get_active_permits"):
+                 "get_active_permits", "search_plant_docs", "query_zone_graph"):
         assert tool in tools_called, f"{tool} missing from evidence"
 
     # Zone context tool must reflect the real twin (B-04 adjacency).

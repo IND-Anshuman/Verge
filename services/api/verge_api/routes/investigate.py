@@ -1,11 +1,8 @@
-"""Finding investigation agent route (spec — agentic advisory plane).
+"""Finding investigation — advisory orchestrator route (Phase 2.5).
 
-Binds the read-only tool registry over live app state and runs the
-investigator from ``verge_agents``. Advisory only: the agent can look at
-telemetry, permits, the plant graph, memory, and the clause library; it
-cannot transition findings, dispatch alerts, or declare emergencies — those
-stay operator-gated (P8). Every response carries the full tool-call evidence
-trail, and each run is hash-chained into the audit.
+Binds read-only tools over live app state, runs specialists → merge → validate.
+Advisory only (P8). Every response carries specialist digests, tool evidence,
+and a deterministic validation report. Audit-chained.
 """
 
 from __future__ import annotations
@@ -14,7 +11,7 @@ import os
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
-from verge_agents import Tool, ToolRegistry, investigate
+from verge_agents import Tool, ToolRegistry, TwinCatalog, investigate
 from verge_compliance.clauses import load_clauses
 
 router = APIRouter(tags=["investigate"])
@@ -29,6 +26,7 @@ def _build_tools(app, finding) -> ToolRegistry:
     occupancy = app.state.occupancy
     permits = app.state.permits
     thresholds = getattr(app.state, "sensor_thresholds", {})
+    docintel = getattr(app.state, "docintel", None)
 
     def get_finding(finding_id: str = "") -> dict:
         f = store.get_finding(finding_id or finding.finding_id)
@@ -58,7 +56,6 @@ def _build_tools(app, finding) -> ToolRegistry:
     def get_recent_telemetry(finding_id: str = "") -> dict:
         f = store.get_finding(finding_id or finding.finding_id) or finding
         data = readings.series_for_finding(f, thresholds=thresholds)
-        # Trim points so the model sees the shape, not a token flood.
         for series in data.get("series", []):
             pts = series.get("points", [])
             if len(pts) > 24:
@@ -81,7 +78,6 @@ def _build_tools(app, finding) -> ToolRegistry:
         ]
 
     def get_equipment_graph(zone_id: str = "") -> dict:
-        """Equipment↔permit↔finding relations around a zone (knowledge graph)."""
         zid = zone_id or finding.zone_id
         nearby = {zid} | set(plant.adjacency().get(zid, set()))
         active = [p for p in permits.list_active() if p.zone_id in nearby]
@@ -122,6 +118,99 @@ def _build_tools(app, finding) -> ToolRegistry:
                                "title": c.title, "requirement": c.requirement})
         return scored[:8]
 
+    def search_plant_docs(query: str = "") -> dict:
+        """Local DocIntel chunk retrieval for the Knowledge Specialist."""
+        if docintel is None:
+            return {"citations": [], "degraded": True, "reason": "docintel-unavailable"}
+        q = (query or finding.title).lower().split()
+        scored: list[tuple[int, dict]] = []
+        for doc_id, chunks in getattr(docintel, "chunks", {}).items():
+            doc = getattr(docintel, "documents", {}).get(doc_id)
+            for ch in chunks:
+                text = ch.text.lower()
+                score = sum(1 for tok in q if tok in text)
+                if score:
+                    scored.append((
+                        score,
+                        {
+                            "documentId": doc_id,
+                            "title": doc.title if doc else doc_id,
+                            "chunkId": ch.chunk_id,
+                            "page": ch.page,
+                            "excerpt": ch.text[:400],
+                            "score": score,
+                        },
+                    ))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        citations = [row for _, row in scored[:6]]
+        return {
+            "citations": citations,
+            "degraded": len(citations) == 0,
+            "reason": "" if citations else "no-matching-chunks",
+        }
+
+    def query_zone_graph(zone_id: str = "") -> dict:
+        """GraphRAG-lite: local twin relations + optional Neo4j coverage."""
+        zid = zone_id or finding.zone_id
+        local = get_equipment_graph(zid)
+        neo: dict = {"degraded": True, "reason": "skipped"}
+        try:
+            from verge_twin.neo4j_query import zone_graph_coverage
+            neo = zone_graph_coverage(zid, env=dict(os.environ))
+        except Exception as exc:
+            neo = {"degraded": True, "reason": type(exc).__name__}
+        return {
+            "zoneId": zid,
+            "localTwin": local,
+            "neo4j": neo,
+            "hops": [
+                {"from": zid, "rel": "ADJACENT", "to": z}
+                for z in local.get("nearbyZones", []) if z != zid
+            ],
+        }
+
+    def get_recent_voice_events(zone_id: str = "") -> dict:
+        zid = zone_id or finding.zone_id
+        try:
+            from ..voice_events import list_voice_events
+            events = list_voice_events(app.state, limit=20)
+        except Exception as exc:
+            return {"events": [], "degraded": True, "reason": type(exc).__name__}
+        rows = []
+        for e in events:
+            dump = e.model_dump(by_alias=True, mode="json") if hasattr(e, "model_dump") else dict(e)
+            ez = dump.get("zoneId") or dump.get("zone_id")
+            if ez and ez != zid and ez not in plant.adjacency().get(zid, set()):
+                continue
+            rows.append({
+                "transcript": (dump.get("transcript") or dump.get("englishTranscript") or "")[:300],
+                "zoneId": ez,
+                "source": dump.get("source"),
+                "hazards": dump.get("hazards") or [],
+            })
+        return {"zoneId": zid, "events": rows[:8], "count": len(rows)}
+
+    def get_recent_vision_events(zone_id: str = "") -> dict:
+        zid = zone_id or finding.zone_id
+        try:
+            from ..vision_events import list_vision_detections
+            dets = list_vision_detections(app.state, limit=20)
+        except Exception as exc:
+            return {"detections": [], "degraded": True, "reason": type(exc).__name__}
+        rows = []
+        for d in dets:
+            dump = d.model_dump(by_alias=True, mode="json") if hasattr(d, "model_dump") else dict(d)
+            ez = dump.get("zoneId") or dump.get("zone_id")
+            if ez and ez != zid:
+                continue
+            rows.append({
+                "label": dump.get("label") or dump.get("className"),
+                "zoneId": ez,
+                "cameraId": dump.get("cameraId"),
+                "confidence": dump.get("confidence"),
+            })
+        return {"zoneId": zid, "detections": rows[:8], "count": len(rows)}
+
     return ToolRegistry([
         Tool("get_finding", "Full details of a risk finding by id.",
              get_finding, {"type": "object", "properties": {"finding_id": _STR}}),
@@ -135,15 +224,27 @@ def _build_tools(app, finding) -> ToolRegistry:
              "Active work permits in a zone and its adjacent zones.",
              get_active_permits, {"type": "object", "properties": {"zone_id": _STR}}),
         Tool("get_equipment_graph",
-             "Equipment-permit-risk relationships around a zone (knowledge graph).",
+             "Equipment-permit-risk relationships around a zone (local twin graph).",
              get_equipment_graph, {"type": "object", "properties": {"zone_id": _STR}}),
         Tool("search_incident_memory",
              "Search organizational memory: similar incidents, near-misses, OISD guidance.",
              search_incident_memory,
              {"type": "object", "properties": {"query": _STR}}),
+        Tool("search_plant_docs",
+             "Search ingested plant SOPs/manuals (DocIntel chunks) with citations.",
+             search_plant_docs, {"type": "object", "properties": {"query": _STR}}),
+        Tool("query_zone_graph",
+             "Multi-hop zone graph: local twin adjacency/equipment + Neo4j coverage.",
+             query_zone_graph, {"type": "object", "properties": {"zone_id": _STR}}),
         Tool("get_compliance_clauses",
              "Regulatory clauses (OISD/Factory Act) relevant to this finding.",
              get_compliance_clauses, {"type": "object", "properties": {"zone_id": _STR}}),
+        Tool("get_recent_voice_events",
+             "Recent radio/voice events (English ops text) near the finding zone.",
+             get_recent_voice_events, {"type": "object", "properties": {"zone_id": _STR}}),
+        Tool("get_recent_vision_events",
+             "Recent vision detections near the finding zone.",
+             get_recent_vision_events, {"type": "object", "properties": {"zone_id": _STR}}),
     ])
 
 
@@ -156,6 +257,7 @@ def investigate_finding(finding_id: str, request: Request) -> dict:
         raise HTTPException(404, "finding not found")
 
     tools = _build_tools(app, finding)
+    catalog = TwinCatalog.from_plant(app.state.plant)
     model = os.environ.get("VERGE_LLM_AGENT_MODEL") or None
     result = investigate(
         app.state.llm,
@@ -164,15 +266,20 @@ def investigate_finding(finding_id: str, request: Request) -> dict:
         title=finding.title,
         tools=tools,
         model=model,
+        catalog=catalog,
     )
     store.audit_append(
-        actor="investigator-agent",
+        actor="advisory-orchestrator",
         kind="investigation-run",
         payload={
             "findingId": finding_id,
             "degraded": result["degraded"],
             "toolCalls": [s["tool"] for s in result["evidence"]],
+            "specialists": [s["name"] for s in result.get("specialists") or []],
+            "validationOk": (result.get("validation") or {}).get("ok"),
+            "inventedTags": (result.get("validation") or {}).get("inventedTags") or [],
             "model": result["model"],
+            "orchestrator": result.get("orchestrator"),
         },
         timestamp=datetime.now(UTC),
     )

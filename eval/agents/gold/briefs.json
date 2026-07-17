@@ -1,0 +1,100 @@
+[
+  {
+    "id": "gold-hot-work-b04",
+    "findingId": "F-CONV-07",
+    "zoneId": "B-04",
+    "title": "Hot work + rising flammable gas during shift changeover",
+    "catalog": {
+      "zoneIds": ["B-04", "B-03", "B-05"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": ["LEL-04A", "F-CONV-07"]
+    },
+    "evidenceTools": ["get_finding", "get_zone_context", "get_active_permits", "search_plant_docs"],
+    "brief": {
+      "summary": "NEAR-band compound finding in B-04: hot work permit activity coincides with rising LEL on LEL-04A during changeover.",
+      "hypotheses": [
+        {
+          "cause": "SIMOPS: hot work near rising flammable atmosphere",
+          "likelihood": "high",
+          "supportedBy": "get_active_permits"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Suspend hot work near EQ-OVEN-1 in B-04 until LEL-04A is stable below watch band",
+          "urgency": "immediate",
+          "rationale": "Hierarchy: eliminate ignition source while atmosphere is uncertain",
+          "supportedBy": "get_active_permits"
+        }
+      ],
+      "regulatoryRefs": [
+        {"clauseId": "VC-HOT-WORK", "relevance": "Hot work controls"}
+      ],
+      "openQuestions": [
+        "Confirm purge completeness on the work package"
+      ]
+    },
+    "digestTokens": "B-04 hot work LEL-04A permit changeover EQ-OVEN-1"
+  },
+  {
+    "id": "gold-stale-sensor",
+    "findingId": "F-STALE-01",
+    "zoneId": "B-03",
+    "title": "stale-sensor advisory",
+    "catalog": {
+      "zoneIds": ["B-03", "B-04"],
+      "equipmentIds": [],
+      "sensorIds": ["CO-03A"]
+    },
+    "evidenceTools": ["get_finding", "get_recent_telemetry"],
+    "brief": {
+      "summary": "WATCH advisory for stale CO-03A telemetry in B-03 — confidence degraded, no barrier recommendation without live readings.",
+      "hypotheses": [
+        {
+          "cause": "Sensor cadence loss or edge gateway drop",
+          "likelihood": "medium",
+          "supportedBy": "get_recent_telemetry"
+        }
+      ],
+      "recommendedBarriers": [
+        {
+          "action": "Dispatch instrument tech to verify CO-03A in B-03",
+          "urgency": "this-shift",
+          "rationale": "Restore sensing before trusting band",
+          "supportedBy": "get_recent_telemetry"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": ["Is the edge gateway reporting for B-03?"]
+    },
+    "digestTokens": "B-03 CO-03A stale telemetry gateway"
+  },
+  {
+    "id": "gold-reject-ghost",
+    "findingId": "F-GHOST",
+    "zoneId": "B-04",
+    "title": "synthetic invented-tag case",
+    "catalog": {
+      "zoneIds": ["B-04"],
+      "equipmentIds": ["EQ-OVEN-1"],
+      "sensorIds": ["LEL-04A"]
+    },
+    "evidenceTools": ["get_zone_context"],
+    "brief": {
+      "summary": "Model invented GHOST-99 skid in B-04.",
+      "hypotheses": [],
+      "recommendedBarriers": [
+        {
+          "action": "Isolate GHOST-99 before entry",
+          "urgency": "immediate",
+          "rationale": "fabricated",
+          "supportedBy": "get_zone_context"
+        }
+      ],
+      "regulatoryRefs": [],
+      "openQuestions": []
+    },
+    "expectInvented": ["GHOST-99"],
+    "digestTokens": "B-04 EQ-OVEN-1"
+  }
+]

@@ -93,28 +93,27 @@ def test_degraded_provider_degrades_agent():
     assert result.answer == ""
 
 
-def test_investigator_parses_brief_and_carries_evidence():
+def test_investigator_parses_brief_via_orchestrator_merge():
+    # Phase 2.5: specialists run tools locally; one LLM merge call synthesizes.
     brief = {"summary": "Hot work near rising LEL.",
              "hypotheses": [{"cause": "purge failure", "likelihood": "high",
-                             "supportedBy": "get_recent_telemetry"}],
+                             "supportedBy": "telemetry"}],
              "recommendedBarriers": [], "regulatoryRefs": [], "openQuestions": []}
-    provider = ScriptedProvider([
-        Completion("", "m", tool_calls=(_call("lookup", {"key": "t"}),)),
-        Completion(json.dumps(brief), "m"),
-    ])
+    provider = ScriptedProvider([Completion(json.dumps(brief), "m")])
     out = investigate(provider, finding_id="F-1", zone_id="B-04", title="t",
                       tools=_registry())
     assert out["degraded"] is False
     assert out["brief"]["summary"] == "Hot work near rising LEL."
     assert out["brief"]["hypotheses"][0]["likelihood"] == "high"
-    assert [e["tool"] for e in out["evidence"]] == ["lookup"]
+    assert out["orchestrator"] == "advisory-v1"
+    assert "validation" in out
 
 
 def test_investigator_degraded_path_is_fact_sheet():
     out = investigate(NullProvider(), finding_id="F-1", zone_id="B-04", title="t",
                       tools=_registry())
     assert out["degraded"] is True
-    assert "no LLM" in out["brief"]["summary"]
+    assert "no LLM" in out["brief"]["summary"] or "specialists" in out["brief"]["summary"]
     # No fabricated hypotheses in the deterministic path (P4).
     assert out["brief"]["hypotheses"] == []
 

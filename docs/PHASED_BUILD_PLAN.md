@@ -498,6 +498,13 @@ Even solo: sequence Phase 0 → 1 → 2D fusion → **2.5 GenAI Core** → 4 →
 
 ## 16. Build progress log
 
+### 2026-07-18 — Phase 2.5 GenAI Core landed (orchestrator path)
+
+- `packages/agents`: advisory **orchestrator** + telemetry/knowledge/compliance(/multimodal) specialists + twin **validator**  
+- Investigate API: DocIntel `search_plant_docs`, `query_zone_graph`, voice/vision event tools; audit actor `advisory-orchestrator`  
+- `eval/agents/` gold briefs + invented-tag / citation / groundedness metrics  
+- Still open: Cognee always-on cognify in prod env; deeper Neo4j GraphRAG templates  
+
 ### 2026-07-18 — GenAI architecture audit + Melia voice
 
 - Research audit: [`GENAI_ARCHITECTURE_AUDIT.md`](./GENAI_ARCHITECTURE_AUDIT.md)  
