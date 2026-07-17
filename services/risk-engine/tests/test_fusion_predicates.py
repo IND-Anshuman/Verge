@@ -101,7 +101,7 @@ def test_vision_ppe_with_hot_work() -> None:
                 ts=NOW - timedelta(seconds=20),
                 camera_id="CAM-B04",
                 zone_id="B-04",
-                label="no-hardhat",
+                label="ppe-missing",
                 confidence=0.81,
             )
         ],

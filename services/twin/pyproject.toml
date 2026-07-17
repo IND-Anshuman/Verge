@@ -3,7 +3,7 @@ name = "verge-twin"
 version = "0.3.0"
 description = "Plant digital twin — zones, adjacency, sensors, thresholds (Pillar 3)."
 requires-python = ">=3.11"
-dependencies = ["verge-schema", "pyyaml>=6.0"]
+dependencies = ["verge-schema", "pyyaml>=6.0", "neo4j>=5.0"]
 
 [build-system]
 requires = ["hatchling"]

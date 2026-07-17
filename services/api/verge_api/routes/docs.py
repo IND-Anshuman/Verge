@@ -6,6 +6,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 from verge_docintel import DocIntelStore, process_bytes
 from verge_docintel.pipeline import chunk_text
+from verge_docintel.resolve import resolve_entities
 from verge_llm import Message, provider_from_env
 
 from verge_api.doc_hooks import maybe_cognify_document, maybe_sync_entities_neo4j
@@ -67,10 +68,21 @@ async def ingest_doc(
         title=title,
         plant_pack=plantPack,
     )
+    plant = getattr(request.app.state, "plant", None)
+    if plant is not None and asset.document_id in store.entities:
+        store.entities[asset.document_id] = resolve_entities(
+            store.entities[asset.document_id],
+            zone_ids=set(plant.zones),
+            sensor_ids=set(plant.sensors),
+            equipment_ids=set(plant.equipment),
+        )
+    ents = store.entities.get(asset.document_id, [])
+    resolved = sum(1 for e in ents if e.resolved_ref)
     return {
         "document": asset.model_dump(by_alias=True, mode="json"),
-        "entityCount": len(store.entities.get(asset.document_id, [])),
+        "entityCount": len(ents),
         "chunkCount": len(store.chunks.get(asset.document_id, [])),
+        "resolvedEntityCount": resolved,
         "hooks": {
             "cognee": maybe_cognify_document(store, asset),
             "neo4j": maybe_sync_entities_neo4j(store, asset),

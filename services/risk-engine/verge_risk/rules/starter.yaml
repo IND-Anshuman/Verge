@@ -449,7 +449,7 @@
     - type: permit_active
       kind: hot-work
     - type: vision_detection
-      labels: [no-hardhat, no-ppe, person]
+      labels: [ppe-missing, no-hardhat, no-ppe, person]
       min_confidence: 0.45
       max_age_s: 300
 

@@ -13,7 +13,8 @@ from verge_twin.plant import PlantModel
 
 
 def sync_plant(model: PlantModel, *, env: dict[str, str] | None = None) -> dict[str, Any]:
-    env = env or dict(os.environ)
+    # Use identity check: empty dict must mean "no credentials", not fall back to os.environ.
+    env = dict(os.environ) if env is None else env
     uri = env.get("NEO4J_URI")
     user = env.get("NEO4J_USER", "neo4j")
     password = env.get("NEO4J_PASSWORD")

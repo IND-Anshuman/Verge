@@ -9,9 +9,13 @@ can show vision as one leg of a compound finding (P3).
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, File, Form, Request, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from verge_vision import to_contributing_signals
+
+from ..vision_events import list_vision_detections, record_vision_detections
 
 router = APIRouter(tags=["vision"])
 FRAME_FILE = File(...)
@@ -23,19 +27,37 @@ class DetectBody(BaseModel):
     frameId: str | None = None
 
 
-def _detect_response(detector, camera_id: str, frame_id: str | None, image: bytes | None) -> dict:
+class VisionEventBody(BaseModel):
+    cameraId: str
+    zoneId: str
+    label: str = "ppe-missing"
+    confidence: float = Field(default=0.8, ge=0.0, le=1.0)
+
+
+def _detect_response(
+    request: Request,
+    detector,
+    camera_id: str,
+    frame_id: str | None,
+    image: bytes | None,
+) -> dict:
     result = detector.detect(camera_id, frame_id, image)
     signals = to_contributing_signals(result)
+    body = result.to_dict()
+    recorded = record_vision_detections(request.app.state, body.get("detections") or [])
     return {
-        **result.to_dict(),
+        **body,
         "contributingSignals": [s.model_dump(by_alias=True, mode="json") for s in signals],
+        "fusionCount": len(recorded),
     }
 
 
 @router.post("/vision/detect")
 def detect(body: DetectBody, request: Request) -> dict:
     """Annotation-replay / metadata-only detection (no real frame required)."""
-    return _detect_response(request.app.state.vision, body.cameraId, body.frameId, None)
+    return _detect_response(
+        request, request.app.state.vision, body.cameraId, body.frameId, None
+    )
 
 
 @router.post("/vision/detect-frame")
@@ -49,4 +71,34 @@ async def detect_frame(
     routed demo clip (``verge vision watch``) reaches the vision plane; the
     stub/annotation backends still degrade or replay exactly as before."""
     image = await file.read()
-    return _detect_response(request.app.state.vision, cameraId, None, image)
+    return _detect_response(request, request.app.state.vision, cameraId, None, image)
+
+
+@router.post("/vision/events")
+def vision_event_ingest(body: VisionEventBody, request: Request) -> dict:
+    """Manual/demo vision event for fusion drills (honest about source)."""
+    recorded = record_vision_detections(
+        request.app.state,
+        [
+            {
+                "label": body.label,
+                "zoneId": body.zoneId,
+                "cameraId": body.cameraId,
+                "confidence": body.confidence,
+                "ts": datetime.now(UTC).isoformat(),
+            }
+        ],
+    )
+    return {
+        "detections": [d.model_dump(by_alias=True, mode="json") for d in recorded],
+        "count": len(recorded),
+    }
+
+
+@router.get("/vision/events")
+def vision_events_recent(request: Request, limit: int = 50) -> dict:
+    events = list_vision_detections(request.app.state, limit=limit)
+    return {
+        "detections": [d.model_dump(by_alias=True, mode="json") for d in events],
+        "count": len(events),
+    }

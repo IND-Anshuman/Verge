@@ -46,7 +46,11 @@ def extract_entities(text: str, *, document_id: str) -> list[EntityMention]:
     for m in _EQUIPMENT.finditer(text):
         add(EntityKind.EQUIPMENT, m.group(0), 0.8)
     for m in _ZONE.finditer(text):
-        add(EntityKind.ZONE, m.group(1), 0.75)
+        raw = m.group(1)
+        # Avoid tagging sensor/equipment ids (LEL-04, CO-04) as zones.
+        if _EQUIPMENT.fullmatch(raw):
+            continue
+        add(EntityKind.ZONE, raw, 0.75)
     for m in _CLAUSE.finditer(text):
         add(EntityKind.CLAUSE, m.group(0), 0.7)
     for m in _PERMIT.finditer(text):

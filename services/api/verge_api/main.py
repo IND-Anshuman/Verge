@@ -206,6 +206,7 @@ if seed_enabled():
 app.state.sensor_thresholds = _demo_plant.thresholds_by_kind()
 app.state.docintel = DocIntelStore()
 app.state.voice_events = []  # rolling VoiceEvent list for risk fusion
+app.state.vision_detections = []  # rolling VisionDetection list for risk fusion
 
 
 class TransitionBody(BaseModel):

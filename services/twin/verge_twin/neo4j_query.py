@@ -12,7 +12,7 @@ def zone_graph_coverage(
     env: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Return adjacency coverage for a zone; degrades when Neo4j is unset."""
-    env = env or dict(os.environ)
+    env = dict(os.environ) if env is None else env
     uri = env.get("NEO4J_URI")
     password = env.get("NEO4J_PASSWORD")
     user = env.get("NEO4J_USER", "neo4j")
