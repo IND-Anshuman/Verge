@@ -107,7 +107,7 @@ export function EmergencyPanel({ activeFindings, onChange }: EmergencyPanelProps
                   'Emergency declared — evidence frozen, muster open',
                 )
               }
-              className="text-micro font-bold uppercase shrink-0"
+              className="shrink-0"
             >
               Declare
             </Button>
@@ -137,7 +137,7 @@ export function EmergencyPanel({ activeFindings, onChange }: EmergencyPanelProps
           size="sm"
           disabled={busy || !approver.trim()}
           onClick={() => act(() => emergencyStandDown(approver.trim()), 'Emergency stood down')}
-          className="text-micro font-bold uppercase h-6"
+          className="h-6"
           title={approver.trim() ? 'Stand down' : 'Enter approver name below first'}
         >
           Stand down

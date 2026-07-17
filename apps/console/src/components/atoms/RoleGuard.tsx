@@ -37,11 +37,12 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full p-6 text-center select-none text-ink">
         <div className="bg-imminent/10 border border-imminent/20 p-6 rounded-md max-w-sm flex flex-col items-center gap-3">
-          <ShieldAlert className="h-10 w-10 text-imminent animate-bounce" />
-          <h2 className="text-base font-bold uppercase font-mono text-imminent tracking-wide">
-            403 - FORBIDDEN
+          <ShieldAlert className="h-10 w-10 text-imminent" />
+          <h2 className="text-md font-semibold text-ink">
+            <span className="font-mono text-imminent mr-1.5">403</span>
+            Access restricted
           </h2>
-          <p className="text-xs text-ink-dim leading-relaxed font-mono">
+          <p className="text-xs text-ink-dim leading-relaxed">
             Role authentication failed. This console workspace is restricted to Safety Engineers and administrators only.
           </p>
         </div>

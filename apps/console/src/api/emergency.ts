@@ -71,7 +71,7 @@ export async function declareEmergency(
 ): Promise<EmergencyStatus> {
   return request<EmergencyStatus>(
     `/api/findings/${encodeURIComponent(findingId)}/emergency/declare`,
-    { method: 'POST', body: JSON.stringify({ approvedBy }) },
+    { method: 'POST', body: { approvedBy } },
   );
 }
 
@@ -82,14 +82,14 @@ export async function musterCheckIn(
 ): Promise<EmergencyStatus> {
   return request<EmergencyStatus>('/api/emergency/muster/check-in', {
     method: 'POST',
-    body: JSON.stringify({ workerId, musterId, recordedBy }),
+    body: { workerId, musterId, recordedBy },
   });
 }
 
 export async function emergencyStandDown(approvedBy: string): Promise<EmergencyStatus> {
   return request<EmergencyStatus>('/api/emergency/stand-down', {
     method: 'POST',
-    body: JSON.stringify({ approvedBy }),
+    body: { approvedBy },
   });
 }
 

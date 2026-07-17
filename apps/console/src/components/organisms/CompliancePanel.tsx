@@ -21,7 +21,7 @@ const NEXT_STATE: Record<string, { to: string; label: string; needsNote?: boolea
 const STATE_COLOR: Record<string, string> = {
   open: 'text-near border-near/30 bg-near/10',
   'in-progress': 'text-watch border-watch/30 bg-watch/10',
-  'pending-verification': 'text-accent border-accent/30 bg-accent/10',
+  'pending-verification': 'text-watch border-watch/30 bg-watch/10',
   'closed-effective': 'text-ok border-ok/30 bg-ok/10',
   reopened: 'text-imminent border-imminent/30 bg-imminent/10',
 };
@@ -253,7 +253,7 @@ export function CompliancePanel() {
                         size="sm"
                         disabled={busy}
                         onClick={() => advance(a)}
-                        className="text-micro h-5 px-1.5 shrink-0 text-accent hover:bg-accent/10"
+                        className="text-micro h-5 px-1.5 shrink-0 text-ink-dim hover:text-ink"
                       >
                         {NEXT_STATE[a.state].label}
                       </Button>

@@ -87,26 +87,30 @@ export default function FindingsView() {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden relative text-ink">
+      <div className="flex flex-col h-full overflow-hidden relative text-ink">
         {error && mobileTab === 'home' && (
-          <div className="bg-imminent/10 border-b border-imminent/20 text-imminent text-[10px] p-2 flex items-center gap-2 select-text shrink-0 font-mono uppercase">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-imminent" />
-            <div className="flex-1">Backend offline — no live findings available.</div>
+          <div className="bg-imminent/10 border-b border-imminent/20 p-2 flex items-baseline gap-2 select-text shrink-0">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0 self-center text-imminent" />
+            <span className="text-micro font-mono uppercase tracking-[0.08em] text-imminent font-semibold shrink-0">
+              Offline
+            </span>
+            <span className="text-micro text-ink flex-1">No live findings available.</span>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto scrollbar p-4 pb-2">
+        <div className="flex-1 overflow-y-auto scrollbar p-4 pb-16">
           {mobileTab === 'home' && (
             <div className="flex flex-col gap-3">
-              <span className="text-xs font-mono font-bold text-ink-dim uppercase select-none">
-                Active Field Findings
-              </span>
+              <span className="ruled-label">Active field findings</span>
               {filteredFindings.map((finding) => (
                 <FindingCardMobile key={finding.findingId} finding={finding} onChange={loadData} />
               ))}
               {filteredFindings.length === 0 && (
-                <div className="text-center p-6 border border-dashed border-line text-xs font-mono text-ink-dim uppercase rounded">
-                  NO ACTIVE ALARMS
+                <div className="text-center p-6 border border-dashed border-line rounded-md flex flex-col gap-1">
+                  <span className="text-xs font-medium text-ink-dim">No findings in the field</span>
+                  <span className="text-micro font-mono text-ink-dim/60">
+                    New risks will appear here with their lead-time band.
+                  </span>
                 </div>
               )}
             </div>
@@ -133,14 +137,14 @@ export default function FindingsView() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 h-[calc(100vh-80px)] overflow-hidden">
+    <div className="flex flex-col gap-4 p-4 h-full overflow-hidden">
       {error && (
-        <div className="bg-imminent/10 border border-imminent/20 text-imminent text-xs rounded p-2.5 flex items-center gap-2 select-text shrink-0">
-          <AlertCircle className="h-4 w-4 shrink-0 text-imminent" />
-          <div className="flex-1">
-            <span className="font-bold uppercase tracking-wider mr-1">BACKEND OFFLINE:</span>
-            {error}
-          </div>
+        <div className="bg-imminent/10 border border-imminent/20 rounded p-2.5 flex items-baseline gap-2 select-text shrink-0">
+          <AlertCircle className="h-4 w-4 shrink-0 self-center text-imminent" />
+          <span className="text-micro font-mono uppercase tracking-[0.08em] text-imminent font-semibold shrink-0">
+            Backend offline
+          </span>
+          <span className="text-xs text-ink flex-1">{error}</span>
         </div>
       )}
 

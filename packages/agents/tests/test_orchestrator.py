@@ -150,3 +150,36 @@ def test_investigate_entrypoint_uses_orchestrator():
     )
     assert out["orchestrator"] == "advisory-v1"
     assert "specialists" in out
+
+
+def test_orchestrator_parses_fenced_json_brief():
+    brief = {
+        "summary": "Hot work in B-04 near rising LEL.",
+        "hypotheses": [{"cause": "SIMOPS", "likelihood": "high",
+                        "supportedBy": "telemetry"}],
+        "recommendedBarriers": [
+            {
+                "action": "Hold work near EQ-OVEN-1 in B-04",
+                "urgency": "immediate",
+                "rationale": "atmosphere uncertain",
+                "supportedBy": "get_active_permits",
+            }
+        ],
+        "regulatoryRefs": [],
+        "openQuestions": [],
+    }
+    fenced = "```json\n" + json.dumps(brief) + "\n```\n"
+    provider = ScriptedProvider([Completion(fenced, "m")])
+    out = orchestrate(
+        provider,
+        finding_id="F-1",
+        zone_id="B-04",
+        title="hot work",
+        tools=_tools(),
+        catalog=_catalog(),
+        include_multimodal=False,
+    )
+    assert out["degraded"] is False
+    assert out["brief"]["summary"].startswith("Hot work")
+    assert out["brief"]["hypotheses"]
+    assert "response was not valid JSON" not in out["brief"]["openQuestions"]

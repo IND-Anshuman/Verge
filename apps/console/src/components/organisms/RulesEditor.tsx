@@ -135,7 +135,7 @@ export function RulesEditor() {
               size="sm"
               onClick={handleCompile}
               icon={<Play className="h-3 w-3" />}
-              className="h-6 w-20 text-micro uppercase py-0 bg-accent/25 border-accent/40 text-accent hover:bg-accent/45"
+              className="h-6 w-20 text-micro uppercase py-0"
             >
               Verify DSL
             </Button>

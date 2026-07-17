@@ -90,7 +90,7 @@ export function SnoozeDialog({ finding, isOpen, onClose, onSuccess }: SnoozeDial
                 onClick={() => setDuration(preset.value)}
                 className={`h-8 rounded border text-xs font-semibold font-mono transition-all cursor-pointer ${
                   duration === preset.value
-                    ? 'bg-accent/10 border-accent text-accent'
+                    ? 'bg-panel-2 border-ink text-ink'
                     : 'bg-panel-2 border-line text-ink-dim hover:text-ink hover:border-line/75'
                 }`}
               >

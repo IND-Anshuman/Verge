@@ -130,7 +130,7 @@ export function MobileFieldWorkerPanel({ findings = [] }: MobileFieldWorkerPanel
 
       <Card className="p-3 bg-panel border-line flex flex-col gap-2 select-text">
         <span className="text-micro font-bold text-ink-dim uppercase flex items-center gap-1.5 border-b border-line pb-1.5 select-none">
-          <MapPin className="h-3.5 w-3.5 text-watch animate-bounce" />
+          <MapPin className="h-3.5 w-3.5 text-watch" />
           Active Zone Alerts
         </span>
         {activeFindings.length === 0 ? (
@@ -163,7 +163,7 @@ export function MobileFieldWorkerPanel({ findings = [] }: MobileFieldWorkerPanel
 
       <Card className="p-3 bg-panel border-line flex flex-col gap-3">
         <span className="text-micro font-bold text-ink-dim uppercase flex items-center gap-1.5 border-b border-line pb-1.5">
-          <Mic className="h-3.5 w-3.5 text-accent" />
+          <Mic className="h-3.5 w-3.5 text-ink-dim" />
           Voice Observation Reporter
         </span>
 

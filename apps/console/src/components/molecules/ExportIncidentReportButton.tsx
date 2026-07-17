@@ -39,7 +39,7 @@ export function ExportIncidentReportButton({ finding }: ExportIncidentReportButt
         size="sm"
         onClick={handleExport}
         loading={isExporting}
-        icon={<Download className="h-3.5 w-3.5 text-accent" />}
+        icon={<Download className="h-3.5 w-3.5" />}
         className="text-micro font-mono font-bold uppercase"
       >
         Export Incident Report

@@ -164,7 +164,7 @@ export async function transitionCorrectiveAction(
 ): Promise<CorrectiveAction> {
   return request(`/api/compliance/actions/${encodeURIComponent(actionId)}/transition`, {
     method: 'POST',
-    body: JSON.stringify({ to, actor, note }),
+    body: { to, actor, note },
   });
 }
 

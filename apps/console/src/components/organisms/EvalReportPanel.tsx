@@ -60,7 +60,7 @@ export function EvalReportPanel() {
               {rows.map((r) => (
                 <tr key={r.incident} className="border-t border-line/60">
                   <td className="py-1 pr-2 text-ink">{r.incident}</td>
-                  <td className="py-1 pr-2 text-accent font-bold">
+                  <td className="py-1 pr-2 text-ink font-semibold">
                     {fmtLead(r.verge?.leadMin)} ({r.verge?.band ?? '—'})
                   </td>
                   <td className="py-1 pr-2">{fmtLead(r.b0?.leadMin)}</td>

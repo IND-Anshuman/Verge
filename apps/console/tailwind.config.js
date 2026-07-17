@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#F4F3F0',
-        panel: { DEFAULT: '#FFFFFF', '2': '#ECEBE7' },
-        line: { DEFAULT: '#DEDCD5', '2': '#C6C3BA' },
-        ink: { DEFAULT: '#16181C', dim: '#6E7178' },
+        bg: '#F0F1EF',
+        panel: { DEFAULT: '#FFFFFF', '2': '#E8E9E4' },
+        line: { DEFAULT: '#D5D6D0', '2': '#B4B5AE' },
+        ink: { DEFAULT: '#121417', dim: '#5C6068' },
         accent: '#D9480F',
         imminent: '#C92A2A',
         near: '#D9480F',
@@ -20,18 +20,21 @@ export default {
         mono: ['IBM Plex Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
       },
       fontSize: {
+        // Revised scale (2026-07-18): titles must out-rank body — card titles
+        // sit at base (14px), page h1 at lg (18px), display/counterfactual xl.
         micro: ['10px', { lineHeight: '1.4' }],
-        xs: ['11px', { lineHeight: '1.45' }],
-        sm: ['12px', { lineHeight: '1.45' }],
-        base: ['13px', { lineHeight: '1.45' }],
-        md: ['14px', { lineHeight: '1.45' }],
-        lg: ['16px', { lineHeight: '1.4' }],
-        xl: ['18px', { lineHeight: '1.35' }],
-        '2xl': ['20px', { lineHeight: '1.3' }],
+        xs: ['12px', { lineHeight: '1.45' }],
+        sm: ['13px', { lineHeight: '1.45' }],
+        base: ['14px', { lineHeight: '1.45' }],
+        md: ['15px', { lineHeight: '1.45' }],
+        lg: ['18px', { lineHeight: '1.4' }],
+        xl: ['22px', { lineHeight: '1.3' }],
+        '2xl': ['24px', { lineHeight: '1.25' }],
       },
       spacing: {
         '0.5': '2px', '1': '4px', '1.5': '6px', '2': '8px', '2.5': '10px',
-        '3': '12px', '3.5': '14px', '4': '16px', '5': '20px', '6': '24px', '8': '32px',
+        '3': '12px', '3.5': '14px', '4': '16px', '5': '20px', '6': '24px',
+        '7': '28px', '8': '32px', '9': '36px', '10': '40px', '12': '48px',
       },
       borderRadius: {
         sm: '2px', DEFAULT: '4px', md: '6px', lg: '8px',

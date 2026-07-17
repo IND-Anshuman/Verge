@@ -36,7 +36,7 @@ export default function FleetView() {
   }));
 
   return (
-    <div className="flex flex-col gap-6 p-4 h-[calc(100vh-80px)] overflow-y-auto scrollbar select-text text-ink">
+    <div className="flex flex-col gap-6 p-4 h-full overflow-y-auto scrollbar select-text text-ink">
       <div className="flex flex-col gap-1 border-b border-line pb-3 select-none">
         <h1 className="text-lg font-semibold tracking-tight">Multi-site fleet</h1>
         <p className="text-xs text-ink-dim">
@@ -59,11 +59,16 @@ export default function FleetView() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-3">
-          <span className="text-micro font-mono text-ink-dim uppercase tracking-[0.1em] select-none">
-            Production sites
-          </span>
+          <span className="ruled-label select-none">Production sites</span>
           {plants.length === 0 && !loadError && (
-            <span className="text-xs font-mono text-ink-dim">Loading fleet…</span>
+            <div className="flex flex-col gap-2" aria-label="Loading fleet">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="surface-1 p-3.5 flex flex-col gap-2" aria-hidden="true">
+                  <div className="h-3 w-32 animate-pulse rounded bg-panel-2" />
+                  <div className="h-3 w-48 animate-pulse rounded bg-panel-2" />
+                </div>
+              ))}
+            </div>
           )}
           {plants.map((plant) => {
             const connected = plant.connected ?? plant.plantId === connectedSite;
@@ -142,9 +147,7 @@ export default function FleetView() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <span className="text-micro font-mono text-ink-dim uppercase tracking-[0.1em] select-none">
-            Measured comparison
-          </span>
+          <span className="ruled-label select-none">Measured comparison</span>
           <div className="h-56 w-full border border-line bg-panel-2/30 p-3 rounded-md select-none font-mono text-micro">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -168,7 +171,11 @@ export default function FleetView() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <span className="text-ink-dim text-xs">No fleet data</span>
+              <div className="h-full flex items-center justify-center">
+                <span className="text-micro font-mono uppercase tracking-[0.1em] text-ink-dim/60 select-none">
+                  No measured data yet
+                </span>
+              </div>
             )}
           </div>
         </div>

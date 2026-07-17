@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { RiskFinding } from '@/types';
-import { Modal, Button } from '@/components/atoms';
+import { Modal, Button, Badge } from '@/components/atoms';
 import { transitionFinding, getFindingExposure } from '@/api';
 import type { FindingExposure } from '@/api/workers';
 import { TemporalConvergenceChart } from './TemporalConvergenceChart';
@@ -9,6 +9,7 @@ import { InvestigationPanel } from '@/components/molecules/InvestigationPanel';
 import { ExportEvidenceButton } from '@/components/molecules/ExportEvidenceButton';
 import { ExportIncidentReportButton } from '@/components/molecules/ExportIncidentReportButton';
 import { FindingAuditTab } from '@/components/molecules/FindingAuditTab';
+import { lineageIcon } from '@/components/molecules/LineageChip';
 import {
   FileText,
   ShieldCheck,
@@ -17,6 +18,10 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import clsx from 'clsx';
+
+/* Finding detail — an investigation cockpit, not a CRUD modal.
+   Identity pinned in the header; disposition facts in a left rail that
+   reads like a title block; evidence in stable tabs on the right. */
 
 interface FindingDetailModalProps {
   finding: RiskFinding | null;
@@ -27,6 +32,19 @@ interface FindingDetailModalProps {
 
 type TabType = 'overview' | 'chart' | 'lineage' | 'audit';
 
+/* One disposition fact — hairline-separated definition row (title-block
+   grammar), not a box inside a box. */
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2 py-1.5 border-b border-line/70">
+      <span className="text-micro font-mono uppercase tracking-[0.08em] text-ink-dim shrink-0">
+        {label}
+      </span>
+      <span className="text-xs font-mono text-ink text-right tabular-nums min-w-0">{children}</span>
+    </div>
+  );
+}
+
 export function FindingDetailModal({ finding, isOpen, onClose, onSuccess }: FindingDetailModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [exposure, setExposure] = useState<FindingExposure | null>(null);
@@ -34,6 +52,8 @@ export function FindingDetailModal({ finding, isOpen, onClose, onSuccess }: Find
   const findingId = finding?.findingId ?? null;
   useEffect(() => {
     if (!isOpen || !findingId) return;
+    // Each finding opens on its brief with fresh exposure data
+    setActiveTab('overview');
     let cancelled = false;
     getFindingExposure(findingId)
       .then((e) => {
@@ -50,88 +70,92 @@ export function FindingDetailModal({ finding, isOpen, onClose, onSuccess }: Find
   if (!finding) return null;
 
   const tabs: { value: TabType; label: string; icon: React.ReactNode }[] = [
-    { value: 'overview', label: 'OVERVIEW', icon: <Sliders className="h-3.5 w-3.5" /> },
-    { value: 'chart', label: 'CONVERGENCE CHART', icon: <TrendingUp className="h-3.5 w-3.5" /> },
-    { value: 'lineage', label: 'EVIDENCE LINEAGE', icon: <FileText className="h-3.5 w-3.5" /> },
-    { value: 'audit', label: 'AUDIT CHAIN', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+    { value: 'overview', label: 'BRIEF', icon: <Sliders className="h-3.5 w-3.5" /> },
+    { value: 'chart', label: 'SIGNALS', icon: <TrendingUp className="h-3.5 w-3.5" /> },
+    { value: 'lineage', label: 'LINEAGE', icon: <FileText className="h-3.5 w-3.5" /> },
+    { value: 'audit', label: 'AUDIT', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
   ];
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Finding Details: ${finding.findingId}`}
-      description={`${finding.zoneId} · Risk Finding Analysis`}
-      size="xl"
+      title={
+        <span className="flex items-center gap-2 min-w-0">
+          <span className="truncate">{finding.title}</span>
+          {finding.shadow && (
+            <Badge variant="generic" color="near" className="text-micro font-bold border-dashed shrink-0">
+              SHADOW
+            </Badge>
+          )}
+        </span>
+      }
+      description={
+        <span className="font-mono text-micro tracking-[0.06em]">
+          {finding.findingId} · {finding.zoneId} · investigation
+        </span>
+      }
+      size="2xl"
     >
-      <div className="flex flex-col md:flex-row gap-4 h-[500px] overflow-hidden text-ink">
-        
-        {/* Left column: Summary Stats Card */}
-        <div className="w-full md:w-60 flex flex-col gap-3 border-r border-line pr-4 select-none">
-          <div className="flex flex-col gap-1">
-            <span className="text-micro font-mono text-ink-dim uppercase">Lead time to breach</span>
-            <LeadTimeGauge band={finding.leadTimeBand} basis={finding.leadTimeBasis} size="md" />
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 h-[540px] overflow-hidden text-ink">
+        {/* Left rail — disposition title block */}
+        <div className="w-full md:w-64 flex flex-col border-r border-line pr-4 select-none overflow-y-auto scrollbar shrink-0">
+          <span className="ruled-label mb-2">Lead time to breach</span>
+          <LeadTimeGauge band={finding.leadTimeBand} basis={finding.leadTimeBasis} size="md" />
 
-          <div className="flex flex-col gap-1 font-mono text-xs">
-            <span className="text-micro text-ink-dim uppercase">State</span>
-            <div className="border border-line rounded px-2.5 py-1 bg-panel-2/50 text-ink uppercase font-bold flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+          <span className="ruled-label mt-4 mb-1">Disposition</span>
+          <Fact label="State">
+            <span className="inline-flex items-center gap-1.5 uppercase font-semibold">
+              <span className="h-1.5 w-1.5 rounded-full bg-ink-dim" />
               {finding.state}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1 font-mono text-xs">
-            <span className="text-micro text-ink-dim uppercase">Confidence Rating</span>
-            <div className="border border-line rounded px-2.5 py-1 bg-panel-2/50 text-ink font-bold tabular-nums">
-              {(finding.confidence * 100).toFixed(0)}%
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1 font-mono text-xs">
-            <span className="text-micro text-ink-dim uppercase">Estimate Quality</span>
-            <div className="border border-line rounded px-2.5 py-1 bg-panel-2/50 text-ink uppercase">
-              {finding.estimateQuality}
-            </div>
-          </div>
+            </span>
+          </Fact>
+          <Fact label="Confidence">{(finding.confidence * 100).toFixed(0)}%</Fact>
+          <Fact label="Estimate quality">
+            <span className="uppercase">{finding.estimateQuality}</span>
+          </Fact>
+          {finding.owner && (
+            <Fact label="Assignee">
+              <span className="uppercase">{finding.owner}</span>
+            </Fact>
+          )}
 
           {exposure && (
-            <div className="flex flex-col gap-1 font-mono text-xs">
-              <span className="text-micro text-ink-dim uppercase">Personnel exposure</span>
+            <>
+              <span className="ruled-label mt-4 mb-1">Personnel exposure</span>
               <div
                 className={clsx(
-                  'border rounded px-2.5 py-1 bg-panel-2/50 flex flex-col gap-0.5',
-                  exposure.headcountAtRisk > 0 ? 'border-near/40 text-near' : 'border-line text-ink-dim'
+                  'border rounded px-2.5 py-2 flex flex-col gap-0.5 font-mono',
+                  exposure.headcountAtRisk > 0
+                    ? 'border-near/40 bg-near/5'
+                    : 'border-line bg-panel-2/50'
                 )}
               >
-                <span className="font-bold tabular-nums">
-                  {exposure.headcountAtRisk} AT RISK
+                <span
+                  className={clsx(
+                    'text-sm font-bold tabular-nums',
+                    exposure.headcountAtRisk > 0 ? 'text-near' : 'text-ink-dim'
+                  )}
+                >
+                  {exposure.headcountAtRisk} at risk
                 </span>
                 <span className="text-micro text-ink-dim">
                   {exposure.inZone.length} in zone · {exposure.inAdjacent.length} adjacent
                   {exposure.staleFixes > 0 && ` · ${exposure.staleFixes} stale fix`}
                 </span>
               </div>
-            </div>
+            </>
           )}
 
-          {finding.owner && (
-            <div className="flex flex-col gap-1 font-mono text-xs">
-              <span className="text-micro text-ink-dim uppercase">Assignee</span>
-              <div className="border border-line rounded px-2.5 py-1 bg-panel-2/50 text-ink uppercase">
-                {finding.owner}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-auto flex flex-col gap-2 pt-4 border-t border-line">
+          {/* Respond — grouped, explicit; never hidden in a menu */}
+          <div className="mt-auto flex flex-col gap-2 pt-4">
+            <span className="ruled-label">Respond</span>
             {finding.shadow && (
               <Button
                 variant="primary"
                 size="sm"
                 onClick={async () => {
                   try {
-                    // Update state to live (shadow = false) and notify
                     await transitionFinding(
                       finding.findingId,
                       'acknowledged',
@@ -154,19 +178,20 @@ export function FindingDetailModal({ finding, isOpen, onClose, onSuccess }: Find
           </div>
         </div>
 
-        {/* Right column: Dynamic Tabs Area */}
-        <div className="flex-1 flex flex-col gap-3 overflow-hidden">
-          {/* Tab Navigation header */}
-          <div className="flex border-b border-line pb-0.5 select-none shrink-0">
+        {/* Right column — evidence tabs */}
+        <div className="flex-1 flex flex-col gap-3 overflow-hidden min-w-0">
+          <div className="flex border-b border-line select-none shrink-0" role="tablist">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
+                role="tab"
+                aria-selected={activeTab === tab.value}
                 onClick={() => setActiveTab(tab.value)}
                 className={clsx(
-                  'flex items-center gap-1.5 h-8 px-3 text-xs font-semibold font-mono border-b-2 transition-all cursor-pointer',
+                  'flex items-center gap-1.5 h-8 px-3 text-micro font-semibold font-mono tracking-[0.08em] border-b-2 -mb-px transition-colors duration-fast cursor-pointer',
                   activeTab === tab.value
-                    ? 'border-accent text-accent'
-                    : 'border-transparent text-ink-dim hover:text-ink hover:border-line'
+                    ? 'border-ink text-ink'
+                    : 'border-transparent text-ink-dim hover:text-ink'
                 )}
               >
                 {tab.icon}
@@ -175,35 +200,55 @@ export function FindingDetailModal({ finding, isOpen, onClose, onSuccess }: Find
             ))}
           </div>
 
-          {/* Tab Contents Viewport */}
-          <div className="flex-1 overflow-y-auto pr-1">
+          <div className="flex-1 overflow-y-auto pr-1 scrollbar">
             {activeTab === 'overview' && (
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-base font-bold text-ink">{finding.title}</h3>
-                  <p className="text-xs text-ink-dim/90 leading-relaxed">
-                    A compound safety risk finding was triggered when several independent signals converged. 
-                    The predictive engine estimates a breach window classification of <span className="font-semibold text-accent">{finding.leadTimeBand}</span>.
-                  </p>
-                </div>
+                <p className="text-xs text-ink-dim/90 leading-relaxed">
+                  Independent signals converged into a compound risk. The engine places the
+                  breach window in the{' '}
+                  <span
+                    className="font-mono font-semibold"
+                    style={{
+                      color:
+                        finding.leadTimeBand === 'IMMINENT' ? 'var(--imminent)' :
+                        finding.leadTimeBand === 'NEAR' ? 'var(--near)' :
+                        finding.leadTimeBand === 'WATCH' ? 'var(--watch)' : 'var(--unknown)',
+                    }}
+                  >
+                    {finding.leadTimeBand}
+                  </span>{' '}
+                  band.
+                </p>
 
+                {/* Counterfactual — the differentiator gets display type;
+                    the emphasis is size and ink, never orange decoration */}
                 {finding.counterfactual && (
-                  <div className="bg-panel-2/30 border border-line p-3 rounded flex flex-col gap-1">
-                    <span className="text-micro font-mono font-bold text-accent uppercase">Alternative Course (Counterfactual)</span>
-                    <p className="text-xs italic text-ink-dim leading-relaxed">↳ {finding.counterfactual}</p>
+                  <div className="border-l-2 border-line-2 pl-3 py-1 flex flex-col gap-1">
+                    <span className="text-micro font-mono uppercase tracking-[0.1em] text-ink-dim">
+                      Counterfactual — if unmitigated
+                    </span>
+                    <p className="text-md font-medium text-ink leading-relaxed">
+                      {finding.counterfactual}
+                    </p>
                   </div>
                 )}
 
                 {finding.confidenceDegraded && (
-                  <div className="bg-imminent/5 border border-imminent/10 p-3 rounded flex items-start gap-2 text-xs text-imminent leading-normal">
-                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold">Urgency Quality Degraded:</span> The predictive confidence score has been degraded due to stale or unreliable signals:
-                      <span className="font-semibold block mt-1 font-mono">{finding.confidenceDegradedBy.join(', ')}</span>
+                  <div className="bg-imminent/5 border border-imminent/10 p-3 rounded flex items-start gap-2 text-xs leading-normal">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-imminent" />
+                    <div className="text-ink">
+                      <span className="font-mono text-micro uppercase tracking-[0.08em] text-imminent font-semibold">
+                        Estimate degraded
+                      </span>{' '}
+                      — confidence lowered by stale or unreliable signals:
+                      <span className="font-semibold block mt-1 font-mono">
+                        {finding.confidenceDegradedBy.join(', ')}
+                      </span>
                     </div>
                   </div>
                 )}
 
+                <span className="ruled-label">Investigate</span>
                 <InvestigationPanel findingId={finding.findingId} />
               </div>
             )}
@@ -215,26 +260,42 @@ export function FindingDetailModal({ finding, isOpen, onClose, onSuccess }: Find
             )}
 
             {activeTab === 'lineage' && (
-              <div className="flex flex-col gap-3 font-mono text-xs">
+              <div className="flex flex-col gap-2 font-mono text-xs">
                 {finding.lineage && finding.lineage.length > 0 ? (
                   finding.lineage.map((item, idx) => {
-                    const signal = finding.contributingSignals?.find((s) => `${s.kind}:${s.refId}` === item);
+                    const signal = finding.contributingSignals?.find(
+                      (s) => `${s.kind}:${s.refId}` === item,
+                    );
                     return (
-                      <div key={idx} className="p-3 border border-line bg-panel-2/30 rounded flex flex-col gap-1">
-                        <div className="flex justify-between items-center text-ink-dim">
-                          <span className="font-bold text-ink uppercase">{item}</span>
+                      <div
+                        key={idx}
+                        className="p-3 border border-line bg-panel-2/30 rounded flex flex-col gap-1 hover-elevate"
+                      >
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="font-semibold text-ink inline-flex items-center gap-1.5 min-w-0">
+                            {lineageIcon(item)}
+                            <span className="truncate">{item}</span>
+                          </span>
                           {signal?.ts && (
-                            <span className="text-micro">{new Date(signal.ts).toLocaleTimeString()}</span>
+                            <span className="text-micro text-ink-dim tabular-nums shrink-0">
+                              {new Date(signal.ts).toLocaleTimeString()}
+                            </span>
                           )}
                         </div>
                         {signal?.summary && (
-                          <span className="text-micro text-ink-dim leading-normal">{signal.summary}</span>
+                          <span className="text-micro text-ink-dim leading-normal">
+                            {signal.summary}
+                          </span>
                         )}
                       </div>
                     );
                   })
                 ) : (
-                  <div className="text-ink-dim italic">No evidence signals attached.</div>
+                  <div className="border border-dashed border-line rounded-md py-8 text-center">
+                    <span className="text-micro font-mono uppercase tracking-[0.1em] text-ink-dim/60">
+                      No evidence signals attached
+                    </span>
+                  </div>
                 )}
               </div>
             )}

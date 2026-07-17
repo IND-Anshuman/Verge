@@ -84,7 +84,7 @@ export function AssignDialog({ finding, isOpen, onClose, onSuccess }: AssignDial
                 onClick={() => setAssignee(op.id)}
                 className={`flex items-center justify-between p-3 rounded border text-sm transition-all cursor-pointer text-left ${
                   assignee === op.id
-                    ? 'bg-accent/10 border-accent text-accent'
+                    ? 'bg-panel-2 border-ink text-ink'
                     : 'bg-panel-2 border-line text-ink hover:border-line/75'
                 }`}
               >
@@ -94,11 +94,11 @@ export function AssignDialog({ finding, isOpen, onClose, onSuccess }: AssignDial
                 </div>
                 <div
                   className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                    assignee === op.id ? 'border-accent' : 'border-line'
+                    assignee === op.id ? 'border-ink' : 'border-line'
                   }`}
                 >
                   {assignee === op.id && (
-                    <span className="h-2 w-2 rounded-full bg-accent" />
+                    <span className="h-2 w-2 rounded-full bg-ink" />
                   )}
                 </div>
               </button>

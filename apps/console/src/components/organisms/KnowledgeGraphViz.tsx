@@ -141,7 +141,7 @@ export function KnowledgeGraphViz() {
               ) : selectedNode.type === 'permit' ? (
                 <FileText className="h-3.5 w-3.5 text-watch shrink-0" />
               ) : (
-                <HardDrive className="h-3.5 w-3.5 text-accent shrink-0" />
+                <HardDrive className="h-3.5 w-3.5 text-ink-dim shrink-0" />
               )}
               {selectedNode.label}
             </span>

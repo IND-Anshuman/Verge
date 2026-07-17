@@ -335,7 +335,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
                 onClick={() => toggleLayer(layer.id)}
                 className={`flex items-center gap-2 h-7 px-2 rounded border text-xs font-semibold font-mono text-left cursor-pointer transition-colors ${
                   activeLayers.includes(layer.id)
-                    ? 'bg-panel-2 border-accent text-accent'
+                    ? 'bg-panel-2 border-ink text-ink'
                     : 'bg-transparent border-transparent text-ink-dim hover:text-ink'
                 }`}
               >
@@ -391,7 +391,7 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
             </div>
             <div className="flex justify-between items-center bg-panel-2 p-2 rounded border border-line">
               <span className="font-mono text-ink-dim">CURRENT VALUE:</span>
-              <span className="font-mono font-bold text-accent text-sm tabular-nums">{selectedSensor.value}</span>
+              <span className="font-mono font-semibold text-ink text-sm tabular-nums">{selectedSensor.value}</span>
             </div>
           </Card>
         </div>
@@ -452,7 +452,11 @@ export function DigitalTwinMap({ findings }: DigitalTwinMapProps) {
           {findings.map((finding) => {
             const pos = markerPositions[finding.findingId];
             if (!pos) return null;
-            const color = finding.leadTimeBand === 'IMMINENT' ? '#C92A2A' : '#D9480F';
+            // Color = state: every band renders its own token, never a default orange
+            const color =
+              finding.leadTimeBand === 'IMMINENT' ? 'var(--imminent)' :
+              finding.leadTimeBand === 'NEAR' ? 'var(--near)' :
+              finding.leadTimeBand === 'WATCH' ? 'var(--watch)' : 'var(--unknown)';
             return (
               <div
                 key={finding.findingId}

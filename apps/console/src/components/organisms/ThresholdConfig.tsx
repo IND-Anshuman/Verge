@@ -147,7 +147,7 @@ export function ThresholdConfig() {
                     ) : (
                       <button
                         onClick={() => startEdit(idx)}
-                        className="text-accent hover:underline text-micro cursor-pointer font-bold uppercase"
+                        className="text-micro font-mono uppercase text-ink-dim hover:text-ink underline cursor-pointer"
                       >
                         Edit
                       </button>

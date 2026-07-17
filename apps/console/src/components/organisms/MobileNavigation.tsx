@@ -20,7 +20,7 @@ export function MobileNavigation({ activeTab, setActiveTab }: MobileNavigationPr
           key={tab.id}
           onClick={() => setActiveTab(tab.id)}
           className={`flex flex-col items-center justify-center w-16 h-12 rounded cursor-pointer transition-colors ${
-            activeTab === tab.id ? 'text-accent' : 'text-ink-dim hover:text-ink'
+            activeTab === tab.id ? 'text-ink' : 'text-ink-dim hover:text-ink'
           }`}
           style={{ minWidth: '44px', minHeight: '44px' }}
         >

@@ -139,7 +139,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           variant="ghost"
           size="sm"
           onClick={handleResetLayout}
-          icon={<RefreshCw className="h-3.5 w-3.5 text-accent" />}
+          icon={<RefreshCw className="h-3.5 w-3.5" />}
           className="text-micro font-mono font-bold uppercase"
         >
           Reset Grid
@@ -163,7 +163,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           {layout.some((p) => p.i === 'map') && (
             <div key="map" className="surface-1 overflow-hidden flex flex-col p-1 bg-panel">
               <div className="panel-drag-handle h-7 border-b border-line flex items-center justify-between px-2 shrink-0 bg-panel-2/50 font-mono text-micro select-none cursor-move">
-                <span className="font-bold text-ink-dim uppercase">DIGITAL TWIN PLANT MAP</span>
+                <span className="font-semibold text-ink-dim uppercase tracking-[0.08em]">Plant map · digital twin</span>
               </div>
               <div className="flex-1 overflow-hidden">
                 <ErrorBoundary>
@@ -177,7 +177,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           {layout.some((p) => p.i === 'permits') && (
             <div key="permits" className="surface-1 overflow-hidden flex flex-col p-1.5 bg-panel">
               <div className="panel-drag-handle h-7 border-b border-line flex items-center justify-between px-2 shrink-0 bg-panel-2/50 font-mono text-micro select-none cursor-move">
-                <span className="font-bold text-ink-dim uppercase">ACTIVE PERMITS-TO-WORK</span>
+                <span className="font-semibold text-ink-dim uppercase tracking-[0.08em]">Permits to work</span>
               </div>
               <div className="flex-1 overflow-hidden pt-2">
                 <ErrorBoundary>
@@ -191,7 +191,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           {layout.some((p) => p.i === 'board') && (
             <div key="board" className="surface-1 overflow-hidden flex flex-col p-1 bg-panel">
               <div className="panel-drag-handle h-7 border-b border-line flex items-center justify-between px-2 shrink-0 bg-panel-2/50 font-mono text-micro select-none cursor-move">
-                <span className="font-bold text-ink-dim uppercase">TELETREAD ALERTS BOARD</span>
+                <span className="font-semibold text-ink-dim uppercase tracking-[0.08em]">Findings board</span>
               </div>
               <div className="flex-1 overflow-hidden pt-2">
                 <ErrorBoundary>
@@ -205,7 +205,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           {layout.some((p) => p.i === 'response-ctrl') && (
             <div key="response-ctrl" className="surface-1 overflow-hidden flex flex-col p-1 bg-panel">
               <div className="panel-drag-handle h-7 border-b border-line flex items-center justify-between px-2 shrink-0 bg-panel-2/50 font-mono text-micro select-none cursor-move">
-                <span className="font-bold text-ink-dim uppercase">EMERGENCY RESPONSE BROADCASTER</span>
+                <span className="font-semibold text-ink-dim uppercase tracking-[0.08em]">Emergency response</span>
               </div>
               <div className="flex-1 overflow-hidden overflow-y-auto pt-2 scrollbar">
                 <ErrorBoundary>
@@ -219,7 +219,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           {layout.some((p) => p.i === 'knowledge') && (
             <div key="knowledge" className="surface-1 overflow-hidden flex flex-col p-1.5 bg-panel">
               <div className="panel-drag-handle h-7 border-b border-line flex items-center justify-between px-2 shrink-0 bg-panel-2/50 font-mono text-micro select-none cursor-move">
-                <span className="font-bold text-ink-dim uppercase">VERGE AI RECIRCULATION REFERENCE</span>
+                <span className="font-semibold text-ink-dim uppercase tracking-[0.08em]">Knowledge context</span>
               </div>
               <div className="flex-1 overflow-hidden pt-2">
                 <ErrorBoundary>
@@ -233,7 +233,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           {layout.some((p) => p.i === 'graph') && (
             <div key="graph" className="surface-1 overflow-hidden flex flex-col p-1.5 bg-panel">
               <div className="panel-drag-handle h-7 border-b border-line flex items-center justify-between px-2 shrink-0 bg-panel-2/50 font-mono text-micro select-none cursor-move">
-                <span className="font-bold text-ink-dim uppercase">LINEAGE RELATIONSHIP GRAPH</span>
+                <span className="font-semibold text-ink-dim uppercase tracking-[0.08em]">Lineage graph</span>
               </div>
               <div className="flex-1 overflow-hidden pt-2">
                 <ErrorBoundary>
@@ -247,7 +247,7 @@ export function PanelSystem({ findings, boardComponent, responseComponent }: Pan
           {layout.some((p) => p.i === 'metrics') && (
             <div key="metrics" className="surface-1 overflow-hidden flex flex-col p-1.5 bg-panel">
               <div className="panel-drag-handle h-7 border-b border-line flex items-center justify-between px-2 shrink-0 bg-panel-2/50 font-mono text-micro select-none cursor-move">
-                <span className="font-bold text-ink-dim uppercase">ALERT FATIGUE METRICS SUMMARY</span>
+                <span className="font-semibold text-ink-dim uppercase tracking-[0.08em]">Alert fatigue metrics</span>
               </div>
               <div className="flex-1 overflow-hidden overflow-y-auto pt-2 scrollbar">
                 <ErrorBoundary>

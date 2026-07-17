@@ -23,7 +23,7 @@ function ContextSection({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-1.5 text-micro font-mono font-bold text-ink-dim uppercase select-none">
+      <div className="flex items-center gap-1.5 ruled-label select-none">
         {icon}
         {title}
       </div>
@@ -104,7 +104,7 @@ export function KnowledgePanel({ findingId }: KnowledgePanelProps) {
   return (
     <div className="flex flex-col gap-4 text-ink h-full select-none">
       <div className="flex items-center justify-between border-b border-line pb-2 shrink-0">
-        <span className="text-micro font-mono font-bold text-ink-dim uppercase">
+        <span className="ruled-label">
           Context · {findingId}
         </span>
         {context?.degraded && (
@@ -159,7 +159,7 @@ export function KnowledgePanel({ findingId }: KnowledgePanelProps) {
                 const c = clause as FindingContext['regulatoryClauses'][number];
                 return (
                   <div key={c.id} className="p-2.5 border border-line rounded bg-panel-2/30 text-xs">
-                    <div className="font-mono font-bold text-accent">{c.id}</div>
+                    <div className="font-mono font-semibold text-ink">{c.id}</div>
                     <div className="font-semibold text-ink mt-0.5">{c.title}</div>
                     <p className="text-ink-dim mt-1 leading-relaxed">{c.excerpt}</p>
                   </div>
@@ -186,7 +186,7 @@ export function KnowledgePanel({ findingId }: KnowledgePanelProps) {
         )}
 
         <form onSubmit={handleQuery} className="flex flex-col gap-2 border-t border-line pt-3 shrink-0">
-          <div className="flex items-center gap-1.5 text-micro font-mono font-bold text-ink-dim uppercase">
+          <div className="flex items-center gap-1.5 ruled-label">
             <Search className="h-3.5 w-3.5" />
             Ask memory
           </div>

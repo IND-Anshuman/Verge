@@ -22,8 +22,8 @@ export function EmptyState({ icon, title, hint, action, className }: EmptyStateP
       )}
     >
       {icon && <span className="text-ink-dim/50 [&>svg]:h-6 [&>svg]:w-6">{icon}</span>}
-      <span className="text-xs font-medium text-ink-dim">{title}</span>
-      {hint && <span className="text-micro font-mono text-ink-dim/60 max-w-[36ch] leading-normal">{hint}</span>}
+      <span className="text-sm font-medium text-ink">{title}</span>
+      {hint && <span className="text-xs text-ink-dim max-w-[44ch] leading-normal">{hint}</span>}
       {action}
     </div>
   );

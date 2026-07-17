@@ -45,6 +45,20 @@ export function FindingsBoard({ findings, onChange }: FindingsBoardProps) {
     setFeedbackVerdict(verdict);
   };
 
+  // Board-level empty state — designed, honest, no fake calm-metrics
+  if (findings.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <EmptyState
+          icon={<Inbox />}
+          title="No findings on the board"
+          hint="Signals are streaming; nothing has converged into a risk. When one does, it lands here with its lead-time band."
+          className="w-[420px] max-w-full py-12"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full overflow-x-auto overflow-y-hidden pb-2 scrollbar">
       <div className="flex gap-3 h-full min-w-[1200px] px-1 select-none">
@@ -79,11 +93,11 @@ export function FindingsBoard({ findings, onChange }: FindingsBoardProps) {
               {/* Column Cards Container */}
               <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2 scrollbar select-text">
                 {items.length === 0 ? (
-                  <EmptyState
-                    icon={<Inbox />}
-                    title="Nothing here"
-                    className="flex-1 border-line/50"
-                  />
+                  /* Column-level quiet: one dashed cell, no icon chorus —
+                     the board-level empty state owns the storytelling */
+                  <div className="flex-1 flex items-start justify-center pt-6 border border-dashed border-line/60 rounded-md">
+                    <span className="text-xs text-ink-dim/70">Nothing in this state</span>
+                  </div>
                 ) : (
                   items.map((f) => (
                     <FindingCard

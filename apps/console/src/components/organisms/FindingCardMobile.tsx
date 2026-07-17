@@ -51,8 +51,8 @@ export function FindingCardMobile({ finding, onChange, onOpenDetail }: FindingCa
     <div className="relative overflow-hidden w-full h-24 select-none rounded border border-line">
       {/* Swipe action reveal background */}
       <div className="absolute inset-0 bg-ok/20 flex items-center pl-6 text-ok font-mono font-bold text-xs select-none">
-        <Check className="h-4 w-4 mr-2 animate-bounce" />
-        ACKNOWLEDGE ALARM...
+        <Check className="h-4 w-4 mr-2" />
+        RELEASE TO ACKNOWLEDGE
       </div>
 
       {/* Main card body that swipes */}
@@ -71,7 +71,7 @@ export function FindingCardMobile({ finding, onChange, onOpenDetail }: FindingCa
             </Badge>
             <span className="text-micro font-mono text-ink-dim truncate">ID: {finding.findingId}</span>
           </div>
-          <h4 className="text-xs font-bold text-ink leading-relaxed truncate">{finding.title}</h4>
+          <h4 className="text-base font-semibold text-ink leading-snug truncate">{finding.title}</h4>
           <span className="text-[9px] font-mono text-ink-dim uppercase truncate">ZONE: {finding.zoneId}</span>
         </div>
 
@@ -81,9 +81,10 @@ export function FindingCardMobile({ finding, onChange, onOpenDetail }: FindingCa
               ACKED
             </Badge>
           ) : (
-            <div className="flex items-center text-micro font-mono text-ink-dim/40 animate-pulse">
+            <div className="flex items-center text-micro font-mono text-ink-dim/40">
               <span>SWIPE</span>
               <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3 w-3 -ml-1.5 opacity-60" />
             </div>
           )}
         </div>

@@ -37,7 +37,7 @@ export default function AppShell() {
             <Logo size={22} />
           </Link>
           <span className="h-4 w-[1px] bg-line shrink-0" />
-          <span className="text-micro text-ink-dim/70 font-mono tracking-[0.14em] hidden xl:inline truncate">
+          <span className="text-micro text-ink-dim font-mono tracking-[0.14em] hidden xl:inline truncate">
             LEAD-TIME INTELLIGENCE · OPERATOR CONSOLE
           </span>
         </div>
@@ -96,7 +96,7 @@ export default function AppShell() {
                 status === 'connected' ? 'bg-ok' : status === 'reconnecting' ? 'bg-near animate-pulse' : 'bg-unknown'
               )}
             />
-            <span className="text-micro font-mono text-ink-dim/70 uppercase hidden sm:inline">{status}</span>
+            <span className="text-micro font-mono text-ink-dim uppercase hidden sm:inline">{status}</span>
           </div>
 
           <span className="h-4 w-[1px] bg-line" />
@@ -131,10 +131,16 @@ export default function AppShell() {
 
       <DegradationBannerStrip />
 
-      {/* Shadow banner warning */}
+      {/* Shadow banner — a calm tinted well with ink text, not a shout.
+          The micro-label carries the state; prose stays sentence case. */}
       {shadow && (
-        <div className="bg-near/10 border-b border-near/20 text-near text-xs font-mono py-1 px-4 text-center select-text">
-          SHADOW MODE &mdash; SURFACING FORECASTED FINDINGS THAT ARE RECORDED BUT NOT ACTIVE IN THE LIVE SYSTEM.
+        <div className="bg-near/10 border-b border-near/25 py-1.5 px-4 flex items-baseline gap-2 select-text">
+          <span className="text-micro font-mono uppercase tracking-[0.1em] text-near font-semibold shrink-0">
+            Shadow mode
+          </span>
+          <span className="text-xs text-ink truncate">
+            Surfacing forecasted findings that are recorded but not active in the live system.
+          </span>
         </div>
       )}
 

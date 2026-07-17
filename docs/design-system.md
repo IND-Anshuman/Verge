@@ -20,17 +20,20 @@ isn't information.
 
 ## Tokens
 
-### Surfaces (warm paper neutrals)
+### Surfaces (cold instrument paper — revised 2026-07-18)
+Cooler, sharper neutrals: the old warm cream read as "AI dashboard"; the
+canvas is now a cold paper with crisper rules and blacker ink.
+
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | `#F4F3F0` | canvas (paper) |
+| `--bg` | `#F0F1EF` | canvas (cold paper) |
 | `--panel` | `#FFFFFF` | cards, header, table rows |
-| `--panel-2` | `#ECEBE7` | wells, insets, hover fills, chips |
-| `--line` | `#DEDCD5` | hairline rules (1px, everywhere) |
-| `--line-2` | `#C6C3BA` | hover borders, strong rules |
-| `--ink` | `#16181C` | primary text, primary buttons |
-| `--ink-dim` | `#6E7178` | secondary text, micro-labels |
-| scrim | `rgba(22,24,28,.34)` | modal/palette overlay |
+| `--panel-2` | `#E8E9E4` | wells, insets, hover fills, chips |
+| `--line` | `#D5D6D0` | hairline rules (1px, everywhere) |
+| `--line-2` | `#B4B5AE` | hover borders, strong rules |
+| `--ink` | `#121417` | primary text, primary buttons |
+| `--ink-dim` | `#5C6068` | secondary text, micro-labels (readable at 11–12px) |
+| scrim | `rgba(18,20,23,.34)` | modal/palette overlay |
 
 ### Signal (color only ever means state)
 | Token | Value | Meaning |
@@ -53,10 +56,25 @@ separation, ≥3:1 contrast) on **both** `#FFFFFF` and `#16181C`. Grid
 ### Type
 - **IBM Plex Sans** (self-hosted): all UI text. Titles 600, body 400/500.
 - **IBM Plex Mono**: data only — IDs, readings, timestamps, tick labels,
-  micro-labels. Never for prose or titles.
+  micro-labels. Never for prose, titles, buttons, or empty-state copy.
+  Mono is a label atom, not a brand voice.
 - Micro-label: 10px mono, uppercase, tracking 0.08–0.14em, `--ink-dim`.
   This is the ONLY sanctioned uppercase. Everything else sentence case.
 - Numerals always `tabular-nums`.
+
+Scale (revised 2026-07-18 — hierarchy is non-negotiable):
+
+| Token | Size | Use |
+|---|---|---|
+| `micro` | 10px | ruled labels, kbd, band codes only |
+| `xs` | 12px | secondary UI, metadata, nav |
+| `sm` | 13px | body / card supporting lines |
+| `base` | 14px | default UI **and finding card titles** |
+| `md` | 15px | emphasized body, modal titles |
+| `lg` | 18px | page titles (`h1`, Sans, sentence case — never uppercase mono) |
+| `xl` | 22px | rare hero / counterfactual display |
+
+The finding title is the loudest thing on a card that isn't the band tape.
 
 ### Geometry & elevation
 - Radii: 2 / 4 / 6 / 8 px (sharp, technical). Pills only for count chips.
@@ -80,8 +98,9 @@ separation, ≥3:1 contrast) on **both** `#FFFFFF` and `#16181C`. Grid
   dot, LIVE/SHADOW segmented control — active LIVE is ink-on-white inverted;
   active SHADOW is orange-tinted.
 - **Sensor ribbon (32px, well):** single line, truncates, never wraps.
-  Audit chip = ok-tinted. Degradation banners = near-tinted wells with
-  hairlines, ink text.
+  Audit chip = ok-tinted. Degradation = ONE collapsed hairline strip
+  (`DEGRADED · N` + first reason, ink text, signal color on the word only);
+  expands on click to the full list. Never stacked full-width tinted bars.
 - **Board:** columns transparent on paper, hairline-bounded, 2px band-colored
   top rule, micro-label headers + white count chips. Cards white with 3px
   band edge; title 600 ink; gauge tints on white; footer actions ghost until
@@ -101,7 +120,11 @@ separation, ≥3:1 contrast) on **both** `#FFFFFF` and `#16181C`. Grid
 
 ## Hard rules
 
-1. One signal color. Orange never decorates; it warns or brands.
+1. One signal color. Orange never decorates; it warns or brands. The full
+   orange budget — the ONLY places accent/near/imminent may appear:
+   logo dot, focus ring, lead-time band (tape/edge/gauge), active SHADOW
+   control, and the signal *word* of a true danger/degraded message.
+   Never on title hovers, lineage icons, counterfactual rules, or state dots.
 2. No gradients. No glassmorphism. No shadows except the floating layer.
 3. Uppercase only in micro-labels. Mono only for data.
 4. Status colors never become chart series.

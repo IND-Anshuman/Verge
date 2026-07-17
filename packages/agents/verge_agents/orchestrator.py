@@ -41,11 +41,22 @@ telemetry or knowledge is degraded/empty, say so in openQuestions."""
 
 
 def _parse_brief(text: str) -> dict | None:
-    raw = text.strip()
+    """Parse model JSON; tolerate fences and leading/trailing prose."""
+    raw = (text or "").strip()
+    if not raw:
+        return None
     if raw.startswith("```"):
-        raw = raw.strip("`")
-        raw = raw.split("\n", 1)[1] if "\n" in raw else raw
-        raw = raw.rsplit("```", 1)[0] if "```" in raw else raw
+        # Drop opening fence line (``` or ```json), then closing fence.
+        parts = raw.split("\n", 1)
+        raw = parts[1] if len(parts) > 1 else ""
+        if "```" in raw:
+            raw = raw.rsplit("```", 1)[0]
+        raw = raw.strip()
+    # If the model wrapped the object in prose, take the outermost JSON object.
+    if not raw.startswith("{"):
+        start, end = raw.find("{"), raw.rfind("}")
+        if start >= 0 and end > start:
+            raw = raw[start : end + 1]
     try:
         data = json.loads(raw)
     except (ValueError, TypeError):
@@ -110,7 +121,7 @@ def _merge_with_llm(
         [Message("system", ORCHESTRATOR_SYSTEM), Message("user", user)],
         tools=None,
         model=model,
-        max_tokens=1600,
+        max_tokens=2400,
     )
     if completion.degraded:
         return (

@@ -52,9 +52,11 @@ export async function askKnowledge(
   query: string,
   signal?: AbortSignal,
 ): Promise<KnowledgeAskResult> {
+  // request() serializes the body itself — passing a pre-stringified body
+  // double-encodes it and the API rejects it with a 422.
   return request('/api/knowledge/ask', {
     method: 'POST',
-    body: JSON.stringify({ query }),
+    body: { query },
     signal,
   });
 }

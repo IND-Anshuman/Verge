@@ -121,7 +121,7 @@ export function FindingFilters() {
           variant="ghost"
           size="sm"
           onClick={clearFilters}
-          className="h-8 text-xs text-ink-dim hover:text-accent font-semibold"
+          className="h-8 text-xs text-ink-dim hover:text-ink font-semibold"
         >
           Reset Filters
         </Button>

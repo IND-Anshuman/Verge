@@ -73,10 +73,10 @@ export function SuppressionSuggestion({ activeFindings, onChange }: SuppressionS
       {suggestions.map(({ primary, duplicate }) => (
         <Card
           key={duplicate.findingId}
-          className="border-accent/30 bg-accent/5 p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-ink"
+          className="border-line bg-panel-2/40 p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-ink"
         >
           <div className="flex items-start gap-2.5">
-            <div className="p-1.5 bg-accent/15 border border-accent/25 rounded text-accent shrink-0 mt-0.5">
+            <div className="p-1.5 bg-panel-2 border border-line rounded text-ink-dim shrink-0 mt-0.5">
               <Merge className="h-4 w-4" />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -84,8 +84,8 @@ export function SuppressionSuggestion({ activeFindings, onChange }: SuppressionS
                 <span>COLLAPSE SUGGESTION: duplicate risk finding detected</span>
               </div>
               <p className="text-xs text-ink-dim leading-relaxed">
-                Merge <code className="text-accent">{duplicate.findingId}</code> into{' '}
-                <code className="text-accent">{primary.findingId}</code> ({primary.title}) in{' '}
+                Merge <code className="text-ink font-semibold">{duplicate.findingId}</code> into{' '}
+                <code className="text-ink font-semibold">{primary.findingId}</code> ({primary.title}) in{' '}
                 {duplicate.zoneId}.
               </p>
             </div>
@@ -107,7 +107,7 @@ export function SuppressionSuggestion({ activeFindings, onChange }: SuppressionS
               size="sm"
               onClick={() => handleConfirm(duplicate, primary)}
               disabled={isSubmitting}
-              className="bg-accent/20 border-accent/40 text-accent hover:bg-accent/30"
+              
               icon={<Check className="h-3.5 w-3.5" />}
             >
               Approve Merge

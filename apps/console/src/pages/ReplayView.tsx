@@ -149,12 +149,12 @@ export default function ReplayView() {
   const duration = timeline?.duration ?? 0;
 
   return (
-    <div className="flex flex-col gap-6 p-4 h-[calc(100vh-80px)] overflow-y-auto scrollbar select-text text-ink font-sans">
+    <div className="flex flex-col gap-6 p-4 h-full overflow-y-auto scrollbar select-text text-ink font-sans">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-line pb-3 select-none shrink-0">
         <div className="flex flex-col gap-1 min-w-0">
-          <h1 className="text-lg font-bold uppercase font-mono tracking-wide">Incident Replay</h1>
-          <p className="text-xs text-ink-dim font-mono">
+          <h1 className="text-lg font-semibold tracking-tight">Incident replay</h1>
+          <p className="text-xs text-ink-dim">
             Real incident streams scored by the eval harness — the alert marker is Verge&apos;s actual output, not a script.
           </p>
         </div>
@@ -304,7 +304,7 @@ export default function ReplayView() {
           {/* Grid: event log + real telemetry */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-3">
-              <span className="text-xs font-mono font-bold text-ink-dim uppercase select-none">
+              <span className="ruled-label select-none">
                 Incident event stream ({activeEvents.length}/{timeline.events.length})
               </span>
               <div className="flex flex-col gap-2.5 h-72 overflow-y-auto scrollbar pr-1">
@@ -315,7 +315,7 @@ export default function ReplayView() {
                       e.type === 'breach'
                         ? 'border-imminent/50 bg-imminent/10 text-imminent'
                         : e.type === 'verge-alert'
-                          ? 'border-accent/50 bg-accent/10 text-accent'
+                          ? 'border-ink bg-panel-2 text-ink'
                           : 'border-line bg-panel text-ink-dim'
                     }`}
                   >
@@ -346,7 +346,7 @@ export default function ReplayView() {
             </div>
 
             <div className="flex flex-col gap-3 select-none">
-              <span className="text-xs font-mono font-bold text-ink-dim uppercase">
+              <span className="ruled-label">
                 Recorded telemetry · % of sensor peak
               </span>
               <div className="h-72 border border-line bg-panel p-3 rounded-md font-mono text-micro">
@@ -402,7 +402,7 @@ export default function ReplayView() {
 
       {!timeline && !loadError && (
         <div className="flex-1 flex items-center justify-center border border-dashed border-line rounded select-none">
-          <span className="text-xs text-ink-dim font-mono uppercase">Loading replay catalog…</span>
+          <span className="text-xs text-ink-dim">Loading replay catalog…</span>
         </div>
       )}
     </div>

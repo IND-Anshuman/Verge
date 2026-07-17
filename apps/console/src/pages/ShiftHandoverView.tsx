@@ -87,31 +87,34 @@ export default function ShiftHandoverView() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 h-[calc(100vh-80px)] overflow-y-auto scrollbar select-text text-ink font-sans">
+    <div className="flex flex-col gap-6 p-4 h-full overflow-y-auto scrollbar select-text text-ink font-sans">
       <div className="flex items-center justify-between border-b border-line pb-3 select-none shrink-0">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-bold uppercase font-mono tracking-wide flex items-center gap-2">
-            <ArrowRightLeft className="h-5 w-5 text-accent" />
-            Shift Handover Console
+          <h1 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+            <ArrowRightLeft className="h-5 w-5 text-ink-dim" />
+            Shift handover
           </h1>
-          <p className="text-xs text-ink-dim font-mono">
-            Review open findings, record voice handover, and sign off to the audit ledger.
+          <p className="text-xs text-ink-dim">
+            Review open findings, record the handover, sign off to the audit ledger. Three steps, every shift.
           </p>
         </div>
       </div>
 
       {loadError && (
-        <div className="bg-imminent/10 border border-imminent/20 text-imminent text-xs p-2.5 rounded flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          {loadError}
+        <div className="bg-imminent/10 border border-imminent/20 rounded p-2.5 flex items-baseline gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 self-center text-imminent" />
+          <span className="text-micro font-mono uppercase tracking-[0.08em] text-imminent font-semibold shrink-0">
+            Unavailable
+          </span>
+          <span className="text-xs text-ink">{loadError}</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-3">
-          <span className="text-xs font-mono font-bold text-ink-dim uppercase select-none flex items-center gap-1.5">
-            <ClipboardList className="h-4 w-4" />
-            Open Findings ({findings.length})
+          <span className="ruled-label select-none">
+            <ClipboardList className="h-3.5 w-3.5" />
+            1 · Review open findings · <span className="tabular-nums">{findings.length}</span>
           </span>
 
           <div className="flex flex-col gap-2.5">
@@ -132,27 +135,30 @@ export default function ShiftHandoverView() {
               </Card>
             ))}
             {findings.length === 0 && !loadError && (
-              <p className="text-xs font-mono text-ink-dim uppercase p-4 border border-dashed border-line rounded text-center">
-                No open findings to hand over
-              </p>
+              <div className="p-6 border border-dashed border-line rounded-md text-center flex flex-col gap-1">
+                <span className="text-xs font-medium text-ink-dim">Nothing open to hand over</span>
+                <span className="text-micro font-mono text-ink-dim/60">
+                  A clean board — record the summary and sign off.
+                </span>
+              </div>
             )}
           </div>
         </div>
 
         <div className="flex flex-col gap-3">
-          <span className="text-xs font-mono font-bold text-ink-dim uppercase select-none flex items-center gap-1.5">
-            <FileText className="h-4 w-4" />
-            Shift Transfer Log
+          <span className="ruled-label select-none">
+            <FileText className="h-3.5 w-3.5" />
+            2 · Record the handover
           </span>
 
           {signedOff ? (
             <Card className="p-4 border border-ok/30 bg-ok/5 flex flex-col items-center gap-3 text-center">
-              <CheckCircle2 className="h-10 w-10 text-ok animate-bounce" />
-              <h3 className="text-xs font-bold font-mono text-ok uppercase">
-                Shift handover signed off successfully
+              <CheckCircle2 className="h-10 w-10 text-ok" />
+              <h3 className="text-micro font-semibold font-mono text-ok uppercase tracking-[0.08em]">
+                Shift signed off
               </h3>
-              <p className="text-xs text-ink-dim font-mono leading-relaxed max-w-xs">
-                Handover logged via voice audit trail and open findings assigned to incoming shift.
+              <p className="text-xs text-ink-dim leading-relaxed max-w-xs">
+                Handover logged to the audit trail; open findings assigned to the incoming shift.
               </p>
             </Card>
           ) : (
@@ -207,16 +213,23 @@ export default function ShiftHandoverView() {
                   required
                 />
 
-                <Button
-                  variant="primary"
-                  size="sm"
-                  type="submit"
-                  loading={submitting}
-                  disabled={!logText.trim()}
-                  className="uppercase text-micro font-bold h-8 tracking-wider w-36 self-end"
-                >
-                  Sign Off Shift
-                </Button>
+                <span className="ruled-label select-none">3 · Sign off</span>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-micro font-mono text-ink-dim leading-normal">
+                    Signing off appends this log to the audit chain and assigns open findings
+                    to the incoming shift.
+                  </p>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    type="submit"
+                    loading={submitting}
+                    disabled={!logText.trim()}
+                    className="uppercase text-micro font-bold h-8 tracking-wider w-36 shrink-0"
+                  >
+                    Sign Off Shift
+                  </Button>
+                </div>
               </form>
             </>
           )}

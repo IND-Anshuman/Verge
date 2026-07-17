@@ -7,11 +7,11 @@ import { Button } from './Button';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 const sizeClasses = {
@@ -19,6 +19,7 @@ const sizeClasses = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-4xl',
 };
 
 export function Modal({
@@ -40,7 +41,7 @@ export function Modal({
         <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
           <Dialog.Content
             className={clsx(
-              'w-full bg-panel border border-line rounded-lg float-layer',
+              'w-full bg-panel border border-line rounded-lg float-layer panel-in',
               'flex flex-col max-h-[85vh]',
               'focus:outline-none',
               sizeClasses[size]

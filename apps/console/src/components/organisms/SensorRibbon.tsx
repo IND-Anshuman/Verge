@@ -32,8 +32,9 @@ export function SensorRibbon() {
     >
       {/* Left side: Sensor counts summary text */}
       <div className="flex items-center gap-2 text-ink-dim min-w-0 flex-1 whitespace-nowrap">
-        <span className="h-1.5 w-1.5 rounded-full bg-ok animate-pulse shrink-0" />
-        <span className="font-semibold text-ink uppercase tracking-wide shrink-0">Sensors:</span>
+        {/* Steady dot — pulse is reserved for transitional/IMMINENT states */}
+        <span className="h-1.5 w-1.5 rounded-full bg-ok shrink-0" />
+        <span className="text-micro font-semibold text-ink-dim uppercase tracking-[0.08em] shrink-0">Sensors</span>
         <span className="tabular-nums truncate">{ribbon?.text ?? 'Connecting to sensor health plane...'}</span>
       </div>
 

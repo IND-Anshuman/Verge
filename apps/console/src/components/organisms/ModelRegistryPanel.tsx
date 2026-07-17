@@ -42,7 +42,7 @@ export function ModelRegistryPanel() {
           {models.map((m) => (
             <div key={`${m.name}-${m.version}`} className="text-micro">
               {m.name} v{m.version}{' '}
-              <span className="text-accent uppercase">{m.stage}</span>
+              <span className="text-ink uppercase">{m.stage}</span>
             </div>
           ))}
         </div>

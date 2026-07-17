@@ -5,15 +5,17 @@ const resources = {
   en: {
     translation: {
       app_title: 'Verge — Operator Console',
-      board: 'BOARD',
-      knowledge: 'KNOWLEDGE',
-      replay: 'REPLAY',
-      fleet: 'FLEET',
-      audit: 'AUDIT',
-      config: 'CONFIG',
-      handover: 'HANDOVER',
-      live: 'LIVE',
-      shadow: 'SHADOW',
+      // Nav labels are sentence case — uppercase is reserved for micro-labels
+      // (docs/design-system.md); LIVE/SHADOW render via an uppercase class.
+      board: 'Board',
+      knowledge: 'Knowledge',
+      replay: 'Replay',
+      fleet: 'Fleet',
+      audit: 'Audit',
+      config: 'Config',
+      handover: 'Handover',
+      live: 'Live',
+      shadow: 'Shadow',
       // States
       'new': 'New',
       'acknowledged': 'Acknowledged',

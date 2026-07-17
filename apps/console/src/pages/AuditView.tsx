@@ -75,14 +75,12 @@ export default function AuditView() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 h-[calc(100vh-80px)] overflow-hidden text-ink font-sans">
+    <div className="flex flex-col gap-6 p-4 h-full overflow-hidden text-ink font-sans">
       <div className="flex items-center justify-between border-b border-line pb-3 select-none shrink-0">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-bold uppercase font-mono tracking-wide">
-            Audit Ledger Chain Verification
-          </h1>
-          <p className="text-xs text-ink-dim font-mono">
-            Live hash-chain entries from <code className="text-accent">GET /api/audit</code>.
+          <h1 className="text-lg font-semibold tracking-tight">Audit ledger</h1>
+          <p className="text-xs text-ink-dim">
+            Live hash-chain entries from <code>GET /api/audit</code> — verified end to end.
           </p>
         </div>
 
@@ -93,9 +91,9 @@ export default function AuditView() {
               size="sm"
               onClick={handleSimulateDiscontinuity}
               icon={<AlertTriangle className="h-3.5 w-3.5 text-imminent" />}
-              className="text-micro font-mono font-bold uppercase text-ink-dim hover:text-imminent"
+              className="text-ink-dim hover:text-imminent"
             >
-              Simulate Tamper
+              Simulate tamper
             </Button>
           )}
           <Button
@@ -103,10 +101,9 @@ export default function AuditView() {
             size="sm"
             onClick={handleExportAudit}
             disabled={logs.length === 0}
-            icon={<Download className="h-3.5 w-3.5 text-accent" />}
-            className="text-micro font-mono font-bold uppercase"
+            icon={<Download className="h-3.5 w-3.5" />}
           >
-            Export Ledger
+            Export ledger
           </Button>
         </div>
       </div>
@@ -133,7 +130,7 @@ export default function AuditView() {
 
           <div className="flex-1 overflow-y-auto scrollbar border border-line rounded">
             {loading && logs.length === 0 ? (
-              <div className="p-6 text-center text-xs font-mono text-ink-dim uppercase animate-pulse">
+              <div className="p-6 text-center text-xs text-ink-dim animate-pulse">
                 Loading audit chain...
               </div>
             ) : (
@@ -164,7 +161,7 @@ export default function AuditView() {
                         {log.isValid ? (
                           <ShieldCheck className="h-4 w-4 text-ok mx-auto" />
                         ) : (
-                          <ShieldAlert className="h-4 w-4 text-imminent mx-auto animate-pulse" />
+                          <ShieldAlert className="h-4 w-4 text-imminent mx-auto" />
                         )}
                       </td>
                     </tr>
@@ -176,7 +173,7 @@ export default function AuditView() {
         </div>
 
         <div className="flex-1 flex flex-col gap-3 overflow-hidden select-text">
-          <span className="text-xs font-mono font-bold text-ink-dim uppercase select-none">
+          <span className="ruled-label select-none">
             Block Properties
           </span>
           {selectedEntry ? (
@@ -237,7 +234,7 @@ export default function AuditView() {
             </Card>
           ) : (
             <div className="flex-1 flex items-center justify-center border border-dashed border-line rounded">
-              <span className="text-xs text-ink-dim font-mono uppercase">Select a block to inspect</span>
+              <span className="text-xs text-ink-dim">Select a block to inspect</span>
             </div>
           )}
         </div>
