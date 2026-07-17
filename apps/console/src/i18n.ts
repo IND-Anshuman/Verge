@@ -6,6 +6,7 @@ const resources = {
     translation: {
       app_title: 'Verge — Operator Console',
       board: 'BOARD',
+      knowledge: 'KNOWLEDGE',
       replay: 'REPLAY',
       fleet: 'FLEET',
       audit: 'AUDIT',
@@ -30,6 +31,7 @@ const resources = {
     translation: {
       app_title: 'वर्ज — ऑपरेटर कंसोल',
       board: 'बोर्ड',
+      knowledge: 'ज्ञान',
       replay: 'रीप्ले',
       fleet: 'बेड़ा',
       audit: 'ऑडिट',
@@ -54,6 +56,7 @@ const resources = {
     translation: {
       app_title: 'வெர்ஜ் — ஆபரேட்டர் கன்சோல்',
       board: 'பலகை',
+      knowledge: 'அறிவு',
       replay: 'மீள் இயக்கம்',
       fleet: 'கடற்படை',
       audit: 'தணிக்கை',
@@ -78,6 +81,7 @@ const resources = {
     translation: {
       app_title: 'వెర్జ్ — ఆపరేటర్ కన్సోల్',
       board: 'బోర్డు',
+      knowledge: 'జ్ఞానం',
       replay: 'రీప్లే',
       fleet: 'ఫ్లీట్',
       audit: 'ఆడిట్',
@@ -102,6 +106,7 @@ const resources = {
     translation: {
       app_title: 'ವರ್ಜ್ — ಆಪರೇಟರ್ ಕನ್ಸೋಲ್',
       board: 'ಬೋರ್ಡ್',
+      knowledge: 'ಜ್ಞಾನ',
       replay: 'ಮರುಪಂದ್ಯ',
       fleet: 'ಫ್ಲೀಟ್',
       audit: 'ಆಡಿಟ್',

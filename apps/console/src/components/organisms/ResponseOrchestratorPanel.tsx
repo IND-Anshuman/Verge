@@ -10,6 +10,7 @@ import {
 import { transitionFinding } from '@/api';
 import { getAlertPreview } from '@/api/intelligence';
 import { dispatchAlert } from '@/api/platform';
+import { getEmergencyStatus, type EmergencyStatus } from '@/api/emergency';
 
 interface ResponseOrchestratorProps {
   activeFindings: RiskFinding[];
@@ -62,6 +63,7 @@ export function ResponseOrchestratorPanel({ activeFindings, onChange }: Response
   const [previewDegraded, setPreviewDegraded] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<Array<{ name: string; channel: string; status: string }>>([]);
+  const [emergency, setEmergency] = useState<EmergencyStatus | null>(null);
 
   const trigger = imminentFindings[0];
 
@@ -85,6 +87,24 @@ export function ResponseOrchestratorPanel({ activeFindings, onChange }: Response
       cancelled = true;
     };
   }, [trigger?.findingId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const status = await getEmergencyStatus();
+        if (!cancelled) setEmergency(status);
+      } catch {
+        if (!cancelled) setEmergency(null);
+      }
+    };
+    void load();
+    const id = window.setInterval(load, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
 
   if (imminentFindings.length === 0 || !trigger) return null;
 
@@ -282,18 +302,39 @@ export function ResponseOrchestratorPanel({ activeFindings, onChange }: Response
             </Button>
           </div>
 
-          {/* Evacuation headcount mustering status */}
+          {/* Live muster from emergency API — never invent headcount */}
           <div className="border border-line bg-panel-2/30 p-2.5 rounded flex flex-col gap-1 text-xs">
             <div className="flex justify-between items-center text-ink-dim font-mono text-micro uppercase">
-              <span>Evacuation Mustering (Alpha)</span>
-              <span className="text-ok font-bold tabular-nums">42/43 reconciled</span>
+              <span>Evacuation mustering</span>
+              <span
+                className={`font-bold tabular-nums ${
+                  emergency?.active && emergency.muster?.allAccounted ? 'text-ok' : 'text-ink'
+                }`}
+              >
+                {emergency?.active && emergency.muster
+                  ? `${emergency.muster.accounted.length}/${emergency.muster.expected} accounted`
+                  : 'No active emergency'}
+              </span>
             </div>
-            <div className="h-1.5 w-full bg-bg border border-line rounded-full overflow-hidden">
-              <div className="h-full bg-ok w-[97%]" />
-            </div>
+            {emergency?.active && emergency.muster && emergency.muster.expected > 0 ? (
+              <div className="h-1.5 w-full bg-bg border border-line rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-ok transition-all duration-fast"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      (100 * emergency.muster.accounted.length) / emergency.muster.expected,
+                    )}%`,
+                  }}
+                />
+              </div>
+            ) : (
+              <span className="text-micro font-mono text-ink-dim/70">
+                Declare emergency from the Emergency panel to start roll-call.
+              </span>
+            )}
           </div>
 
-          {/* Mock delivery tracking logs */}
           {deliveryStatus.length > 0 && (
             <div className="flex flex-col gap-1.5 max-h-[100px] overflow-y-auto border border-line rounded p-2 select-text font-mono text-micro bg-bg/50">
               {deliveryStatus.map((d, idx) => (

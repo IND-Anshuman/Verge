@@ -6,9 +6,10 @@ export interface FleetPlant {
   location: string;
   activeRisks: number;
   sensorHealth: number | null;
-  alertFatigueRate: number;
-  trir: number;
+  alertFatigueRate: number | null;
+  trir: number | null;
   status: 'imminent' | 'near' | 'ok';
+  connected?: boolean;
   measured: {
     activeRisks: boolean;
     sensorHealth: boolean;

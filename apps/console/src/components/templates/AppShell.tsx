@@ -4,13 +4,14 @@ import { useConnectionStore } from '@/stores/connection';
 import { SensorRibbon } from '@/components/organisms/SensorRibbon';
 import { DegradationBannerStrip } from '@/components/organisms/DegradationBannerStrip';
 import { CommandPalette } from '@/components/organisms/CommandPalette';
-import { Activity, BarChart2, Settings, History, ArrowRightLeft, Shield, Search } from 'lucide-react';
+import { Activity, BarChart2, Settings, History, ArrowRightLeft, Shield, Search, BookOpen } from 'lucide-react';
 import { Logo, Toaster, Kbd } from '@/components/atoms';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 
 const NAV = [
   { to: '/', key: 'board', icon: Activity },
+  { to: '/knowledge', key: 'knowledge', icon: BookOpen },
   { to: '/replay', key: 'replay', icon: History },
   { to: '/fleet', key: 'fleet', icon: BarChart2 },
   { to: '/audit', key: 'audit', icon: Shield },

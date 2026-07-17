@@ -24,7 +24,6 @@ export function MobileFieldWorkerPanel({ findings = [] }: MobileFieldWorkerPanel
   const [isRecording, setIsRecording] = useState(false);
   const [voiceText, setVoiceText] = useState('');
   const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
-  const [photoCaptured, setPhotoCaptured] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [ribbonText, setRibbonText] = useState<string | null>(null);
@@ -180,13 +179,14 @@ export function MobileFieldWorkerPanel({ findings = [] }: MobileFieldWorkerPanel
           </Button>
 
           <Button
-            variant={photoCaptured ? 'primary' : 'secondary'}
+            variant="secondary"
             size="sm"
-            onClick={() => setPhotoCaptured(true)}
+            disabled
+            title="Evidence photo upload lands with document ingest (Phase 1) — will not fake an attach."
             icon={<Camera className="h-3.5 w-3.5" />}
             className="w-1/2 uppercase text-micro font-bold border-line"
           >
-            {photoCaptured ? 'Photo Attached' : 'Attach Photo'}
+            Photo (soon)
           </Button>
         </div>
 

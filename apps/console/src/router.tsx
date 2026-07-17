@@ -9,6 +9,7 @@ const AuditView = lazy(() => import('@/pages/AuditView'));
 const ReplayView = lazy(() => import('@/pages/ReplayView'));
 const FleetView = lazy(() => import('@/pages/FleetView'));
 const ShiftHandoverView = lazy(() => import('@/pages/ShiftHandoverView'));
+const KnowledgeView = lazy(() => import('@/pages/KnowledgeView'));
 
 function PageFallback() {
   return (
@@ -47,6 +48,7 @@ export default function AppRouter() {
           />
           <Route path="/replay" element={<ReplayView />} />
           <Route path="/fleet" element={<FleetView />} />
+          <Route path="/knowledge" element={<KnowledgeView />} />
           <Route
             path="/handover"
             element={

@@ -8,8 +8,8 @@ export {
 } from './findings';
 export type { FindingResponse } from './findings';
 export { getSensorRibbon, getSystemHealth } from './sensors';
-export { getPlantGeoJson } from './plant';
-export type { PlantGeoJson, PlantSensor } from './plant';
+export { getPlantGeoJson, getPlantGraph } from './plant';
+export type { PlantGeoJson, PlantSensor, PlantGraph, GraphNode, GraphLink } from './plant';
 export { getAuditEntries } from './audit';
 export type { AuditEntryWire } from './audit';
 export { getFindingContext, queryMemory } from './memory';

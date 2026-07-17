@@ -1,79 +1,97 @@
-import { useState } from 'react';
-import { Card } from '@/components/atoms';
+import { useEffect, useState } from 'react';
+import { Card, EmptyState } from '@/components/atoms';
 import { Network, HardDrive, FileText, AlertTriangle } from 'lucide-react';
-
-interface GraphNode {
-  id: string;
-  label: string;
-  type: 'equipment' | 'permit' | 'risk';
-  x: number;
-  y: number;
-  details: string;
-}
-
-interface GraphLink {
-  source: string;
-  target: string;
-}
-
-const NODES: GraphNode[] = [
-  { id: 'eq-1', label: 'Primary Reformer Line-04', type: 'equipment', x: 150, y: 150, details: 'Line isolation valves, status: operating' },
-  { id: 'ptw-1', label: 'PTW-4091 Welding', type: 'permit', x: 280, y: 100, details: 'Authorized hot-work, active shift supervisor approval' },
-  { id: 'ptw-2', label: 'PTW-1102 Vessel Insp', type: 'permit', x: 280, y: 200, details: 'Confined space entry authorized adjacent' },
-  { id: 'risk-1', label: 'RF-0491 Gas Accumulation', type: 'risk', x: 80, y: 80, details: 'Imminent lead-time warning risk convergence' },
-  { id: 'risk-2', label: 'RF-1204 Bearing Thermal', type: 'risk', x: 80, y: 220, details: 'Near thermal breach limit risk' },
-];
-
-const LINKS: GraphLink[] = [
-  { source: 'eq-1', target: 'ptw-1' },
-  { source: 'eq-1', target: 'ptw-2' },
-  { source: 'risk-1', target: 'eq-1' },
-  { source: 'risk-2', target: 'eq-1' },
-  { source: 'risk-1', target: 'ptw-1' },
-];
+import { getPlantGraph, type GraphNode, type PlantGraph } from '@/api/plant';
 
 export function KnowledgeGraphViz() {
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(NODES[0]);
+  const [graph, setGraph] = useState<PlantGraph | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const g = await getPlantGraph();
+        if (cancelled) return;
+        setGraph(g);
+        setError(null);
+        setSelectedNode((prev) => {
+          if (!g.nodes.length) return null;
+          if (prev && g.nodes.some((n) => n.id === prev.id)) {
+            return g.nodes.find((n) => n.id === prev.id) ?? g.nodes[0];
+          }
+          return g.nodes[0];
+        });
+      } catch {
+        if (!cancelled) {
+          setGraph(null);
+          setError('Plant graph unavailable — start API with `make dev`.');
+        }
+      }
+    };
+    void load();
+    const id = window.setInterval(load, 15000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <EmptyState icon={<Network className="h-5 w-5" />} title="Graph offline" hint={error} />
+    );
+  }
+
+  if (!graph) {
+    return (
+      <div className="flex items-center justify-center h-40 text-xs font-mono text-ink-dim">
+        Loading plant graph…
+      </div>
+    );
+  }
+
+  if (graph.nodes.length === 0) {
+    return (
+      <EmptyState
+        icon={<Network className="h-5 w-5" />}
+        title="No graph relationships yet"
+        hint="Commission equipment and open permits, or ingest live findings — Verge will not invent nodes."
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 text-ink h-full select-none">
-      <div className="flex-1 border border-line bg-panel/30 rounded-md relative overflow-hidden flex items-center justify-center">
-        {/* Network Icon absolute watermark */}
+      <div className="flex-1 border border-line bg-panel/30 rounded-md relative overflow-hidden flex items-center justify-center min-h-[220px]">
         <div className="absolute top-2 left-2 text-ink-dim/40 font-mono text-micro flex items-center gap-1.5 pointer-events-none">
           <Network className="h-3.5 w-3.5" />
-          ADJACENCY RELATIONSHIP GRAPH
+          LIVE · {graph.source.toUpperCase()} · {graph.plant}
         </div>
 
-        {/* SVG Drawing workspace */}
-        <svg className="w-full h-full max-h-[300px] pointer-events-auto">
-          {/* Link edges lines */}
-          {LINKS.map((link, idx) => {
-            const sourceNode = NODES.find((n) => n.id === link.source);
-            const targetNode = NODES.find((n) => n.id === link.target);
+        <svg className="w-full h-full max-h-[300px] pointer-events-auto" viewBox="0 0 360 240">
+          {graph.links.map((link, idx) => {
+            const sourceNode = graph.nodes.find((n) => n.id === link.source);
+            const targetNode = graph.nodes.find((n) => n.id === link.target);
             if (!sourceNode || !targetNode) return null;
             return (
               <line
-                key={idx}
+                key={`${link.source}-${link.target}-${idx}`}
                 x1={sourceNode.x}
                 y1={sourceNode.y}
                 x2={targetNode.x}
                 y2={targetNode.y}
                 stroke="#DEDCD5"
                 strokeWidth={1.5}
-                className="transition-colors duration-fast"
               />
             );
           })}
 
-          {/* Node circles */}
-          {NODES.map((node) => {
+          {graph.nodes.map((node) => {
             const isSelected = selectedNode?.id === node.id;
             const color =
-              node.type === 'risk'
-                ? '#C92A2A'
-                : node.type === 'permit'
-                ? '#1864AB'
-                : '#D9480F';
+              node.type === 'risk' ? '#C92A2A' : node.type === 'permit' ? '#1864AB' : '#D9480F';
 
             return (
               <g
@@ -82,7 +100,6 @@ export function KnowledgeGraphViz() {
                 className="cursor-pointer group"
                 transform={`translate(${node.x}, ${node.y})`}
               >
-                {/* Ping ring for selected or risk nodes */}
                 {isSelected && (
                   <circle
                     r={10}
@@ -107,7 +124,7 @@ export function KnowledgeGraphViz() {
                   fontFamily="monospace"
                   className="group-hover:fill-ink transition-colors"
                 >
-                  {node.id}
+                  {node.refId ?? node.id}
                 </text>
               </g>
             );
@@ -115,11 +132,10 @@ export function KnowledgeGraphViz() {
         </svg>
       </div>
 
-      {/* Selected Node Drawer */}
       {selectedNode && (
         <Card className="p-3 bg-panel-2/30 border-line select-text text-xs flex flex-col gap-1.5">
           <div className="flex justify-between items-center select-none border-b border-line pb-1.5 mb-1 shrink-0">
-            <span className="font-bold text-ink uppercase flex items-center gap-1.5">
+            <span className="font-bold text-ink flex items-center gap-1.5">
               {selectedNode.type === 'risk' ? (
                 <AlertTriangle className="h-3.5 w-3.5 text-imminent shrink-0" />
               ) : selectedNode.type === 'permit' ? (
@@ -131,7 +147,7 @@ export function KnowledgeGraphViz() {
             </span>
             <span className="text-micro font-mono text-ink-dim uppercase">[{selectedNode.type}]</span>
           </div>
-          <p className="text-ink-dim leading-relaxed font-mono text-micro uppercase">{selectedNode.details}</p>
+          <p className="text-ink-dim leading-relaxed font-mono text-micro">{selectedNode.details}</p>
         </Card>
       )}
     </div>
