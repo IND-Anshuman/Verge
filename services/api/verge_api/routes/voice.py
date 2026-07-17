@@ -7,7 +7,10 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from pydantic import BaseModel, Field
 from verge_voice import (
+    PLANT_RADIO_HINTS_DEFAULT,
+    UNSUPPORTED_PLANT_REQUESTS,
     alert_preview,
+    melia_language_catalog,
     near_miss_from_audio,
     near_miss_from_transcript,
     transcribe_audio,
@@ -27,6 +30,28 @@ class VoiceEventBody(BaseModel):
     zoneId: str | None = None
     source: str = "radio"
     hazards: list[str] = Field(default_factory=list)
+
+
+@router.get("/voice/languages")
+def voice_languages() -> dict:
+    """Melia-supported languages + plant-radio hints (honest about gaps)."""
+    return {
+        "model": "melia-1",
+        "mode": "batch",
+        "languages": melia_language_catalog(),
+        "count": len(melia_language_catalog()),
+        "plantRadioHints": list(PLANT_RADIO_HINTS_DEFAULT),
+        "unsupportedPlantRequests": [
+            {"code": code, "note": note}
+            for code, note in UNSUPPORTED_PLANT_REQUESTS.items()
+        ],
+        "notes": [
+            "Melia auto-detects and code-switches; set language=multi in job config.",
+            "Speechmatics Melia does not include translation_config — Verge "
+            "translates to English via aimlapi when non-English is detected.",
+            "Telugu (te) and Kannada (kn) are not in the current Melia table.",
+        ],
+    }
 
 
 @router.post("/voice/transcribe")

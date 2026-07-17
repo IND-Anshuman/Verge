@@ -45,23 +45,51 @@ def test_structure_handover_extracts_basic_evidence() -> None:
     assert "escalate" in structured["actions"]
 
 
+def test_melia_job_config() -> None:
+    settings = SpeechmaticsSettings.from_env(
+        {
+            "SPEECHMATICS_API_KEY": "k",
+            "SPEECHMATICS_MODEL": "melia-1",
+            "SPEECHMATICS_LANGUAGE_HINTS": "en,hi,te,ta",
+        }
+    )
+    cfg = settings.build_job_config()["transcription_config"]
+    assert cfg["model"] == "melia-1"
+    assert cfg["language"] == "multi"
+    assert cfg["language_hints"] == ["en", "hi", "ta"]  # te skipped
+
+
 def test_speechmatics_flow_is_mocked() -> None:
     calls: list[str] = []
+    posted_config: dict = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
-        calls.append(request.url.path)
-        if request.method == "POST" and request.url.path == "/v2/jobs":
+        calls.append(f"{request.method}:{request.url.path}")
+        if request.method == "POST" and request.url.path.endswith("/jobs"):
+            # multipart: config field is JSON string
+            body = request.content.decode("utf-8", errors="ignore")
+            if '"model"' in body or "melia-1" in body:
+                posted_config["seen"] = True
             return httpx.Response(201, json={"id": "job-1"})
-        if request.url.path == "/v2/jobs/job-1":
+        if request.url.path.endswith("/jobs/job-1") and request.method == "GET":
             return httpx.Response(200, json={"job": {"status": "done"}})
-        if request.url.path == "/v2/jobs/job-1/transcript":
+        if "transcript" in request.url.path:
             return httpx.Response(
                 200,
                 json={
                     "results": [
-                        {"alternatives": [{"content": "B-04"}]},
-                        {"alternatives": [{"content": "gas"}]},
-                        {"alternatives": [{"content": "pause"}]},
+                        {
+                            "type": "word",
+                            "alternatives": [{"content": "B-04", "language": "en"}],
+                        },
+                        {
+                            "type": "word",
+                            "alternatives": [{"content": "gas", "language": "en"}],
+                        },
+                        {
+                            "type": "word",
+                            "alternatives": [{"content": "pause", "language": "en"}],
+                        },
                     ]
                 },
             )
@@ -81,7 +109,52 @@ def test_speechmatics_flow_is_mocked() -> None:
     assert result["degraded"] is False
     assert result["jobId"] == "job-1"
     assert result["transcript"] == "B-04 gas pause"
-    assert calls == ["/v2/jobs", "/v2/jobs/job-1", "/v2/jobs/job-1/transcript"]
+    assert result["transcriptEn"] == "B-04 gas pause"
+    assert result["languagesDetected"] == ["en"]
+    assert result["translationSource"] == "identity"
+    assert "melia-1" in result["provider"]
+    assert any(c.endswith("/jobs") for c in calls)
+
+
+def test_llm_translates_when_non_english_detected() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST" and request.url.path.endswith("/jobs"):
+            return httpx.Response(201, json={"id": "job-2"})
+        if request.url.path.endswith("/jobs/job-2"):
+            return httpx.Response(200, json={"job": {"status": "done"}})
+        if "transcript" in request.url.path:
+            return httpx.Response(
+                200,
+                json={
+                    "results": [
+                        {
+                            "type": "word",
+                            "alternatives": [{"content": "गैस", "language": "hi"}],
+                        },
+                        {
+                            "type": "word",
+                            "alternatives": [{"content": "B-04", "language": "en"}],
+                        },
+                    ]
+                },
+            )
+        return httpx.Response(404)
+
+    client = httpx.Client(
+        base_url="https://eu1.asr.api.speechmatics.com/v2",
+        transport=httpx.MockTransport(handler),
+    )
+    llm = _FakeLLM(answer="gas smell in B-04, pause hot work")
+    result = transcribe_audio(
+        b"audio",
+        client=client,
+        provider=llm,
+        settings=SpeechmaticsSettings(api_key="key", poll_interval_s=0, max_polls=1),
+    ).to_dict()
+    assert result["translationSource"] == "llm"
+    assert "gas" in result["transcript"].lower()
+    assert "B-04" in result["transcript"]
+    assert "hi" in result["languagesDetected"]
 
 
 def test_enrich_with_no_provider_returns_regex_baseline_tagged() -> None:
