@@ -394,11 +394,13 @@ Design system stays **Instrument Paper** — elevate, don’t replace.
 | Field EHS apps | One-thumb mobile copilot |
 
 ### Craft priorities
-1. **Mission Control** — one composition: map + lead-time board + living now-strip (sensors + radio + vision chips)  
-2. **Knowledge** — chat + citation rail + source preview (PDF page jump)  
+Full console IA: [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md). No hardcoded fiction (P4).
+
+1. **Mission Control** — one composition: map + lead-time board + living now-strip (live sensors / radio / vision only)  
+2. **Plant Copilot** (`/knowledge`) — **AI chat** (grounded, cited) + ingest for SOPs/docs **and** field photos; empty corpus stays empty  
 3. **Graph** — real Neo4j/twin data, filterable, click → object  
-4. **Finding object page** — Timeline / Spatial / Knowledge / Investigate / Respond  
-5. **Mobile field** — ask + acknowledge + photo evidence + muster check-in  
+4. **Finding object page** — Live / Investigate / Knowledge / Graph / Respond  
+5. **Mobile field** — ask Copilot + acknowledge + photo evidence + muster check-in  
 6. Kill Admin dump — sectioned Plant IT  
 7. Optional **dim wallboard theme** for summit stage display  
 

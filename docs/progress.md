@@ -1,5 +1,23 @@
 # Dex Progress Log
 
+## 2026-07-19 — Console UI plan: no fiction + Plant Copilot chat
+
+### Decision
+
+UI plan tightened: **no hardcoded / fake KPIs / fake attach** in the planned surfaces. Living Knowledge is explicitly the **Plant Copilot** — AI chat + document/photo ingest with citations.
+
+### Canonical doc
+
+[`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md) — Mission Control + Plant Copilot layout, ingest/chat contracts, build order.
+
+### Backend already supports (to wire in UI)
+
+- Chat/ask: `POST /api/knowledge/ask` (DocIntel + Cognee hybrid)  
+- Doc ingest: `POST /api/docs/ingest`  
+- Photos: honest gap until evidence/image ingest returns a real asset id (mobile currently disables fake attach)
+
+---
+
 ## 2026-07-18 — GenAI core hold; UI-first planning (pickup)
 
 ### Decision

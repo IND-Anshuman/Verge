@@ -17,14 +17,14 @@
 | **Phase 2.5 GenAI Core** | **Done** (orchestrator, specialists, Cognee auto-on, Melia English ops, validator harden, agent evals, P1 lint) |
 | **Phase 2 Live Risk** | **Partially done** — predicates/fusion/voice+vision events/API live; **open:** RTSP/YOLO polish, Whisper degrade path, Neo4j VoiceEvent edges, console transcript ticker, full Phase 2 exit criteria |
 | **Phase 3 Specialists** | **Not started** — RCA / compliance-depth / lessons under orchestrator |
-| **Phase 4 Premium UI** | **Next planning focus** — Instrument Paper Mission Control + Knowledge IA; drives what Phase 2/3 surfaces we finish for summit |
+| **Phase 4 Premium UI** | **Next** — see [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md): Mission Control + **Plant Copilot** (AI chat + ingest); **no hardcoded fiction** |
 
 **Resume order after UI plan lands**
-1. Implement console IA / screens from the UI plan (truthful binding to existing APIs).  
+1. Implement console IA from [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md) (Mission Control + Plant Copilot chat/ingest).  
 2. Close remaining Phase 2 exit criteria that the UI plan depends on.  
 3. Then Phase 3 specialists (RCA → compliance → lessons), not before the operator story is clear.
 
-**Detailed session log:** [`progress.md`](./progress.md) → entry `2026-07-18 — GenAI core hold; UI-first planning`.
+**Detailed session log:** [`progress.md`](./progress.md) → UI-first entries.
 
 ---
 
@@ -397,13 +397,16 @@ gantt
 Switcher in header: changes twin geo, rules, corpus dataset, eval fixtures.
 
 ### 4B UI craft (usefulness-first polish)
+
+**Canonical detail:** [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md) (no hardcoded KPIs / fake attach / unlabeled seed).
+
 | Surface | Craft DoD |
 |---|---|
-| Mission Control | One composition: map + board + now-strip (sensors/radio/vision chips) |
-| Knowledge | Citation rail + page preview; empty corpus CTA to ingest |
-| Graph | Live, filterable, object drill-in |
+| Mission Control | One composition: map + board + now-strip (live sensors/radio/vision only) |
+| **Plant Copilot** (`/knowledge`) | **AI chat** (threaded, cited) + ingest well for docs **and** field photos; empty corpus stays empty |
+| Graph | Live API graph, filterable, object drill-in — never hardcoded nodes |
 | Finding object | Full page, not only modal |
-| Mobile field | Ask / ack / photo evidence / muster |
+| Mobile field | Ask Copilot / ack / photo evidence / muster — photo disabled until store returns an id |
 | Wallboard | Dim theme, IMMINENT-first, 10m readability |
 | Admin | Sectioned Plant IT — no equal-weight dump |
 
@@ -520,13 +523,18 @@ Even solo: sequence Phase 0 → 1 → 2D fusion → **2.5 GenAI Core** → 4 →
 
 ## 16. Build progress log
 
+### 2026-07-19 — Console UI plan (Plant Copilot + no fiction)
+
+- Added [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md): Mission Control + **Plant Copilot** AI chat/ingest; explicit ban on hardcoded KPIs / fake attach / unlabeled seed.  
+- Phase 4B and product audit craft priorities updated to match.
+
 ### 2026-07-18 — GenAI/core hold; switch to UI-first planning
 
 - **Hold:** further Phase 2 depth / Phase 3 agent features paused until console structure is planned.  
 - **Phase 2.5:** complete (see §7.5 exit criteria).  
 - **Core harden (`4455456`):** chat-path LLM health + TTL; SQL-durable `VoiceEvent`; hard G4 citations; Zone→Equipment→Document Neo4j hop.  
 - **Melia + Cognee pipelines (`c8ab8af`):** voice→events→fuse→cognify; hybrid `/knowledge/ask`; ops/degradation for STT + Cognee.  
-- **Pickup:** §0 bookmark + [`progress.md`](./progress.md). Next = Phase 4B-style UI IA, then resume Phase 2 leftovers → Phase 3.
+- **Pickup:** §0 bookmark + [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md). Next = implement Copilot/Mission Control UI, then Phase 2 leftovers → Phase 3.
 
 ### 2026-07-18 — Cognee Cloud tenant live (add → cognify → search)
 
