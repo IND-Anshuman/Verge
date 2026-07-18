@@ -14,7 +14,8 @@ def dataset_health(
     client: CogneeClient | None = None,
     env: dict[str, str] | None = None,
 ) -> dict:
-    env = env or dict(os.environ)
+    if env is None:
+        env = dict(os.environ)
     dataset = dataset_name(env)
     client = client or CogneeClient.from_env(env)
 

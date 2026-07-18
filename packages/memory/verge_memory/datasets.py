@@ -14,7 +14,8 @@ def _clean(value: str) -> str:
 
 
 def dataset_name(env: dict[str, str] | None = None) -> str:
-    env = env or dict(os.environ)
+    if env is None:
+        env = dict(os.environ)
     prefix = _clean(env.get("COGNEE_DATASET_PREFIX", "verge"))
     site = _clean(env.get("VERGE_SITE_ID", "default-site"))
     return f"{prefix}-{site}"
