@@ -6,6 +6,28 @@
 
 ---
 
+## 0. Pickup bookmark — 2026-07-18 (UI-first pause)
+
+**Status:** Backend GenAI / voice / memory **core hold**. Next work is **console UX structure** before more Phase 2 depth or Phase 3 specialists.
+
+| Item | State |
+|---|---|
+| **Last engineering commits** | `c8ab8af` Melia+Cognee pipelines · `4455456` core harden (LLM health, durable voice, hard validator, GraphRAG hop) |
+| **Phase 0 / 1** | Done (truth gate + Knowledge spine v0) |
+| **Phase 2.5 GenAI Core** | **Done** (orchestrator, specialists, Cognee auto-on, Melia English ops, validator harden, agent evals, P1 lint) |
+| **Phase 2 Live Risk** | **Partially done** — predicates/fusion/voice+vision events/API live; **open:** RTSP/YOLO polish, Whisper degrade path, Neo4j VoiceEvent edges, console transcript ticker, full Phase 2 exit criteria |
+| **Phase 3 Specialists** | **Not started** — RCA / compliance-depth / lessons under orchestrator |
+| **Phase 4 Premium UI** | **Next planning focus** — Instrument Paper Mission Control + Knowledge IA; drives what Phase 2/3 surfaces we finish for summit |
+
+**Resume order after UI plan lands**
+1. Implement console IA / screens from the UI plan (truthful binding to existing APIs).  
+2. Close remaining Phase 2 exit criteria that the UI plan depends on.  
+3. Then Phase 3 specialists (RCA → compliance → lessons), not before the operator story is clear.
+
+**Detailed session log:** [`progress.md`](./progress.md) → entry `2026-07-18 — GenAI core hold; UI-first planning`.
+
+---
+
 ## 1. How to read this plan
 
 | Term | Meaning |
@@ -498,6 +520,14 @@ Even solo: sequence Phase 0 → 1 → 2D fusion → **2.5 GenAI Core** → 4 →
 
 ## 16. Build progress log
 
+### 2026-07-18 — GenAI/core hold; switch to UI-first planning
+
+- **Hold:** further Phase 2 depth / Phase 3 agent features paused until console structure is planned.  
+- **Phase 2.5:** complete (see §7.5 exit criteria).  
+- **Core harden (`4455456`):** chat-path LLM health + TTL; SQL-durable `VoiceEvent`; hard G4 citations; Zone→Equipment→Document Neo4j hop.  
+- **Melia + Cognee pipelines (`c8ab8af`):** voice→events→fuse→cognify; hybrid `/knowledge/ask`; ops/degradation for STT + Cognee.  
+- **Pickup:** §0 bookmark + [`progress.md`](./progress.md). Next = Phase 4B-style UI IA, then resume Phase 2 leftovers → Phase 3.
+
 ### 2026-07-18 — Cognee Cloud tenant live (add → cognify → search)
 
 - Tenant base URL wired; `VERGE_COGNEE_ENABLED=true` locally  
@@ -555,6 +585,6 @@ Even solo: sequence Phase 0 → 1 → 2D fusion → **2.5 GenAI Core** → 4 →
 - API: `POST/GET /api/voice/events`, `POST/GET /api/vision/events`, `POST /api/risk/fuse`
 - Twin entity resolve on ingest (`resolvedEntityCount`); neo4j driver in workspace
 
-**Next:** Phase 2 depth (RTSP/YOLO polish, Speechmatics radio path) → Phase 3 agents (RCA / compliance gaps / lessons push).
+**Next (superseded 2026-07-18):** see **§0 Pickup bookmark** — UI-first planning, then Phase 2 leftovers → Phase 3.
 
 **Stack quality check this phase:** keep Docling OSS optional extras; Cognee+aimlapi already wired for ask synthesis; set `VERGE_COGNEE_ENABLED=true` for live cognify. CI green through fusion endpoint.

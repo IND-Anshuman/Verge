@@ -1,5 +1,45 @@
 # Dex Progress Log
 
+## 2026-07-18 — GenAI core hold; UI-first planning (pickup)
+
+### Decision
+
+Pause the backend GenAI / Live Risk engineering flow for a while. **Plan the operator console UI first** so Mission Control + Knowledge have a clear information architecture; then resume phase work against that structure.
+
+Agreed rationale: Phase 2.5 + Melia/Cognee/core harden are concrete enough that more specialists without a clear UI story risks building the wrong surfaces.
+
+### Where we left the phasewise plan
+
+Canonical bookmark: [`PHASED_BUILD_PLAN.md`](./PHASED_BUILD_PLAN.md) **§0 Pickup bookmark**.
+
+| Phase | Status at hold |
+|---|---|
+| 0 Truth gate | Done |
+| 1 Knowledge spine | Done (v0; Docling GPU / entity F1 polish still open) |
+| **2.5 GenAI Core** | **Done** — orchestrator, specialists, Cognee auto-on + cognify, Melia English ops, hard validator, durable voice, LLM health, GraphRAG hops, `eval/agents` |
+| **2 Live Risk** | **Partial** — fusion predicates, voice/vision event APIs, Melia path live; still open: RTSP/YOLO polish, Whisper degrade, VoiceEvent→Neo4j edges, console radio ticker, full Phase 2 exit criteria |
+| **3 Specialists** | **Not started** — RCA / compliance depth / lessons |
+| **4 Premium UI** | **Next** — plan IA/craft before more backend depth |
+
+### Last commits on this track
+
+- `4455456` — `feat(core): harden LLM health, durable voice, validator, GraphRAG`
+- `c8ab8af` — `feat(voice,memory): close Melia and Cognee live pipelines`
+- Earlier same day: Cognee tenant live, Ash console Instrument Paper pass, Phase 2.5 orchestrator
+
+### Resume checklist (after UI plan)
+
+1. Lock console screens / navigation / finding-detail tabs against existing APIs (no fake KPIs).  
+2. Wire only the Phase 2 leftovers the UI plan actually needs.  
+3. Start Phase 3 specialists under the existing orchestrator.  
+4. Keep P1: `verge_risk` never imports `verge_llm`.
+
+### Local env note (not in git)
+
+`.env` holds live Cognee tenant + Speechmatics Melia + AIMLAPI keys; `VERGE_COGNEE_ENABLED=true`. Do not commit.
+
+---
+
 ## 2026-07-06 22:16 IST - Repo orientation and task read
 
 ### What I did
