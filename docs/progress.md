@@ -1,5 +1,13 @@
 # Dex Progress Log
 
+## 2026-07-19 — Console UI: one job per page (no mega-dashboard)
+
+### Decision
+
+UI plan revised again: **do not merge everything onto one dashboard**. Separate Board, Finding page, Plant Copilot, and Graph — elegant, useful, Instrument Paper. Still no hardcoded fiction.
+
+---
+
 ## 2026-07-19 — Console UI plan: no fiction + Plant Copilot chat
 
 ### Decision

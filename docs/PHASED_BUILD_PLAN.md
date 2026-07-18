@@ -402,15 +402,15 @@ Switcher in header: changes twin geo, rules, corpus dataset, eval fixtures.
 
 | Surface | Craft DoD |
 |---|---|
-| Mission Control | One composition: map + board + now-strip (live sensors/radio/vision only) |
-| **Plant Copilot** (`/knowledge`) | **AI chat** (threaded, cited) + ingest well for docs **and** field photos; empty corpus stays empty |
-| Graph | Live API graph, filterable, object drill-in — never hardcoded nodes |
-| Finding object | Full page, not only modal |
-| Mobile field | Ask Copilot / ack / photo evidence / muster — photo disabled until store returns an id |
-| Wallboard | Dim theme, IMMINENT-first, 10m readability |
-| Admin | Sectioned Plant IT — no equal-weight dump |
+| **Board** (`/`) | Triage-first findings board (optional map focus) — **not** a mega-dashboard of chat/graph/admin |
+| **Finding page** | Full page depth for one finding; links out to Copilot/Graph |
+| **Plant Copilot** (`/knowledge`) | Own page: cited AI chat + ingest (docs/photos); calm, no risk-board chrome |
+| **Graph** | Own exploration route — live API only |
+| Mobile field | Separate short flows (list → finding; ask; photo; muster) |
+| Wallboard | Optional dim IMMINENT-first display |
+| Admin | Sectioned Plant IT — never on operator home |
 
-Motion: stream tick, map fly-to, IMMINENT annunciator, citation pulse — then stop.
+Motion: IMMINENT pulse, map fly-to, citation highlight — then stop. **One job per page.**
 
 ### Phase 4 exit criteria
 - [ ] Blind tester finds answer in Knowledge &lt;15s  

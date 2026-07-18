@@ -1,134 +1,145 @@
-# Verge Console UI Plan — Mission Control + Plant Copilot
+# Verge Console UI Plan
 
 **Status:** Planning (UI-first pause, 2026-07-19)  
 **Visual system:** [`design-system.md`](./design-system.md) — Instrument Paper  
 **Phase bookmark:** [`PHASED_BUILD_PLAN.md`](./PHASED_BUILD_PLAN.md) §0  
 
+**Design intent:** Separate pages with **one clear job** each. Elegant, calm, useful — not a single mega-dashboard that merges map, chat, graph, admin, and radio into one screen.
+
 ---
 
-## 0. Hard rules (no hardcoded product fiction)
+## 0. Product principles for UI
 
-Every console surface follows P4. The UI plan **does not** include:
+1. **One job per page** — if a section needs its own headline and mental model, it is its own route (or a full finding page), not a panel bolted onto Mission Control.  
+2. **Visually meaningful** — space, type hierarchy, and Instrument Paper restraint; orange only for real lead-time / danger signal.  
+3. **User-friendly** — short paths: see risk → open finding → act; or open Copilot → ask / upload. No training required for the happy path.  
+4. **Useful** — every control binds to a live API or is honestly disabled.  
+5. **No hardcoded fiction** — see §1.
+
+---
+
+## 1. Hard rules (no hardcoded product fiction)
 
 | Forbidden | Instead |
 |---|---|
-| Seed findings presented as live plant truth without `seedMode` label | Show `seedMode` / DEMO banner when `VERGE_SEED=demo`; empty board when off and no live ingest |
+| Seed findings as live truth without label | `seedMode` / DEMO chrome when seeding; empty when off |
 | Fake KPIs (TRIR, fatigue %, compliance %) | Null / “not measured” / omit |
-| Hardcoded graph nodes, muster counts, bulletins | Live API only; empty-state copy when unconfigured |
-| Invented citations or chat answers without corpus | Degraded answer + reason; never fabricate SOP text |
-| Fake photo attach / fake radio ticker | Disabled control + honest reason until ingest path exists |
-| Wallboard “demo numbers” | Harness-backed metrics only, or blank |
-
-**Demo Pack** (optional offline rehearsal) is allowed only when explicitly labeled in chrome — never silent.
+| Hardcoded graph nodes, muster counts, bulletins | Live API only; calm empty state |
+| Invented chat answers / citations | Degraded + reason |
+| Fake photo attach or fake radio ticker | Disabled + reason until real asset/event ids exist |
+| Wallboard “demo numbers” | Harness-backed or blank |
 
 ---
 
-## 1. Two wedges → two primary surfaces
+## 2. Information architecture — separate surfaces
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Header · nav · ⌘K · LIVE/SHADOW · stream · degrade strip   │
-├──────────────────────────────┬──────────────────────────────┤
-│  MISSION CONTROL  (/)        │  PLANT COPILOT  (/knowledge) │
-│  Live Risk wedge             │  Living Knowledge wedge      │
-│  map + board + now-strip     │  chat + ingest + citations   │
-└──────────────────────────────┴──────────────────────────────┘
-```
+Primary nav stays light. Each route owns one job:
 
-Secondary nav (not the hero): Replay · Fleet · Audit · Config · Handover.  
-Mobile field is a constrained surface of the same two wedges (ack / ask / photo / muster).
+| Route | Job (one sentence) | What belongs here | What does **not** |
+|---|---|---|---|
+| **`/` Board** | See and triage live risk findings | Lead-time board, filters, open finding | Map chrome dump, chat, admin, graph explorer |
+| **`/map`** *(or map as Board’s optional focus mode — not a third dump)* | Spatial situation | Twin map, zone select → filters board / opens finding | Chat, corpus, compliance tables |
+| **`/findings/:id`** | Understand and act on **one** finding | Live context · Investigate · linked Knowledge ask · Respond | Site-wide chat history, plant-wide graph |
+| **`/knowledge` Plant Copilot** | Ask the plant’s documents; grow the corpus | Threaded cited chat + ingest (docs / photos) | Risk board columns, sensor ribbon as main UI |
+| **`/graph`** | Explore plant relationships | Live twin / Neo4j drill-in | Finding triage, free chat |
+| **`/handover`** | Shift continuity | Notes + Melia transcript when available | Full Copilot corpus management |
+| **`/replay`** | Prove / rehearse a story | Replay + eval linkage | Live ops triage |
+| **`/audit`** | Evidence & integrity | Hash chain, packs | Risk board |
+| **`/fleet`** | Multi-site glance | Honest nulls where unmeasured | Fake bulletins |
+| **`/admin`** | Plant IT config | Sectioned ops / models / thresholds | Operator Mission Control |
 
----
-
-## 2. Mission Control (`/`) — Live Risk
-
-**One composition** (not a dashboard of equal cards):
-
-| Region | Content | Data source |
-|---|---|---|
-| Map | Zones, adjacency, workers, finding tints by band | `/api/plant/graph`, findings, workers |
-| Board | Findings by state; band edge + lead-time gauge + lineage chips | `/api/findings` (+ SSE) |
-| Now-strip | Live chips: sensor ticks, Melia radio (English), vision hits | readings stream, `/api/voice/events`, `/api/vision/events` |
-
-**Finding object** (full page preferred over modal-only):  
-Live · Investigate · Knowledge · Graph · Respond — all bound to real APIs; Investigate shows orchestrator + validator disposition.
-
-**Empty / degrade:** no findings → calm empty state. Speechmatics/Cognee/LLM down → one collapsed degrade strip (existing).
+**Shared chrome only (every page):** logo, nav, ⌘K, LIVE/SHADOW, stream dot, one collapsed degrade strip, sensor ribbon if it helps that page (Board/Map yes; Copilot/Audit no — keep Copilot visually quiet).
 
 ---
 
-## 3. Plant Copilot (`/knowledge`) — AI chat + ingest
+## 3. Board (`/`) — Live Risk triage
 
-Yes — this is the **AI chat portion**. It is the Living Knowledge product surface, not a side panel afterthought.
+**Not** “map + board + now-strip + emergency + permits + chat” stacked.
 
-### 3.1 Jobs (one page, three verbs)
+**Default Board layout (elegant):**
+- Full-height **findings board** (states / bands).  
+- Optional **split**: board primary + **narrow map** (or “Map” toggle that expands map without burying the board).  
+- Finding click → **`/findings/:id`** (full page), not a kitchen-sink modal.
 
-1. **Ask** — grounded chat over plant corpus + Cognee memory (hybrid `/api/knowledge/ask`).  
-2. **Ingest** — upload plant documents (SOP, WO, PDF, markdown) via `/api/docs/ingest` → DocIntel + Cognee cognify when configured.  
-3. **Attach evidence** — field **photos** / stills (and later short clips) into the same corpus or finding-linked evidence store — honest empty until API path is ready; no fake attach.
+**Live awareness without clutter:**
+- Sensor ribbon stays in chrome (one line).  
+- Radio / vision: small **count chips** or “latest event” link on Board that deep-links to finding lineage or a lightweight Events drawer — **not** a permanent ticker wall competing with the board.
 
-### 3.2 Layout (target)
-
-```text
-┌──────────── corpus / attachments ────┬──────── Plant Copilot chat ──────────┐
-│  Upload docs / photos                 │  Thread: user ↔ grounded answers     │
-│  List: title · status · source        │  Each assistant turn:                │
-│  Empty → CTA “Add plant documents”    │    answer + citation rail + sources  │
-│                                       │  Composer: text (+ attach) + Ask     │
-│  Filters: docs | photos | all         │  Degraded chip when LLM/corpus empty │
-└──────────────────────────────────────┴──────────────────────────────────────┘
-```
-
-### 3.3 Chat contract (non-negotiable)
-
-- Answers **only** from retrieved DocIntel chunks and/or Cognee memory (plus optional finding-scoped tools when opened from a finding).  
-- Every answer shows **citations** (doc title / memory id) or an honest “cannot answer from corpus.”  
-- Multi-turn thread in the UI; each turn still re-grounds (no silent memory of invented facts).  
-- Finding-scoped mode: “Ask about this finding” pre-fills zone/title context via existing memory/investigate APIs — still cited.
-
-### 3.4 Ingest contract
-
-| Asset | Path | UI |
-|---|---|---|
-| SOP / PDF / MD / text | `POST /api/docs/ingest` → cognify hook | Drag-drop + file picker; status in corpus rail |
-| Field photo (JPEG/PNG) | Evidence / docintel image path (wire next; today: honest disabled or ingest-as-doc when backend accepts) | Same upload well; type chip `photo` |
-| Radio / voice clip | Melia → English ops → optional cognify (existing voice APIs) | Optional “Add voice note” on Copilot or Handover — not fake waveform |
-
-### 3.5 What this is not
-
-- Not a free-form ChatGPT about the plant with no sources.  
-- Not Mission Control’s risk engine (P1 stays LLM-free).  
-- Not a place to invent compliance scores.
+Emergency / permits: open from Board actions or finding Respond — not permanent equal-weight side panels on the home screen.
 
 ---
 
-## 4. Other surfaces (truthful, secondary)
+## 4. Finding page (`/findings/:id`) — depth without home-screen merge
 
-| Route | Role |
+One finding, clear tabs (or ruled sections), sequential reading:
+
+| Section | Job |
 |---|---|
-| `/replay` | Time-travel fusion / eval story |
-| `/fleet` | Multi-site; unmeasured metrics stay null |
-| `/audit` | Hash chain + evidence |
-| `/admin` | Sectioned Plant IT (ops, models, thresholds) — no equal-weight dump |
-| `/handover` | Shift notes + voice transcript when Melia returns text |
-| Wallboard (optional) | Dim, IMMINENT-first; same live APIs |
-| Mobile | Ask Copilot · ack finding · photo evidence · muster |
+| **Summary** | Band, zone, title, lineage chips |
+| **Live** | Telemetry / permits / exposure for this finding |
+| **Investigate** | Orchestrator brief + specialists + validator |
+| **Ask** | Copilot scoped to this finding (deep-link into `/knowledge?finding=…`) — not a second full corpus UI |
+| **Respond** | Ack, barriers, alert, CAPA, emergency |
+
+No requirement to show plant-wide graph or full corpus on this page — links out to `/graph` and `/knowledge` when needed.
 
 ---
 
-## 5. Build order (after this plan is accepted)
+## 5. Plant Copilot (`/knowledge`) — AI chat + ingest (own world)
 
-1. **Plant Copilot v1** — elevate `/knowledge` to threaded chat UX + clearer ingest well (docs first; photos when API accepts images).  
-2. **Mission Control composition** — map + board + now-strip (wire radio/vision chips to live events; no hardcode).  
-3. **Finding object page** — tabs over modal.  
-4. **Strip remaining fiction** — audit console for seed-unlabeled / null KPIs / disabled fakes.  
-5. Pack switcher chrome when packs exist.
+A **dedicated** Living Knowledge page. Calm, document-forward, chat-forward — not attached under the risk board.
+
+### Jobs
+1. **Ask** — threaded, grounded chat (`/api/knowledge/ask`).  
+2. **Ingest** — docs (SOP/PDF/MD) and field photos when the API stores a real id.  
+3. **Browse corpus** — what was ingested; status; open citation source.
+
+### Layout
+```text
+┌── Corpus (secondary) ──┬──────── Chat (primary) ────────────┐
+│ Upload · list · filter │ Thread + citations per turn         │
+│                        │ Composer                            │
+└────────────────────────┴─────────────────────────────────────┘
+```
+
+Chat is the visual focus; corpus rail supports it. No map, no finding columns, no IMMINENT pulse here unless a linked finding chip is in context.
+
+### Contract
+- Cited or honest “cannot answer.”  
+- Not ChatGPT-about-the-plant with no sources.  
+- Not the P1 risk engine.
 
 ---
 
-## 6. Success checks
+## 6. Graph (`/graph`) — its own exploration room
 
-- Blind tester asks a real ingested SOP question in Copilot and gets a **cited** answer in &lt;15s (or honest empty).  
-- Blind tester understands a NEAR finding on Mission Control in &lt;30s.  
-- With `VERGE_SEED=off` and no live ingest: board and corpus are empty — never fake-busy.  
-- Photo control never claims success without a stored asset id.
+Live, filterable twin/Neo4j. Click node → object or finding.  
+**Do not** embed a full graph canvas on Board home.
+
+---
+
+## 7. Craft bar (elegant + useful)
+
+- Instrument Paper: cold canvas, hairline rules, IBM Plex, orange = signal only.  
+- Generous whitespace on Copilot and Finding pages; Board can be denser (ops triage) without becoming a panel mall.  
+- Motion budget: IMMINENT pulse, map fly-to on finding open, citation highlight — then stop.  
+- Mobile: separate flows (list → finding; Copilot ask; photo; muster) — not a shrunk mega-dashboard.
+
+---
+
+## 8. Build order
+
+1. **Clarify routes** — Board home stays triage-first; Finding full page; Copilot elevated chat UX; Graph as own route if not already first-class.  
+2. **Remove panel sprawl from `/`** — emergency/permits/admin-like blocks leave the home composition.  
+3. **Plant Copilot v1** — threaded chat + ingest well (docs; photos when API ready).  
+4. **Finding page** — replace modal-as-only-depth.  
+5. Fiction audit pass on remaining views.
+
+---
+
+## 9. Success checks
+
+- New operator triage a NEAR finding from Board → Finding page in &lt;30s without opening Copilot or Graph.  
+- New operator asks a cited SOP question on Copilot in &lt;15s without seeing the risk board.  
+- Home screen does not require scrolling through chat, graph, and admin to see findings.  
+- `VERGE_SEED=off` + no ingest → empty Board and empty corpus — never fake-busy.
