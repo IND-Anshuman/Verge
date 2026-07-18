@@ -71,6 +71,10 @@ def test_voice_near_miss_unknown_finding_is_404() -> None:
 
 
 def test_alert_preview_template_fallback() -> None:
+    from verge_llm import NullProvider
+
+    # Force template path — app may have been constructed with a live LLM key.
+    app.state.llm = NullProvider()
     r = client.post("/api/findings/F-CONV-07/alert/preview")
     assert r.status_code == 200
     body = r.json()

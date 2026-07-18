@@ -8,7 +8,12 @@ from .languages import (
     melia_language_catalog,
 )
 from .near_miss import near_miss_from_audio, near_miss_from_transcript
-from .transcribe import SpeechmaticsSettings, VoiceResult, transcribe_audio
+from .transcribe import (
+    SpeechmaticsSettings,
+    VoiceResult,
+    speechmatics_status,
+    transcribe_audio,
+)
 
 __all__ = [
     "MELIA_LANGUAGES",
@@ -20,6 +25,7 @@ __all__ = [
     "melia_language_catalog",
     "near_miss_from_audio",
     "near_miss_from_transcript",
+    "speechmatics_status",
     "transcribe_audio",
 ]
 

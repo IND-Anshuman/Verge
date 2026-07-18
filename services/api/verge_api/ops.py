@@ -69,6 +69,38 @@ def _vision_health(vision) -> dict:
         return {"backend": backend, "degraded": True, "reason": f"probe failed: {exc}"}
 
 
+def _speechmatics_health(env: Mapping[str, str]) -> dict:
+    from verge_voice import speechmatics_status
+
+    return speechmatics_status(dict(env))
+
+
+def _cognee_health(env: Mapping[str, str]) -> dict:
+    """Config posture for ops (no network). Live probe: GET /api/memory/status."""
+    try:
+        from verge_memory.client import CogneeClient
+        from verge_memory.datasets import dataset_name
+
+        client = CogneeClient.from_env(dict(env))
+        settings = client.settings
+        reason = settings.missing_reason() if not settings.ready else None
+        return {
+            "enabled": settings.enabled,
+            "configured": settings.ready,
+            "dataset": dataset_name(dict(env)),
+            # Degraded only when memory is turned on but credentials incomplete.
+            "degraded": bool(settings.enabled and not settings.ready),
+            "reason": reason,
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "enabled": False,
+            "configured": False,
+            "degraded": True,
+            "reason": f"status failed: {type(exc).__name__}",
+        }
+
+
 def _bundle_verification(env: Mapping[str, str]) -> dict:
     from verge_supplychain import verify_bundle
 
@@ -133,6 +165,8 @@ def ops_snapshot(
         },
         "llm": {"provider": llm.name, "degraded": not llm.healthy()},
         "vision": _vision_health(vision),
+        "speechmatics": _speechmatics_health(env),
+        "cognee": _cognee_health(env),
         "modelRegistry": _model_registry(env),
         "backup": {"lastTs": backup_ts, "ageSeconds": _age_seconds(backup_ts, now)},
         "signedBundle": {
@@ -182,6 +216,14 @@ def render_prometheus(snap: dict) -> str:
             "LLM narrative layer degraded (1 yes, 0 no)")
     _metric(lines, "verge_vision_degraded", int(snap["vision"]["degraded"]),
             "Vision plane degraded (1 yes, 0 no)")
+    speech = snap.get("speechmatics") or {}
+    if speech.get("degraded") is not None:
+        _metric(lines, "verge_speechmatics_degraded", int(speech["degraded"]),
+                "Speechmatics Melia STT degraded (1 yes, 0 no)")
+    cognee = snap.get("cognee") or {}
+    if cognee.get("degraded") is not None:
+        _metric(lines, "verge_cognee_degraded", int(cognee["degraded"]),
+                "Cognee memory plane degraded (1 yes, 0 no)")
     _metric(lines, "verge_models_total", snap["modelRegistry"].get("total"),
             "Models in the registry")
     _metric(lines, "verge_backup_age_seconds", snap["backup"]["ageSeconds"],

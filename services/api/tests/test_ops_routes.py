@@ -20,6 +20,10 @@ def test_ops_status_reports_audit_integrity_and_ingest():
     assert body["ingest"]["sensors"] > 0
     assert body["ingest"]["readings"] > 0
     assert "livePct" in body["sensorHealth"]
+    assert "speechmatics" in body
+    assert "configured" in body["speechmatics"]
+    assert "cognee" in body
+    assert "enabled" in body["cognee"]
 
 
 def test_ops_status_is_honest_about_unmeasured_facts():

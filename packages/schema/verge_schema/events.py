@@ -12,11 +12,13 @@ from ._base import VergeModel
 class VoiceEvent(VergeModel):
     event_id: str
     ts: datetime
-    transcript: str = ""
+    transcript: str = ""  # English ops text (canonical for fusion/agents)
+    transcript_original: str | None = None  # Melia original when non-English
+    languages_detected: list[str] = Field(default_factory=list)
     zone_id: str | None = None
     hazards: list[str] = Field(default_factory=list)
     equipment_ids: list[str] = Field(default_factory=list)
-    source: str = "radio"  # radio | handover | near-miss | manual
+    source: str = "radio"  # radio | handover | near-miss | manual | transcribe
 
 
 class VisionDetection(VergeModel):

@@ -48,16 +48,17 @@ def _sensors_and_readings(buf) -> tuple[dict[str, Sensor], dict[str, list[Readin
     return sensors, readings
 
 
-@router.post("/risk/fuse")
-def fuse_evaluate(body: FuseBody, request: Request) -> dict:
-    """Evaluate starter rules against live buffers (voice/vision/permits/readings).
-
-    LLM-free (P1). Returns findings with lineage; optional persist into the store.
-    """
+def run_live_fusion(
+    app_state,
+    *,
+    persist: bool = False,
+    in_changeover: bool = False,
+    limit: int = 50,
+) -> dict:
+    """Evaluate starter rules against live buffers (LLM-free, P1)."""
     now = datetime.now(UTC)
-    plant = request.app.state.plant
-    sensors, readings = _sensors_and_readings(request.app.state.readings)
-    # Ensure plant sensors exist even if no readings yet (voice/vision-only zones).
+    plant = app_state.plant
+    sensors, readings = _sensors_and_readings(app_state.readings)
     for sid, node in plant.sensors.items():
         sensors.setdefault(
             sid,
@@ -71,10 +72,9 @@ def fuse_evaluate(body: FuseBody, request: Request) -> dict:
                 plausible_max=1e6,
             ),
         )
-    permits = request.app.state.permits.list_active(now=now)
-    voice = list(getattr(request.app.state, "voice_events", []) or [])[-body.limit :]
-    vision = list(getattr(request.app.state, "vision_detections", []) or [])[-body.limit :]
-    # Coerce plain dicts if any slipped in
+    permits = app_state.permits.list_active(now=now)
+    voice = list(getattr(app_state, "voice_events", []) or [])[-limit:]
+    vision = list(getattr(app_state, "vision_detections", []) or [])[-limit:]
     voice_events = [
         v if isinstance(v, VoiceEvent) else VoiceEvent.model_validate(v) for v in voice
     ]
@@ -87,15 +87,15 @@ def fuse_evaluate(body: FuseBody, request: Request) -> dict:
         sensors=sensors,
         readings=readings,
         permits=permits,
-        thresholds=dict(request.app.state.sensor_thresholds or plant.thresholds_by_kind()),
-        in_changeover=body.inChangeover,
+        thresholds=dict(app_state.sensor_thresholds or plant.thresholds_by_kind()),
+        in_changeover=in_changeover,
         voice_events=voice_events,
         vision_detections=vision_dets,
     )
     findings = evaluate(ctx, load_rules(STARTER_RULES))
     persisted = 0
-    if body.persist:
-        store = request.app.state.store
+    if persist:
+        store = app_state.store
         for f in findings:
             store.add_finding(f)
             persisted += 1
@@ -108,7 +108,21 @@ def fuse_evaluate(body: FuseBody, request: Request) -> dict:
             "permits": len(permits),
             "voiceEvents": len(voice_events),
             "visionDetections": len(vision_dets),
-            "inChangeover": body.inChangeover,
+            "inChangeover": in_changeover,
         },
         "findings": [f.model_dump(by_alias=True, mode="json") for f in findings],
     }
+
+
+@router.post("/risk/fuse")
+def fuse_evaluate(body: FuseBody, request: Request) -> dict:
+    """Evaluate starter rules against live buffers (voice/vision/permits/readings).
+
+    LLM-free (P1). Returns findings with lineage; optional persist into the store.
+    """
+    return run_live_fusion(
+        request.app.state,
+        persist=body.persist,
+        in_changeover=body.inChangeover,
+        limit=body.limit,
+    )

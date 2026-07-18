@@ -182,11 +182,28 @@ def run_multimodal_specialist(
         "get_recent_vision_events": {"zone_id": zone_id},
     }
     facts, steps = _run_tools(tools, MULTIMODAL_TOOLS, args)
+    voice = facts.get("get_recent_voice_events") or {}
+    vision = facts.get("get_recent_vision_events") or {}
     digest = {
-        "voice": _trim(facts.get("get_recent_voice_events") or {}, max_list=5),
-        "vision": _trim(facts.get("get_recent_vision_events") or {}, max_list=5),
+        "voice": _trim(voice, max_list=5),
+        "vision": _trim(vision, max_list=5),
     }
-    return SpecialistResult("multimodal", digest, steps, refs=[])
+    refs: list[str] = []
+    for ev in (voice.get("events") or []) if isinstance(voice, dict) else []:
+        if not isinstance(ev, dict):
+            continue
+        eid = ev.get("eventId") or ev.get("source")
+        if eid:
+            refs.append(str(eid))
+        elif ev.get("transcript"):
+            refs.append(f"voice:{(ev.get('transcript') or '')[:40]}")
+    for det in (vision.get("detections") or []) if isinstance(vision, dict) else []:
+        if not isinstance(det, dict):
+            continue
+        label = det.get("label") or det.get("cameraId")
+        if label:
+            refs.append(f"vision:{label}")
+    return SpecialistResult("multimodal", digest, steps, refs=refs[:12])
 
 
 def run_all_specialists(

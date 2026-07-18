@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 from verge_docintel import DocIntelStore, process_bytes
@@ -121,31 +123,108 @@ def _retrieve(store: DocIntelStore, query: str, *, limit: int) -> list[dict]:
     return [row for _, row in scored[:limit]]
 
 
+def _cognee_citations(query: str, *, llm, limit: int) -> tuple[list[dict], dict | None]:
+    """Best-effort Cognee memory citations; never raises."""
+    try:
+        from verge_memory.client import cognee_enabled_from_env
+        from verge_memory.query import query_memory
+
+        env = dict(os.environ)
+        if not cognee_enabled_from_env(env):
+            return [], None
+        mem = query_memory(query, provider=llm, env=env)
+        if mem.get("degraded") and not mem.get("citations"):
+            return [], {"degraded": True, "reason": mem.get("reason") or "cognee-empty"}
+        rows: list[dict] = []
+        for c in mem.get("citations") or []:
+            if not isinstance(c, dict):
+                continue
+            excerpt = (c.get("excerpt") or "").strip()
+            if not excerpt:
+                continue
+            rows.append(
+                {
+                    "documentId": str(c.get("id") or "cognee"),
+                    "title": str(c.get("title") or "Plant memory"),
+                    "chunkId": None,
+                    "page": None,
+                    "excerpt": excerpt[:500],
+                    "score": 0,
+                    "source": "cognee",
+                }
+            )
+            if len(rows) >= limit:
+                break
+        return rows, {
+            "degraded": bool(mem.get("degraded")),
+            "reason": mem.get("reason") or "",
+            "narrativeDegraded": bool(mem.get("narrativeDegraded")),
+            "answer": mem.get("answer") or "",
+        }
+    except Exception as exc:  # noqa: BLE001
+        return [], {"degraded": True, "reason": f"cognee:{type(exc).__name__}"}
+
+
 @router.post("/knowledge/ask")
 def knowledge_ask(body: AskBody, request: Request) -> dict:
-    """Grounded answer over ingested documents — refuse when corpus is empty."""
+    """Hybrid grounded ask: DocIntel chunks + Cognee plant memory when configured."""
     store = _store(request)
-    citations = _retrieve(store, body.query, limit=body.limit)
+    llm = getattr(request.app.state, "llm", None) or provider_from_env()
+    doc_citations = _retrieve(store, body.query, limit=body.limit)
+    for c in doc_citations:
+        c.setdefault("source", "docintel")
+    cognee_rows, cognee_meta = _cognee_citations(
+        body.query, llm=llm, limit=max(2, body.limit // 2)
+    )
+
+    # Prefer DocIntel first, then Cognee — cap total for the prompt.
+    citations = list(doc_citations) + list(cognee_rows)
+    citations = citations[: max(body.limit, len(doc_citations))]
+    sources = sorted({str(c.get("source") or "docintel") for c in citations})
+
     if not citations:
+        reason = "empty-corpus"
+        if store.documents:
+            reason = "no-matching-chunks"
+        if cognee_meta and cognee_meta.get("degraded"):
+            reason = cognee_meta.get("reason") or reason
         return {
             "answer": "",
             "citations": [],
             "degraded": True,
-            "reason": "no-matching-chunks" if store.documents else "empty-corpus",
+            "reason": reason,
+            "sources": [],
+            "cognee": cognee_meta,
+        }
+
+    # If DocIntel empty but Cognee synthesized an answer, reuse it (still cited).
+    if (
+        not doc_citations
+        and cognee_meta
+        and (cognee_meta.get("answer") or "").strip()
+        and not cognee_meta.get("degraded")
+    ):
+        return {
+            "answer": cognee_meta["answer"].strip(),
+            "citations": citations,
+            "degraded": False,
+            "reason": "",
+            "sources": sources,
+            "cognee": {k: v for k, v in cognee_meta.items() if k != "answer"},
         }
 
     facts = "\n\n".join(
-        f"[{i + 1}] ({c['title']}) {c['excerpt']}" for i, c in enumerate(citations)
+        f"[{i + 1}] ({c.get('source', 'docintel')}:{c['title']}) {c['excerpt']}"
+        for i, c in enumerate(citations)
     )
-    llm = getattr(request.app.state, "llm", None) or provider_from_env()
     prompt = (
-        "Answer ONLY from the numbered facts. If insufficient, say you cannot answer "
-        "from the corpus. Cite fact numbers like [1].\n\n"
+        "Answer ONLY from the numbered facts (plant docs and memory). "
+        "If insufficient, say you cannot answer from the corpus. "
+        "Cite fact numbers like [1].\n\n"
         f"Question: {body.query}\n\nFacts:\n{facts}"
     )
     completion = llm.complete([Message(role="user", content=prompt)])
     if completion.degraded or not (completion.text or "").strip():
-        # Deterministic fallback: stitch top excerpts — never invent.
         answer = "Based on retrieved documents:\n" + "\n".join(
             f"- [{i + 1}] {c['excerpt'][:240]}" for i, c in enumerate(citations[:3])
         )
@@ -154,12 +233,24 @@ def knowledge_ask(body: AskBody, request: Request) -> dict:
             "citations": citations,
             "degraded": True,
             "reason": "llm-degraded",
+            "sources": sources,
+            "cognee": (
+                {k: v for k, v in cognee_meta.items() if k != "answer"}
+                if cognee_meta
+                else None
+            ),
         }
     return {
         "answer": completion.text.strip(),
         "citations": citations,
         "degraded": False,
         "reason": "",
+        "sources": sources,
+        "cognee": (
+            {k: v for k, v in cognee_meta.items() if k != "answer"}
+            if cognee_meta
+            else None
+        ),
     }
 
 

@@ -101,6 +101,27 @@ class SpeechmaticsSettings:
         return config
 
 
+def speechmatics_status(env: dict[str, str] | None = None) -> dict[str, Any]:
+    """Config posture for ops/degradation (no network call — key presence only)."""
+    settings = SpeechmaticsSettings.from_env(env or dict(os.environ))
+    reason = settings.missing_reason()
+    region = "eu1"
+    if "asr.api.speechmatics.com" in settings.base_url:
+        try:
+            region = settings.base_url.split("//", 1)[1].split(".", 1)[0]
+        except Exception:  # noqa: BLE001
+            pass
+    return {
+        "configured": reason is None,
+        "degraded": reason is not None,
+        "reason": reason,
+        "model": settings.model,
+        "language": settings.language,
+        "region": region,
+        "translateToEn": settings.translate_to_en,
+    }
+
+
 @dataclass(frozen=True)
 class VoiceResult:
     transcript: str

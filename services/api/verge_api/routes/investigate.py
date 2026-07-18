@@ -188,7 +188,10 @@ def _build_tools(app, finding) -> ToolRegistry:
             if ez and ez != zid and ez not in plant.adjacency().get(zid, set()):
                 continue
             rows.append({
+                "eventId": dump.get("eventId") or dump.get("event_id"),
                 "transcript": (dump.get("transcript") or dump.get("englishTranscript") or "")[:300],
+                "transcriptOriginal": (dump.get("transcriptOriginal") or "")[:200] or None,
+                "languagesDetected": dump.get("languagesDetected") or [],
                 "zoneId": ez,
                 "source": dump.get("source"),
                 "hazards": dump.get("hazards") or [],

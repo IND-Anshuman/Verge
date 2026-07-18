@@ -1,7 +1,8 @@
-"""Voice transcription routes."""
+"""Voice transcription routes — Melia → English ops → events + Cognee."""
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
@@ -16,8 +17,10 @@ from verge_voice import (
     transcribe_audio,
 )
 
-from ..hooks import maybe_ingest_near_miss
+from ..hooks import maybe_ingest_near_miss, maybe_ingest_voice_ops
 from ..voice_events import list_voice_events, record_voice_event
+
+_TRUE = {"1", "true", "yes", "on"}
 
 router = APIRouter(tags=["voice"])
 VOICE_FILE = File(...)
@@ -30,6 +33,59 @@ class VoiceEventBody(BaseModel):
     zoneId: str | None = None
     source: str = "radio"
     hazards: list[str] = Field(default_factory=list)
+
+
+def _english_ops(result) -> str:
+    """Canonical English ops text from a VoiceResult / dict."""
+    if hasattr(result, "transcript_en") and result.transcript_en:
+        return result.transcript_en
+    if hasattr(result, "transcript"):
+        return result.transcript or ""
+    if isinstance(result, dict):
+        return result.get("transcriptEn") or result.get("transcript") or ""
+    return ""
+
+
+def _record_from_voice_result(app_state, result, *, source: str, zone_id: str | None = None):
+    english = _english_ops(result)
+    structured = result.structured if hasattr(result, "structured") else {}
+    original = getattr(result, "transcript_original", None)
+    langs = list(getattr(result, "languages_detected", ()) or ())
+    zones = structured.get("zones") or []
+    zid = zone_id or (zones[0] if zones else None)
+    return record_voice_event(
+        app_state,
+        transcript=english,
+        structured=structured,
+        zone_id=zid,
+        source=source,
+        transcript_original=original if original and original != english else None,
+        languages_detected=langs,
+    )
+
+
+def _maybe_fuse_after_voice(app_state, *, structured: dict | None = None) -> dict | None:
+    """Run LLM-free fusion after radio evidence lands (preview; persist opt-in)."""
+    flag = os.environ.get("VERGE_VOICE_AUTO_FUSE", "true").strip().lower()
+    if flag in {"0", "false", "no", "off"}:
+        return None
+    structured = structured or {}
+    hazards = structured.get("hazards") or []
+    try:
+        from .fusion import run_live_fusion
+
+        persist = os.environ.get("VERGE_VOICE_AUTO_FUSE_PERSIST", "false").lower() in _TRUE
+        out = run_live_fusion(app_state, persist=persist, limit=50)
+        return {
+            "count": out.get("count", 0),
+            "persisted": out.get("persisted", 0),
+            "findingIds": [
+                f.get("findingId") for f in (out.get("findings") or []) if f.get("findingId")
+            ][:12],
+            "hazardsSeen": list(hazards)[:8],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"count": 0, "persisted": 0, "reason": f"fuse:{type(exc).__name__}"}
 
 
 @router.get("/voice/languages")
@@ -63,7 +119,19 @@ async def voice_transcribe(request: Request, file: UploadFile = VOICE_FILE) -> d
         content_type=file.content_type or "application/octet-stream",
         provider=request.app.state.llm,
     )
-    return result.to_dict()
+    body = result.to_dict()
+    if not result.degraded and _english_ops(result).strip():
+        ev = _record_from_voice_result(request.app.state, result, source="transcribe")
+        body["voiceEventId"] = ev.event_id
+        body["cognee"] = maybe_ingest_voice_ops(
+            _english_ops(result),
+            structured=result.structured,
+            source="transcribe",
+        )
+        body["fusion"] = _maybe_fuse_after_voice(
+            request.app.state, structured=result.structured
+        )
+    return body
 
 
 @router.post("/voice/handover")
@@ -79,15 +147,18 @@ async def voice_handover(
         content_type=file.content_type or "application/octet-stream",
         provider=request.app.state.llm,
     )
+    english = _english_ops(result)
     payload = {
         "kind": "voice-handover",
         "actor": actor,
-        "transcript": result.transcript,
+        "transcript": english,
+        "transcriptOriginal": result.transcript_original,
         "structured": result.structured,
         "degraded": result.degraded,
         "reason": result.reason,
         "provider": result.provider,
         "jobId": result.job_id,
+        "languagesDetected": list(result.languages_detected or ()),
     }
     request.app.state.store.audit_append(
         actor=actor,
@@ -97,6 +168,15 @@ async def voice_handover(
     )
     body = result.to_dict()
     body["auditAppended"] = True
+    if not result.degraded and english.strip():
+        ev = _record_from_voice_result(request.app.state, result, source="handover")
+        body["voiceEventId"] = ev.event_id
+        body["cognee"] = maybe_ingest_voice_ops(
+            english, structured=result.structured, source="handover"
+        )
+        body["fusion"] = _maybe_fuse_after_voice(
+            request.app.state, structured=result.structured
+        )
     return body
 
 
@@ -148,19 +228,28 @@ async def voice_near_miss(
         payload=dict(body),
         timestamp=datetime.now(UTC),
     )
-    maybe_ingest_near_miss(
-        body.get("transcript", ""),
-        structured=body.get("structured") or {},
-        finding_id=findingId,
-    )
-    ev = record_voice_event(
-        request.app.state,
-        transcript=body.get("transcript", ""),
-        structured=body.get("structured") or {},
-        source="near-miss",
-    )
+    english = body.get("transcriptEn") or body.get("transcript", "")
+    structured = body.get("structured") or {}
     body["auditAppended"] = True
-    body["voiceEventId"] = ev.event_id
+    if english.strip():
+        cognee = maybe_ingest_near_miss(
+            english,
+            structured=structured,
+            finding_id=findingId,
+        )
+        ev = record_voice_event(
+            request.app.state,
+            transcript=english,
+            structured=structured,
+            source="near-miss",
+            transcript_original=body.get("transcriptOriginal"),
+            languages_detected=body.get("languagesDetected") or [],
+        )
+        body["voiceEventId"] = ev.event_id
+        body["cognee"] = cognee
+        body["fusion"] = _maybe_fuse_after_voice(
+            request.app.state, structured=structured
+        )
     return body
 
 
@@ -177,13 +266,21 @@ def voice_event_ingest(body: VoiceEventBody, request: Request) -> dict:
         zone_id=body.zoneId,
         source=body.source,
     )
+    cognee = maybe_ingest_voice_ops(
+        body.transcript, structured=structured, source=body.source
+    )
+    fusion = _maybe_fuse_after_voice(request.app.state, structured=structured)
     request.app.state.store.audit_append(
         actor="operator",
         kind="voice-event",
         payload=ev.model_dump(by_alias=True, mode="json"),
         timestamp=datetime.now(UTC),
     )
-    return {"event": ev.model_dump(by_alias=True, mode="json")}
+    return {
+        "event": ev.model_dump(by_alias=True, mode="json"),
+        "cognee": cognee,
+        "fusion": fusion,
+    }
 
 
 @router.get("/voice/events")

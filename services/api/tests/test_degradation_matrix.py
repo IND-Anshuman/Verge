@@ -98,3 +98,44 @@ def test_vision_degraded_banner() -> None:
     readings.latest_ts.return_value = None
     banners = operator_banners(store=store, llm=llm, vision=vision, readings=readings)
     assert any(b["code"] == "vision-degraded" for b in banners)
+
+
+def test_speechmatics_degraded_banner_without_key() -> None:
+    store = MagicMock()
+    store.audit_verify.return_value = True
+    llm = MagicMock()
+    llm.healthy.return_value = True
+    vision = MagicMock()
+    vision.detect.return_value = MagicMock(degraded=False, reason="")
+    readings = MagicMock()
+    readings.latest_ts.return_value = None
+    banners = operator_banners(
+        store=store,
+        llm=llm,
+        vision=vision,
+        readings=readings,
+        env={"VERGE_COGNEE_ENABLED": "false"},
+    )
+    assert any(b["code"] == "speechmatics-degraded" for b in banners)
+
+
+def test_cognee_degraded_banner_when_enabled_but_not_ready() -> None:
+    store = MagicMock()
+    store.audit_verify.return_value = True
+    llm = MagicMock()
+    llm.healthy.return_value = True
+    vision = MagicMock()
+    vision.detect.return_value = MagicMock(degraded=False, reason="")
+    readings = MagicMock()
+    readings.latest_ts.return_value = None
+    banners = operator_banners(
+        store=store,
+        llm=llm,
+        vision=vision,
+        readings=readings,
+        env={
+            "VERGE_COGNEE_ENABLED": "true",
+            "SPEECHMATICS_API_KEY": "test-key",
+        },
+    )
+    assert any(b["code"] == "cognee-degraded" for b in banners)

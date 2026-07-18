@@ -39,6 +39,8 @@ def record_voice_event(
     zone_id: str | None = None,
     source: str = "radio",
     ts: datetime | None = None,
+    transcript_original: str | None = None,
+    languages_detected: list[str] | None = None,
 ) -> VoiceEvent:
     structured = structured or {}
     hazards = [str(h).lower() for h in (structured.get("hazards") or [])]
@@ -55,6 +57,8 @@ def record_voice_event(
         event_id=f"VE-{uuid.uuid4().hex[:10].upper()}",
         ts=ts or datetime.now(UTC),
         transcript=transcript,
+        transcript_original=transcript_original,
+        languages_detected=list(languages_detected or []),
         zone_id=zone_id,
         hazards=hazards,
         equipment_ids=[str(x) for x in (structured.get("equipment") or [])],

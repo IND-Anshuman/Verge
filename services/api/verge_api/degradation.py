@@ -164,4 +164,46 @@ def operator_banners(
             ),
         })
 
+    try:
+        from verge_voice import speechmatics_status
+
+        stt = speechmatics_status(dict(env))
+        if stt.get("degraded"):
+            banners.append({
+                "code": "speechmatics-degraded",
+                "severity": "warn",
+                "message": (
+                    f"Radio/voice STT: degraded ({stt.get('reason') or 'Speechmatics unavailable'}). "
+                    "Text handover and rule engine remain available."
+                ),
+            })
+    except Exception as exc:  # noqa: BLE001
+        banners.append({
+            "code": "speechmatics-degraded",
+            "severity": "warn",
+            "message": f"Radio/voice STT: degraded (probe failed: {type(exc).__name__}).",
+        })
+
+    try:
+        from verge_memory.client import CogneeClient
+
+        client = CogneeClient.from_env(dict(env))
+        settings = client.settings
+        # Config-only (no network). Live Cognee health lives on /api/memory/status.
+        if settings.enabled and not settings.ready:
+            banners.append({
+                "code": "cognee-degraded",
+                "severity": "warn",
+                "message": (
+                    f"Plant memory (Cognee): degraded ({settings.missing_reason() or 'not ready'}). "
+                    "DocIntel local corpus still answers when available."
+                ),
+            })
+    except Exception as exc:  # noqa: BLE001
+        banners.append({
+            "code": "cognee-degraded",
+            "severity": "warn",
+            "message": f"Plant memory (Cognee): degraded (status failed: {type(exc).__name__}).",
+        })
+
     return banners

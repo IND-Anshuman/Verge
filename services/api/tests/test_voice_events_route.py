@@ -21,6 +21,8 @@ def test_voice_event_text_ingest() -> None:
     body = r.json()
     assert body["event"]["zoneId"] == "B-04"
     assert "gas" in [h.lower() for h in body["event"]["hazards"]]
+    assert "cognee" in body
+    assert "fusion" in body
 
     listed = client.get("/api/voice/events").json()
     assert listed["count"] >= 1
