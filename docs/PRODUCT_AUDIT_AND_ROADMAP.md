@@ -394,7 +394,7 @@ Design system stays **Instrument Paper** — elevate, don’t replace.
 | Field EHS apps | One-thumb mobile copilot |
 
 ### Craft priorities
-Full console IA: [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md). **One job per page** — elegant, not a merged mega-dashboard. No hardcoded fiction (P4).
+Full console IA: [`design_plan.md`](./design_plan.md). **One job per page** — elegant, not a merged mega-dashboard. No hardcoded fiction (P4).
 
 1. **Board** — triage findings (optional map); leave chat/graph/admin off home  
 2. **Finding page** — depth for one finding; link out to Copilot / Graph  

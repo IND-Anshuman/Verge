@@ -1,5 +1,13 @@
 # Dex Progress Log
 
+## 2026-07-19 — Standalone design_plan.md
+
+### Decision
+
+UI/UX lives in its own doc: [`design_plan.md`](./design_plan.md) — not inside the phased eng plan. One job per page; Plant Copilot; no mega-dashboard; Instrument Paper; no fiction.
+
+---
+
 ## 2026-07-19 — Console UI: one job per page (no mega-dashboard)
 
 ### Decision

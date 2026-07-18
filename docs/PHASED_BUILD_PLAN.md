@@ -17,10 +17,10 @@
 | **Phase 2.5 GenAI Core** | **Done** (orchestrator, specialists, Cognee auto-on, Melia English ops, validator harden, agent evals, P1 lint) |
 | **Phase 2 Live Risk** | **Partially done** — predicates/fusion/voice+vision events/API live; **open:** RTSP/YOLO polish, Whisper degrade path, Neo4j VoiceEvent edges, console transcript ticker, full Phase 2 exit criteria |
 | **Phase 3 Specialists** | **Not started** — RCA / compliance-depth / lessons under orchestrator |
-| **Phase 4 Premium UI** | **Next** — see [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md): Mission Control + **Plant Copilot** (AI chat + ingest); **no hardcoded fiction** |
+| **Phase 4 Premium UI** | **Next** — see [`design_plan.md`](./design_plan.md) (UI/UX, separate from this phased eng plan) |
 
 **Resume order after UI plan lands**
-1. Implement console IA from [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md) (Mission Control + Plant Copilot chat/ingest).  
+1. Implement console from [`design_plan.md`](./design_plan.md) (Board · Finding · Plant Copilot · Graph).  
 2. Close remaining Phase 2 exit criteria that the UI plan depends on.  
 3. Then Phase 3 specialists (RCA → compliance → lessons), not before the operator story is clear.
 
@@ -398,7 +398,7 @@ Switcher in header: changes twin geo, rules, corpus dataset, eval fixtures.
 
 ### 4B UI craft (usefulness-first polish)
 
-**Canonical detail:** [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md) (no hardcoded KPIs / fake attach / unlabeled seed).
+**Canonical UI/UX detail:** [`design_plan.md`](./design_plan.md) (separate from this eng plan).
 
 | Surface | Craft DoD |
 |---|---|
@@ -523,10 +523,11 @@ Even solo: sequence Phase 0 → 1 → 2D fusion → **2.5 GenAI Core** → 4 →
 
 ## 16. Build progress log
 
-### 2026-07-19 — Console UI plan (Plant Copilot + no fiction)
+### 2026-07-19 — Standalone UI/UX plan (`design_plan.md`)
 
-- Added [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md): Mission Control + **Plant Copilot** AI chat/ingest; explicit ban on hardcoded KPIs / fake attach / unlabeled seed.  
-- Phase 4B and product audit craft priorities updated to match.
+- Added [`design_plan.md`](./design_plan.md) — console craft & IA, separate from this phased eng plan.  
+- One job per page; Plant Copilot; no mega-dashboard; no fiction.  
+- [`CONSOLE_UI_PLAN.md`](./CONSOLE_UI_PLAN.md) redirects here.
 
 ### 2026-07-18 — GenAI/core hold; switch to UI-first planning
 
