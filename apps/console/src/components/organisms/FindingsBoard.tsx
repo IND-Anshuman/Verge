@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { RiskFinding, FindingState, FeedbackVerdict } from '@/types';
 import { FindingCard } from '@/components/organisms/FindingCard';
 import { SnoozeDialog } from '@/components/molecules/SnoozeDialog';
 import { AssignDialog } from '@/components/molecules/AssignDialog';
 import { FeedbackModal } from '@/components/molecules/FeedbackModal';
-import { FindingDetailModal } from '@/components/organisms/FindingDetailModal';
 import { EmptyState } from '@/components/atoms';
 import { useFindingsStore } from '@/stores/findings';
 import { Inbox } from 'lucide-react';
@@ -29,16 +29,19 @@ export function FindingsBoard({ findings, onChange }: FindingsBoardProps) {
   const [assignFinding, setAssignFinding] = useState<RiskFinding | null>(null);
   const [feedbackFinding, setFeedbackFinding] = useState<RiskFinding | null>(null);
   const [feedbackVerdict, setFeedbackVerdict] = useState<FeedbackVerdict | null>(null);
-  const [detailFinding, setDetailFinding] = useState<RiskFinding | null>(null);
+  const navigate = useNavigate();
   const { selectedId, setSelectedId } = useFindingsStore();
 
-  // The command palette selects a finding by id; open its detail modal here.
+  // The command palette can still select a finding by id (legacy path);
+  // route to its full page rather than a modal (design_plan §6.2).
   useEffect(() => {
     if (!selectedId) return;
     const hit = findings.find((f) => f.findingId === selectedId);
-    if (hit) setDetailFinding(hit);
     setSelectedId(null);
-  }, [selectedId, findings, setSelectedId]);
+    if (hit) navigate(`/findings/${hit.findingId}`);
+  }, [selectedId, findings, setSelectedId, navigate]);
+
+  const openDetail = (finding: RiskFinding) => navigate(`/findings/${finding.findingId}`);
 
   const handleOpenFeedback = (finding: RiskFinding, verdict: FeedbackVerdict) => {
     setFeedbackFinding(finding);
@@ -107,7 +110,7 @@ export function FindingsBoard({ findings, onChange }: FindingsBoardProps) {
                       onOpenSnooze={setSnoozeFinding}
                       onOpenAssign={setAssignFinding}
                       onOpenFeedback={handleOpenFeedback}
-                      onOpenDetail={setDetailFinding}
+                      onOpenDetail={openDetail}
                     />
                   ))
                 )}
@@ -145,13 +148,6 @@ export function FindingsBoard({ findings, onChange }: FindingsBoardProps) {
         onSuccess={onChange}
       />
 
-      {/* Details dialog popup */}
-      <FindingDetailModal
-        finding={detailFinding}
-        isOpen={detailFinding !== null}
-        onClose={() => setDetailFinding(null)}
-        onSuccess={onChange}
-      />
     </div>
   );
 }

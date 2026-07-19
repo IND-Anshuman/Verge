@@ -11,10 +11,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from verge_vision import to_contributing_signals
 
+from ..frame_cache import get_frame, store_frame
 from ..vision_events import list_vision_detections, record_vision_detections
 
 router = APIRouter(tags=["vision"])
@@ -40,6 +42,8 @@ def _detect_response(
     camera_id: str,
     frame_id: str | None,
     image: bytes | None,
+    *,
+    zone_id: str | None = None,
 ) -> dict:
     from ..frame_store import upload_vision_frame
 
@@ -50,21 +54,48 @@ def _detect_response(
     if image:
         frame_meta = upload_vision_frame(image, camera_id=camera_id)
     detections = list(body.get("detections") or [])
-    if frame_meta and frame_meta.get("uri"):
-        uri = frame_meta["uri"]
+    # Stamp zone when the worker/client provides one (fusion buffer requires it).
+    if zone_id:
+        for d in detections:
+            if isinstance(d, dict) and not d.get("zoneId"):
+                d["zoneId"] = zone_id
+    s3_uri = frame_meta.get("uri") if frame_meta else None
+    if s3_uri:
         for d in detections:
             if isinstance(d, dict) and not d.get("frameUri"):
-                d["frameUri"] = uri
-        body["frameUri"] = uri
+                # Temporary; rewritten to HTTP path after record assigns ids.
+                d["frameUri"] = s3_uri
         body["frameUpload"] = {
             "bucket": frame_meta.get("bucket"),
             "key": frame_meta.get("key"),
+            "storageUri": s3_uri,
         }
     recorded = record_vision_detections(request.app.state, detections)
+    # Prefer browser-fetchable paths over s3:// for console Live Ops stage.
+    browser_uri = None
+    if image and recorded:
+        for ev in recorded:
+            path = store_frame(request.app.state, ev.detection_id, image)
+            if path:
+                ev.frame_uri = path
+                browser_uri = path
+        # Keep fusion buffer in sync with rewritten URIs.
+        buf = getattr(request.app.state, "vision_detections", None) or []
+        by_id = {e.detection_id: e for e in recorded}
+        for i, existing in enumerate(buf):
+            if existing.detection_id in by_id:
+                buf[i] = by_id[existing.detection_id]
+    if browser_uri:
+        body["frameUri"] = browser_uri
+    elif s3_uri:
+        body["frameUri"] = s3_uri
     return {
         **body,
         "contributingSignals": [s.model_dump(by_alias=True, mode="json") for s in signals],
         "fusionCount": len(recorded),
+        "detections": [d.model_dump(by_alias=True, mode="json") for d in recorded]
+        if recorded
+        else detections,
     }
 
 
@@ -81,13 +112,21 @@ async def detect_frame(
     request: Request,
     cameraId: str = CAMERA_FORM,
     file: UploadFile = FRAME_FILE,
+    zoneId: str | None = Form(None),
 ) -> dict:
     """Real-frame detection — an uploaded image is run through the configured
     detector (e.g. ``UltralyticsDetector``). This is how live/real CCTV or a
     routed demo clip (``verge vision watch``) reaches the vision plane; the
     stub/annotation backends still degrade or replay exactly as before."""
     image = await file.read()
-    return _detect_response(request, request.app.state.vision, cameraId, None, image)
+    return _detect_response(
+        request,
+        request.app.state.vision,
+        cameraId,
+        None,
+        image,
+        zone_id=zoneId,
+    )
 
 
 @router.post("/vision/events")
@@ -118,3 +157,13 @@ def vision_events_recent(request: Request, limit: int = 50) -> dict:
         "detections": [d.model_dump(by_alias=True, mode="json") for d in events],
         "count": len(events),
     }
+
+
+@router.get("/vision/frames/{detection_id}")
+def vision_frame_bytes(detection_id: str, request: Request) -> Response:
+    """Serve last annotated still for a detection — honest 404 when absent."""
+    hit = get_frame(request.app.state, detection_id)
+    if hit is None:
+        raise HTTPException(404, "frame not in memory cache (upload via detect-frame)")
+    data, content_type = hit
+    return Response(content=data, media_type=content_type)

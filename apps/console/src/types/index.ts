@@ -71,6 +71,8 @@ export interface SensorHealthSummary {
 
 export interface Health {
   status: string;
+  /** 'demo' when VERGE_SEED seeded the plant — must be labeled in chrome (design_plan §8). */
+  seedMode?: string;
   llm: { provider: string; degraded: boolean };
   audit: { entries: number; head: string; verified: boolean };
   findings: number;

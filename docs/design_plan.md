@@ -96,25 +96,26 @@ Support
 
 ### 6.1 Board — Live Risk triage
 
-**Mood:** Dense enough for ops, still editorial — not a widget mall.
+**Mood:** Ops room first, triage second — industrial situation awareness without a mega-dashboard.
 
-- Full-height findings board (by state and/or band).
-- Optional split or toggle for map focus; map must not bury the board by default.
+- **Live Ops stage (mandatory):** always-visible vision still + radio transcript rail on `/`. Honest empty labels when quiet — never hide the whole stage. Frames from real `detect-frame` ingest (`/api/vision/frames/{id}`); no invented cameras.
+- **Triage:** band-first finding list by default (IMMINENT → NEAR → WATCH); column kanban available as a toggle.
+- Optional Map / Response side rails — closed by default; never permanent equal panels.
 - Click finding → **`/findings/:id`** (full page). Prefer page over kitchen-sink modal.
-- Chrome: sensor ribbon; small chips/links for latest radio/vision counts that deep-link — not a permanent ticker occupying half the screen.
-- Emergency / permits: from finding Respond or intentional entry points — not permanent equal panels on home.
+- Chrome: sensor ribbon + degrade strip. Chips alone are **not** sufficient for summit Live presence.
 
-**Empty:** calm empty state when no findings (`VERGE_SEED=off` and no live data).
+**Empty:** calm empty state when no findings (`VERGE_SEED=off` and no live data); Live Ops stage still shows labeled empty feeds.
 
 ### 6.2 Finding page — depth
 
 Sequential, readable sections (tabs or ruled blocks):
 
-1. **Summary** — band, zone, title, lineage chips  
-2. **Live** — telemetry, permits, exposure for this finding  
-3. **Investigate** — orchestrator brief, specialists, validator disposition  
-4. **Ask** — deep-link to Copilot scoped to this finding (`/knowledge?finding=…`)  
-5. **Respond** — ack, barriers, alert, CAPA, emergency  
+1. **Summary** — band, zone, title, counterfactual  
+2. **Live** — zone camera still, radio, telemetry window, active permits  
+3. **Signals** — lineage chips + convergence chart  
+4. **Investigate** — orchestrator brief, specialists, validator disposition  
+5. **Ask** — deep-link to Copilot scoped to this finding (`/knowledge?finding=…`)  
+6. **Respond** — ack, escalate, resolve, evidence export (rail)  
 
 Links out to `/graph` when the operator needs plant topology — do not embed a full explorer here.
 
@@ -227,3 +228,71 @@ Independent of backend phase numbers; coordinate APIs as needed.
 | Date | Note |
 |---|---|
 | 2026-07-19 | Initial `design_plan.md`: one job per page; Plant Copilot; no mega-dashboard; no fiction |
+| 2026-07-20 | Added §13 Premium craft escalation (backed by [`design-resources/`](./design-resources/README.md)); Ash IA handoff (finding page, graph, Copilot thread) — U2–U6 partial, not complete |
+| 2026-07-20 | §6.1 Live Ops stage mandatory; band-first triage default; finding **Live** section; vision frame HTTP cache |
+
+---
+
+## 13. Premium craft escalation
+
+**Premise:** "Premium" is earned through craft depth, not chrome. The visual
+references and explicit adopt/reject verdicts live in
+[`design-resources/README.md`](./design-resources/README.md) — Anduril's
+Lattice page is the north star; neon-gradient "AI dashboard" chrome is the
+labeled anti-pattern. Nothing in this section relaxes the hard rules of
+[`design-system.md`](./design-system.md); it spends *within* them.
+
+### 13.1 Typographic confidence
+
+The system's scale tops out at `xl` (22px) for ordinary surfaces. Each route
+may additionally spend **one display moment** — a single element at 28–36px
+that carries the page's meaning:
+
+| Route | The one display moment |
+|---|---|
+| `/findings/:id` | The lead-time band as a standing **mission clock** (band word in band color, window line beneath) — not a KPI tile |
+| `/` (empty) | Calm editorial empty state — confidence shown by whitespace, not a spinner |
+| `/knowledge` (empty thread) | The ask prompt as an invitation, not a toolbar |
+
+Rules: sentence case (never uppercase display type), IBM Plex Sans 600,
+`tabular-nums` when numeric, and band color **only** when the element *is*
+the band. Two display moments on one screen means neither is one.
+
+### 13.2 Motion system
+
+A named budget, not ad hoc transitions. Everything uses the existing 150ms
+ease token; anything not in this table does not move.
+
+| Name | Trigger | Motion | Budget |
+|---|---|---|---|
+| Annunciator pulse | IMMINENT band only | opacity pulse ~1.2s | reserved — never reused |
+| Press | button active | `scale(0.98)` | all buttons |
+| Elevate | card/row hover | border `--line` → `--line-2` | color only — no shadow, no scale |
+| Fly-to | map zone select | camera ease | map only |
+| Citation flash | citation click → source | one background flash, then stop | knowledge surfaces |
+| Page settle | route enter | 150ms fade/2px rise, once | never on data refresh |
+
+`prefers-reduced-motion` kills every row, including the pulse (state stays
+visible through color and the band word).
+
+### 13.3 Data-viz, edited
+
+Plotting is not designing. Every chart must pass: (1) it states one finding a
+sentence could not; (2) direct labels over legends when ≤3 series; (3) grid
+recessive (`#ECEAE4`), axes earn their place; (4) band/status colors appear
+only as threshold reference lines — series use the categorical palette;
+(5) no sparkline confetti — a number with a stable denominator beats a
+2-point trend; unmeasured stays null (§8), never interpolated.
+
+### 13.4 Tactile hero instruments
+
+Budget: **at most two components in the whole console** may carry material
+rendering (the metallic-widget reference, adopted narrowly):
+
+1. `LeadTimeGauge` on `/findings/:id` — the one instrument that reads as a
+   physical gauge (subtle inner bevel / specular edge is allowed).
+2. A future IMMINENT alert orb, if one ships.
+
+Constraints: CSS-only (no textures/images), works on paper white, respects
+reduced motion, and never appears in lists or cards at large. If every panel
+goes glossy, none of it means anything (D3 — signal is sacred).

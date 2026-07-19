@@ -29,10 +29,12 @@ export default function FleetView() {
     return () => clearInterval(interval);
   }, []);
 
+  // One unit per axis (§13.3): the chart compares active risks — sensor
+  // health lives in the site cards, where unmeasured stays an honest "—"
+  // instead of charting as 0%.
   const chartData = plants.map((p) => ({
     name: p.plantId.replace('PLT-', ''),
-    'Sensor Health %': p.sensorHealth ?? 0,
-    'Active Alarms': p.activeRisks,
+    'Active risks': p.activeRisks,
   }));
 
   return (
@@ -147,7 +149,7 @@ export default function FleetView() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <span className="ruled-label select-none">Measured comparison</span>
+          <span className="ruled-label select-none">Active risks by site</span>
           <div className="h-56 w-full border border-line bg-panel-2/30 p-3 rounded-md select-none font-mono text-micro">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -157,13 +159,7 @@ export default function FleetView() {
                   <YAxis {...chartAxisProps} />
                   <Tooltip contentStyle={chartTooltipStyle} />
                   <Bar
-                    dataKey="Active Alarms"
-                    fill={CHART_SERIES[1]}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={28}
-                  />
-                  <Bar
-                    dataKey="Sensor Health %"
+                    dataKey="Active risks"
                     fill={CHART_SERIES[0]}
                     radius={[4, 4, 0, 0]}
                     maxBarSize={28}

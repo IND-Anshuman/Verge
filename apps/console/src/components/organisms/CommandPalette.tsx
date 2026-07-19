@@ -12,6 +12,7 @@ import {
   ArrowRightLeft,
   BookOpen,
   Wrench,
+  Network,
   Eye,
   Radio,
   CornerDownLeft,
@@ -26,6 +27,7 @@ import {
 const VIEWS = [
   { label: 'Board', to: '/', icon: Activity },
   { label: 'Knowledge', to: '/knowledge', icon: BookOpen },
+  { label: 'Graph', to: '/graph', icon: Network },
   { label: 'Maintenance', to: '/maintenance', icon: Wrench },
   { label: 'Replay', to: '/replay', icon: History },
   { label: 'Fleet', to: '/fleet', icon: BarChart2 },

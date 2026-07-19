@@ -4,12 +4,14 @@ import AppShell from '@/components/templates/AppShell';
 
 // Lazy load route pages
 const FindingsView = lazy(() => import('@/pages/FindingsView'));
+const FindingDetailView = lazy(() => import('@/pages/FindingDetailView'));
 const AdminView = lazy(() => import('@/pages/AdminView'));
 const AuditView = lazy(() => import('@/pages/AuditView'));
 const ReplayView = lazy(() => import('@/pages/ReplayView'));
 const FleetView = lazy(() => import('@/pages/FleetView'));
 const ShiftHandoverView = lazy(() => import('@/pages/ShiftHandoverView'));
 const KnowledgeView = lazy(() => import('@/pages/KnowledgeView'));
+const GraphView = lazy(() => import('@/pages/GraphView'));
 const MaintenanceView = lazy(() => import('@/pages/MaintenanceView'));
 
 import { Skeleton, FindingCardSkeleton } from '@/components/atoms';
@@ -107,6 +109,7 @@ export default function AppRouter() {
       <Routes>
         <Route element={<AppShell />}>
           <Route path="/" element={<FindingsView />} />
+          <Route path="/findings/:id" element={<FindingDetailView />} />
           <Route
             path="/admin"
             element={
@@ -126,6 +129,7 @@ export default function AppRouter() {
           <Route path="/replay" element={<ReplayView />} />
           <Route path="/fleet" element={<FleetView />} />
           <Route path="/knowledge" element={<KnowledgeView />} />
+          <Route path="/graph" element={<GraphView />} />
           <Route path="/maintenance" element={<MaintenanceView />} />
           <Route
             path="/handover"

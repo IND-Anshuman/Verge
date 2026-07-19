@@ -107,3 +107,18 @@ def test_detect_frame_returns_real_detections_from_an_uploaded_image():
         from verge_vision import provider_from_env
 
         app.state.vision = provider_from_env({})
+
+
+def test_vision_frame_http_cache_serves_bytes():
+    """Console Live Ops needs GET /api/vision/frames/{id}, not s3:// only."""
+    from verge_api.frame_cache import store_frame
+    from verge_api.main import app
+
+    client = TestClient(app)
+    jpeg = _jpeg_bytes()
+    path = store_frame(app.state, "VD-TESTFRAME01", jpeg)
+    assert path == "/api/vision/frames/VD-TESTFRAME01"
+    r = client.get(path)
+    assert r.status_code == 200
+    assert r.content == jpeg
+    assert client.get("/api/vision/frames/VD-MISSING").status_code == 404

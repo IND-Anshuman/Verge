@@ -1,13 +1,13 @@
+import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useFindingsStore } from '@/stores/findings';
 import { useConnectionStore } from '@/stores/connection';
+import { useSensorsStore } from '@/stores/sensors';
+import { getSystemHealth } from '@/api';
 import { SensorRibbon } from '@/components/organisms/SensorRibbon';
 import { DegradationBannerStrip } from '@/components/organisms/DegradationBannerStrip';
-import { TranscriptTicker } from '@/components/organisms/TranscriptTicker';
-import { VisionOpsStrip } from '@/components/organisms/VisionOpsStrip';
-import { LessonProactiveStrip } from '@/components/organisms/LessonProactiveStrip';
 import { CommandPalette } from '@/components/organisms/CommandPalette';
-import { Activity, BarChart2, Settings, History, ArrowRightLeft, Shield, Search, BookOpen, Wrench } from 'lucide-react';
+import { Activity, BarChart2, Settings, History, ArrowRightLeft, Shield, Search, BookOpen, Wrench, Network } from 'lucide-react';
 import { Logo, Toaster, Kbd } from '@/components/atoms';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -15,6 +15,7 @@ import clsx from 'clsx';
 const NAV = [
   { to: '/', key: 'board', icon: Activity },
   { to: '/knowledge', key: 'knowledge', icon: BookOpen },
+  { to: '/graph', key: 'graph', icon: Network },
   { to: '/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/replay', key: 'replay', icon: History },
   { to: '/fleet', key: 'fleet', icon: BarChart2 },
@@ -30,9 +31,32 @@ function openPalette() {
 export default function AppShell() {
   const { shadow, setShadow } = useFindingsStore();
   const { status } = useConnectionStore();
+  const { health, setHealth } = useSensorsStore();
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
   const onBoard = pathname === '/';
+
+  // Seed truth gate (design_plan §8): when the backend booted with
+  // VERGE_SEED=demo the chrome must say so on every route — never silent.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const h = await getSystemHealth();
+        if (!cancelled) setHealth(h);
+      } catch {
+        /* offline — the pages surface their own error states */
+      }
+    };
+    void load();
+    const id = window.setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [setHealth]);
+
+  const demoSeed = health?.seedMode === 'demo';
 
   return (
     <div className="min-h-screen bg-bg text-ink flex flex-col font-sans select-none">
@@ -46,6 +70,14 @@ export default function AppShell() {
           <span className="text-micro text-ink-dim font-mono tracking-[0.14em] hidden xl:inline truncate">
             LEAD-TIME INTELLIGENCE · OPERATOR CONSOLE
           </span>
+          {demoSeed && (
+            <span
+              className="text-micro font-mono uppercase tracking-[0.1em] text-ink-dim border border-dashed border-line-2 rounded-sm px-1.5 py-0.5 shrink-0 select-none"
+              title="The backend booted with VERGE_SEED=demo — findings and plant data are a labeled demonstration, not live plant truth."
+            >
+              Demo seed
+            </span>
+          )}
         </div>
 
         {/* Global Navigation — editorial: 2px ink underline marks the active
@@ -137,14 +169,7 @@ export default function AppShell() {
 
       <DegradationBannerStrip />
 
-      {/* Phase 2 live fusion strips — Board only; Ash owns craft polish later */}
-      {onBoard && (
-        <>
-          <TranscriptTicker />
-          <VisionOpsStrip />
-          <LessonProactiveStrip />
-        </>
-      )}
+      {/* Live Ops stage lives inside FindingsView (Board) — not a hideable chrome strip. */}
 
       {/* Shadow banner — a calm tinted well with ink text, not a shout.
           The micro-label carries the state; prose stays sentence case. */}
@@ -159,9 +184,12 @@ export default function AppShell() {
         </div>
       )}
 
-      {/* Page Content Viewport */}
+      {/* Page Content Viewport — keyed page-settle: one 150ms rise per route
+          enter (§13.2), never on data refresh */}
       <main className="flex-1 overflow-hidden relative">
-        <Outlet />
+        <div key={pathname} className="page-settle h-full">
+          <Outlet />
+        </div>
       </main>
 
       <CommandPalette />
