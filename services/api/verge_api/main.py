@@ -56,6 +56,8 @@ from .routes.fatigue import router as fatigue_router
 from .routes.fleet import router as fleet_router
 from .routes.fusion import router as fusion_router
 from .routes.investigate import router as investigate_router
+from .routes.lessons import router as lessons_router
+from .routes.maintenance import router as maintenance_router
 from .routes.memory import router as memory_router
 from .routes.models import router as models_router
 from .routes.ops import router as ops_router
@@ -166,6 +168,8 @@ app.include_router(replays_router, prefix="/api")
 app.include_router(workers_router, prefix="/api")
 app.include_router(emergency_router, prefix="/api")
 app.include_router(investigate_router, prefix="/api")
+app.include_router(maintenance_router, prefix="/api")
+app.include_router(lessons_router, prefix="/api")
 app.include_router(actions_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 app.include_router(voice_router, prefix="/api")
@@ -214,6 +218,15 @@ app.state.docintel = DocIntelStore()
 app.state.voice_event_buffer = make_voice_event_buffer(store=store)
 app.state.voice_events = app.state.voice_event_buffer.events  # fusion reads this list
 app.state.vision_detections = []  # rolling VisionDetection list for risk fusion
+try:
+    from verge_maintenance import default_store as _wo_store
+    from verge_lessons import default_corpus as _lesson_corpus
+
+    app.state.work_orders = _wo_store()
+    app.state.lessons = _lesson_corpus()
+except Exception:  # pragma: no cover — packages may be mid-sync
+    app.state.work_orders = None
+    app.state.lessons = None
 
 
 class TransitionBody(BaseModel):

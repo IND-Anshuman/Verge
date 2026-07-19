@@ -1,0 +1,27 @@
+[
+  {
+    "id": "gold-rca-b04",
+    "demoBeat": "rca",
+    "zoneId": "B-04",
+    "title": "hot work gas risk",
+    "minCitations": 3,
+    "requiredRefPrefixes": ["WO-"],
+    "notes": "RCA digest must cite real work orders from Vizag CSV fixtures."
+  },
+  {
+    "id": "gold-compliance-gaps",
+    "demoBeat": "compliance",
+    "requireEvidenceLevels": true,
+    "forbidBareComplianceHero": true,
+    "notes": "Gap board uses evidenceLevel; coverageRatio is secondary with disclaimer."
+  },
+  {
+    "id": "gold-lessons-proactive",
+    "demoBeat": "lessons",
+    "zoneId": "B-04",
+    "title": "hot work with radio gas smell near battery",
+    "minProactiveCards": 1,
+    "expectedLessonId": "LL-2024-GAS-SEAL",
+    "notes": "Summit rehearsal: at least one LESSON card with sourceRefs."
+  }
+]

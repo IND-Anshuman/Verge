@@ -1,0 +1,6 @@
+orderId,equipmentId,zoneId,failureCode,state,title,openedAt,closedAt,description
+WO-2024-118,EQ-OVEN-4,B-04,BRG-OVERHEAT,closed,Replace oven-4 drive bearing,2024-11-02T06:00:00+00:00,2024-11-03T14:00:00+00:00,Bearing temperature rose with vibration; swapped cartridge; LEL was elevated during hot work.
+WO-2024-142,EQ-OVEN-4,B-04,SEAL-LEAK,closed,Repack oven-4 shaft seal,2024-12-08T05:30:00+00:00,2024-12-09T11:00:00+00:00,Gas smell reported on radio near B-04; seal weep confirmed; purged before hot work.
+WO-2025-019,EQ-OVEN-4,B-04,VIB-HIGH,closed,Align oven-4 coupling after high vibration,2025-01-05T07:00:00+00:00,2025-01-06T16:30:00+00:00,Vibration exceeded 80% of alarm with open MO; realigned coupling.
+WO-2025-044,EQ-P-3,B-03,SEAL-LEAK,closed,Pump P-3 mechanical seal,2025-02-01T08:00:00+00:00,2025-02-02T12:00:00+00:00,Adjacent zone seal leak; SIMOPS with hot work on B-04 paused.
+WO-2025-061,EQ-OVEN-4,B-04,BRG-OVERHEAT,in-progress,Inspect oven-4 bearing after recurrence,2025-07-10T05:00:00+00:00,,Open MO — vibration trending; do not invent further WOs beyond this CSV.

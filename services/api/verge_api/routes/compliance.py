@@ -16,6 +16,7 @@ from verge_compliance import (
     build_compliance_pack,
     build_incident_report,
     changes_since_prior,
+    enrich_report,
     gap_findings,
 )
 from verge_risk import STARTER_RULES, load_rules
@@ -44,15 +45,24 @@ def compliance_report(request: Request) -> dict:
         finding_ids=finding_ids,
         audit_head=store.audit_head(),
     )
-    return {**report.to_dict(), "evidencePack": pack.to_dict()}
+    body = enrich_report(report)
+    body["evidencePack"] = pack.to_dict()
+    return body
 
 
 @router.get("/compliance/gaps")
 def compliance_gaps(request: Request) -> dict:
-    """Just the open gaps, as regulatory-gap payloads (for the console badge)."""
+    """Open gaps with evidenceLevel — not a bare compliance percentage."""
     plant, rules = _plant_and_rules()
     report = assess(plant, rules)
-    return {"plant": report.plant, "gaps": gap_findings(report)}
+    enriched = enrich_report(report)
+    return {
+        "plant": report.plant,
+        "gaps": gap_findings(report),
+        "gapBoard": enriched.get("gapBoard") or [],
+        "evidenceLevels": enriched.get("evidenceLevels") or {},
+        "coverageDisclaimer": enriched.get("coverageDisclaimer"),
+    }
 
 
 @router.get("/compliance/changes")

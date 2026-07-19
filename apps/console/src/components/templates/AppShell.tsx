@@ -5,8 +5,9 @@ import { SensorRibbon } from '@/components/organisms/SensorRibbon';
 import { DegradationBannerStrip } from '@/components/organisms/DegradationBannerStrip';
 import { TranscriptTicker } from '@/components/organisms/TranscriptTicker';
 import { VisionOpsStrip } from '@/components/organisms/VisionOpsStrip';
+import { LessonProactiveStrip } from '@/components/organisms/LessonProactiveStrip';
 import { CommandPalette } from '@/components/organisms/CommandPalette';
-import { Activity, BarChart2, Settings, History, ArrowRightLeft, Shield, Search, BookOpen } from 'lucide-react';
+import { Activity, BarChart2, Settings, History, ArrowRightLeft, Shield, Search, BookOpen, Wrench } from 'lucide-react';
 import { Logo, Toaster, Kbd } from '@/components/atoms';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -14,6 +15,7 @@ import clsx from 'clsx';
 const NAV = [
   { to: '/', key: 'board', icon: Activity },
   { to: '/knowledge', key: 'knowledge', icon: BookOpen },
+  { to: '/maintenance', key: 'maintenance', icon: Wrench },
   { to: '/replay', key: 'replay', icon: History },
   { to: '/fleet', key: 'fleet', icon: BarChart2 },
   { to: '/audit', key: 'audit', icon: Shield },
@@ -140,6 +142,7 @@ export default function AppShell() {
         <>
           <TranscriptTicker />
           <VisionOpsStrip />
+          <LessonProactiveStrip />
         </>
       )}
 

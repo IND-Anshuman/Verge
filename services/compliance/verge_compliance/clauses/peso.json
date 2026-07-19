@@ -1,0 +1,34 @@
+[
+  {
+    "id": "PESO-PRESSURE-01",
+    "oisdRef": "PESO-STUB-PRESSURE-01",
+    "standard": "PESO / SMPV",
+    "title": "Pressure system monitoring under hot work",
+    "requirement": "Pressurised systems near hot work must have monitored pressure with defined alarm response.",
+    "capability": "hot-work-control"
+  },
+  {
+    "id": "PESO-GAS-CYL-01",
+    "oisdRef": "PESO-STUB-GAS-01",
+    "standard": "PESO",
+    "title": "Flammable gas cylinder / distribution integrity",
+    "requirement": "Flammable gas distribution near work fronts requires leak detection and isolation readiness.",
+    "capability": "gas-detection"
+  },
+  {
+    "id": "ENV-STACK-01",
+    "oisdRef": "ENV-STUB-AIR-01",
+    "standard": "Environment / Air Act (stub)",
+    "title": "Fugitive emission / toxic release monitoring",
+    "requirement": "Toxic release pathways must have detection coverage and escalation when readings near threshold.",
+    "capability": "gas-detection"
+  },
+  {
+    "id": "ENV-EFFLUENT-01",
+    "oisdRef": "ENV-STUB-WATER-01",
+    "standard": "Environment / Water Act (stub)",
+    "title": "Containment during abnormal operations",
+    "requirement": "Abnormal operations that can release process fluids require containment readiness (config evidence).",
+    "capability": "startup-monitoring"
+  }
+]

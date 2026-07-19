@@ -8,20 +8,20 @@
 
 ## 0. Pickup bookmark — 2026-07-18 (UI-first pause)
 
-**Status:** Phase 2 Live Fusion closed in depth (2026-07-19). Ash resumes design_plan craft; eng next = Phase 3 specialists after UI structure.
+**Status:** Phase 3 specialists closed in depth (2026-07-19). Ash resumes design_plan craft; eng next = Phase 4 polish / summit prep.
 
 | Item | State |
 |---|---|
-| **Last engineering commits** | Phase 2 depth: Whisper fallback, Neo4j VoiceEvent, RTSP worker, MinIO frames, adjacent_permit/open_capa, 60+ rules, transcript/vision strips |
+| **Last engineering commits** | Phase 3: RCA/maintenance + compliance evidence levels + lessons proactive; specialists on orchestrator |
 | **Phase 0 / 1** | Done (truth gate + Knowledge spine v0) |
 | **Phase 2.5 GenAI Core** | **Done** |
 | **Phase 2 Live Risk** | **Done (exit criteria)** — see §7 checklist; PPE YOLO still advisory/VLM (honest) |
-| **Phase 3 Specialists** | **Next eng** — RCA / compliance-depth / lessons under orchestrator |
+| **Phase 3 Specialists** | **Done (exit criteria)** — see §8 checklist |
 | **Phase 4 Premium UI** | Ash + [`design_plan.md`](./design_plan.md) — U1–U6 IA (partial WIP on Finding page) |
 
 **Resume order**
 1. Ash: design_plan U1–U6 craft.  
-2. Eng: Phase 3 specialists.  
+2. Eng: Phase 4 multi-pack / premium UI wiring against design_plan.  
 3. Summit proof (Phase 5) when packs + UI story land.
 
 **Detailed session log:** [`progress.md`](./progress.md) → UI-first entries.
@@ -377,9 +377,12 @@ gantt
 | DoD | At least one proactive lesson fires in summit rehearsal script |
 
 ### Phase 3 exit criteria
-- [ ] RCA + compliance + lessons each have a 60-second demo beat  
-- [ ] All agent outputs cited or degraded — never invented work orders  
-- [ ] All three register as specialists on the Phase 2.5 orchestrator  
+- [x] RCA + compliance + lessons each have a 60-second demo beat  
+  (`GET /api/maintenance/rca`, enriched `/api/compliance/gaps`, `GET /api/lessons/proactive`; console `/maintenance` + Lesson strip + gap board levels)
+- [x] All agent outputs cited or degraded — never invented work orders  
+  (CSV/JSON fixtures only; RCA `degraded` when &lt;3 citations; proactive cards require `sourceRefs`)
+- [x] All three register as specialists on the Phase 2.5 orchestrator  
+  (`rca` / `compliance` / `lessons` via `run_all_specialists` + investigate tools)  
 
 ---
 

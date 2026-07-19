@@ -66,21 +66,38 @@ class Clause:
         )
 
 
-def load_clauses(path: str | Path | None = None) -> list[Clause]:
-    """Load the regulatory clause library (defaults to the bundled OISD subset).
-
-    Enforces id-uniqueness: a duplicate id would inflate the coverage ratio (a
-    legal claim) and silently drop a clause from the change diff, so it is a hard
-    error, not a warning."""
-    p = Path(path) if path else CLAUSES_DIR / "oisd.json"
+def _load_clause_file(p: Path) -> list[Clause]:
     doc = json.loads(p.read_text(encoding="utf-8"))
     if not isinstance(doc, list):
         msg = f"clause library must be a JSON list, got {type(doc).__name__}: {p}"
         raise ValueError(msg)
-    clauses = [Clause.from_dict(d) for d in doc]
+    return [Clause.from_dict(d) for d in doc]
+
+
+def load_clauses(path: str | Path | None = None) -> list[Clause]:
+    """Load the regulatory clause library.
+
+    Default (path=None): merge all ``clauses/*.json`` packs (OISD + PESO/env).
+    Explicit path: load that single file (tests / diffs).
+
+    Enforces id-uniqueness across the loaded set.
+    """
+    if path is not None:
+        clauses = _load_clause_file(Path(path))
+    else:
+        # Default pack set for Phase 3B (oisd-2023 is an alternate snapshot —
+        # loaded only via explicit path to avoid id collisions with oisd.json).
+        packs = ("oisd.json", "peso.json")
+        clauses = []
+        for name in packs:
+            p = CLAUSES_DIR / name
+            if p.exists():
+                clauses.extend(_load_clause_file(p))
+        if not clauses:
+            clauses = _load_clause_file(CLAUSES_DIR / "oisd.json")
     ids = [c.id for c in clauses]
     dupes = sorted({cid for cid in ids if ids.count(cid) > 1})
     if dupes:
-        msg = f"duplicate clause id(s) in {p}: {', '.join(dupes)}"
+        msg = f"duplicate clause id(s): {', '.join(dupes)}"
         raise ValueError(msg)
     return clauses

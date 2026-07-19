@@ -42,6 +42,8 @@ export function CompliancePanel() {
     gaps: number;
     total: number;
     clauses: ComplianceClause[];
+    evidenceLevels?: Record<string, number>;
+    coverageDisclaimer?: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>('all');
@@ -102,14 +104,16 @@ export function CompliancePanel() {
     return [...list].sort((a, b) => (a.status === b.status ? 0 : a.status === 'gap' ? -1 : 1));
   }, [report, filter]);
 
-  const coveragePct = report ? Math.round(report.coverageRatio * 100) : 0;
+  const levelEntries = report
+    ? Object.entries(report.evidenceLevels ?? {}).sort((a, b) => b[1] - a[1])
+    : [];
 
   return (
     <Card className="p-3 border-line bg-panel-2/30 flex flex-col gap-2.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-micro font-mono font-bold text-ink-dim uppercase flex items-center gap-1.5">
           <Scale className="h-3.5 w-3.5" />
-          Regulatory Compliance (OISD / Factory Act)
+          Regulatory gap board (OISD / PESO)
         </span>
         {report && (
           <div className="flex bg-bg border border-line p-0.5 rounded select-none">
@@ -138,16 +142,23 @@ export function CompliancePanel() {
 
       {report && (
         <>
-          {/* Coverage bar */}
-          <div className="flex items-center gap-2 font-mono text-xs select-none">
-            <div className="flex-1 h-1.5 bg-bg border border-line rounded-full overflow-hidden">
-              <div
-                className={clsx('h-full rounded-full', coveragePct >= 90 ? 'bg-ok' : coveragePct >= 70 ? 'bg-near' : 'bg-imminent')}
-                style={{ width: `${coveragePct}%` }}
-              />
+          {/* Evidence levels — not a bare compliance % (Phase 3B / P4) */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5 font-mono text-micro">
+              <span className="text-ink-dim uppercase">{report.plant}</span>
+              {levelEntries.map(([level, n]) => (
+                <span
+                  key={level}
+                  className="px-1.5 py-0.5 rounded-sm border border-line bg-bg text-ink-dim"
+                  title="Clause evidence disclaimer level"
+                >
+                  {level} {n}
+                </span>
+              ))}
             </div>
-            <span className="text-ink font-bold tabular-nums">{coveragePct}%</span>
-            <span className="text-ink-dim text-micro uppercase">{report.plant}</span>
+            {report.coverageDisclaimer && (
+              <p className="text-micro text-ink-dim leading-normal">{report.coverageDisclaimer}</p>
+            )}
           </div>
 
           {/* Clause drill-down */}
@@ -187,6 +198,11 @@ export function CompliancePanel() {
                         >
                           {c.status}
                         </span>
+                        {c.evidenceLevel && (
+                          <span className="px-1.5 py-0.5 rounded-sm border border-watch/30 bg-watch/10 text-watch">
+                            {c.evidenceLevel}
+                          </span>
+                        )}
                         <span className="px-1.5 py-0.5 rounded-sm border border-line bg-panel text-ink-dim">
                           {c.oisdRef}
                         </span>

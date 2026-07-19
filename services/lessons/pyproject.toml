@@ -1,0 +1,19 @@
+[project]
+name = "verge-lessons"
+version = "0.1.0"
+description = "Lessons-learned mine + match for proactive Mission Control cards (Phase 3C)."
+requires-python = ">=3.11"
+dependencies = ["verge-schema"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["verge_lessons"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"verge_lessons/fixtures" = "verge_lessons/fixtures"
+
+[tool.uv.sources]
+verge-schema = { workspace = true }

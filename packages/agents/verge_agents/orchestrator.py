@@ -25,7 +25,8 @@ BRIEF_KEYS = ("summary", "hypotheses", "recommendedBarriers", "regulatoryRefs", 
 ORCHESTRATOR_SYSTEM = """You are the Verge advisory orchestrator for an Indian \
 heavy-industry plant. Specialists have already gathered evidence digests. \
 Synthesize ONLY from those digests — never invent sensor readings, equipment \
-IDs, zones, permits, or clause IDs that do not appear in the digests.
+IDs, zones, permits, work-order IDs, lesson IDs, or clause IDs that do not \
+appear in the digests.
 
 Return STRICT JSON (no markdown fence) with keys:
   summary            one-paragraph situation assessment
@@ -87,7 +88,8 @@ def _degraded_brief(
         "summary": (
             f"Deterministic fact sheet for {finding_id} (no LLM — specialists "
             f"only, no synthesis). Zone {zone_id}: {permits} active permit(s). "
-            "Telemetry, knowledge, and compliance digests attached as evidence."
+            "Telemetry, knowledge, compliance, RCA, and lessons digests "
+            "attached as evidence when tools were available."
         ),
         "hypotheses": [],
         "recommendedBarriers": [],

@@ -10,6 +10,7 @@ const ReplayView = lazy(() => import('@/pages/ReplayView'));
 const FleetView = lazy(() => import('@/pages/FleetView'));
 const ShiftHandoverView = lazy(() => import('@/pages/ShiftHandoverView'));
 const KnowledgeView = lazy(() => import('@/pages/KnowledgeView'));
+const MaintenanceView = lazy(() => import('@/pages/MaintenanceView'));
 
 import { Skeleton, FindingCardSkeleton } from '@/components/atoms';
 
@@ -125,6 +126,7 @@ export default function AppRouter() {
           <Route path="/replay" element={<ReplayView />} />
           <Route path="/fleet" element={<FleetView />} />
           <Route path="/knowledge" element={<KnowledgeView />} />
+          <Route path="/maintenance" element={<MaintenanceView />} />
           <Route
             path="/handover"
             element={

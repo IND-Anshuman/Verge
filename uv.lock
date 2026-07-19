@@ -26,7 +26,9 @@ members = [
     "verge-docintel",
     "verge-edge-gateway",
     "verge-forecaster",
+    "verge-lessons",
     "verge-llm",
+    "verge-maintenance",
     "verge-memory",
     "verge-mlops",
     "verge-orchestrator",
@@ -3940,7 +3942,9 @@ dependencies = [
     { name = "verge-docintel" },
     { name = "verge-edge-gateway" },
     { name = "verge-forecaster" },
+    { name = "verge-lessons" },
     { name = "verge-llm" },
+    { name = "verge-maintenance" },
     { name = "verge-memory" },
     { name = "verge-mlops" },
     { name = "verge-orchestrator" },
@@ -3980,7 +3984,9 @@ requires-dist = [
     { name = "verge-docintel", editable = "services/docintel" },
     { name = "verge-edge-gateway", editable = "services/edge-gateway" },
     { name = "verge-forecaster", editable = "services/forecaster" },
+    { name = "verge-lessons", editable = "services/lessons" },
     { name = "verge-llm", editable = "packages/llm" },
+    { name = "verge-maintenance", editable = "services/maintenance" },
     { name = "verge-memory", editable = "packages/memory" },
     { name = "verge-mlops", editable = "packages/mlops" },
     { name = "verge-orchestrator", editable = "services/orchestrator" },
@@ -4006,7 +4012,7 @@ dev = [
 
 [[package]]
 name = "verge-agents"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "packages/agents" }
 dependencies = [
     { name = "verge-llm" },
@@ -4035,7 +4041,9 @@ dependencies = [
     { name = "verge-compliance" },
     { name = "verge-contracts" },
     { name = "verge-docintel" },
+    { name = "verge-lessons" },
     { name = "verge-llm" },
+    { name = "verge-maintenance" },
     { name = "verge-memory" },
     { name = "verge-mlops" },
     { name = "verge-orchestrator" },
@@ -4071,7 +4079,9 @@ requires-dist = [
     { name = "verge-compliance", editable = "services/compliance" },
     { name = "verge-contracts", editable = "packages/contracts" },
     { name = "verge-docintel", editable = "services/docintel" },
+    { name = "verge-lessons", editable = "services/lessons" },
     { name = "verge-llm", editable = "packages/llm" },
+    { name = "verge-maintenance", editable = "services/maintenance" },
     { name = "verge-memory", editable = "packages/memory" },
     { name = "verge-mlops", editable = "packages/mlops" },
     { name = "verge-orchestrator", editable = "services/orchestrator" },
@@ -4237,6 +4247,17 @@ dependencies = [
 requires-dist = [{ name = "verge-schema", editable = "packages/schema" }]
 
 [[package]]
+name = "verge-lessons"
+version = "0.1.0"
+source = { editable = "services/lessons" }
+dependencies = [
+    { name = "verge-schema" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "verge-schema", editable = "packages/schema" }]
+
+[[package]]
 name = "verge-llm"
 version = "0.3.0"
 source = { editable = "packages/llm" }
@@ -4249,6 +4270,17 @@ http = [
 [package.metadata]
 requires-dist = [{ name = "httpx", marker = "extra == 'http'", specifier = ">=0.27" }]
 provides-extras = ["http"]
+
+[[package]]
+name = "verge-maintenance"
+version = "0.1.0"
+source = { editable = "services/maintenance" }
+dependencies = [
+    { name = "verge-schema" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "verge-schema", editable = "packages/schema" }]
 
 [[package]]
 name = "verge-memory"

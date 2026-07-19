@@ -24,7 +24,7 @@ _TAG_RE = re.compile(
 _ALLOWLIST = frozenset({
     "LEL", "PPE", "CO", "H2S", "OISD", "SIMOPS", "PTW", "SOP", "NCR",
     "RCA", "CAPA", "ISO", "PESO", "IMMINENT", "NEAR", "WATCH", "UNKNOWN",
-    "LLM", "API", "JSON", "UTC",
+    "LLM", "API", "JSON", "UTC", "WO", "LL", "OEM", "QMS", "LESSON",
 })
 
 

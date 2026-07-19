@@ -25,7 +25,18 @@ KNOWLEDGE_TOOLS = (
     "search_plant_docs",
     "query_zone_graph",
 )
-COMPLIANCE_TOOLS = ("get_compliance_clauses",)
+COMPLIANCE_TOOLS = (
+    "get_compliance_clauses",
+    "get_compliance_gaps",
+)
+RCA_TOOLS = (
+    "list_work_orders",
+    "sensor_window",
+    "manual_search",
+    "similar_failures",
+    "get_rca_digest",
+)
+LESSONS_TOOLS = ("match_lessons",)
 MULTIMODAL_TOOLS = (
     "get_recent_voice_events",
     "get_recent_vision_events",
@@ -163,12 +174,22 @@ def run_compliance_specialist(
     *,
     zone_id: str,
 ) -> SpecialistResult:
-    args = {"get_compliance_clauses": {"zone_id": zone_id}}
+    args = {
+        "get_compliance_clauses": {"zone_id": zone_id},
+        "get_compliance_gaps": {"zone_id": zone_id},
+    }
     facts, steps = _run_tools(tools, COMPLIANCE_TOOLS, args)
     clauses = facts.get("get_compliance_clauses") or []
+    gaps = facts.get("get_compliance_gaps") or {}
+    gap_board = gaps.get("gapBoard") if isinstance(gaps, dict) else []
     digest = {
         "clauseCount": len(clauses) if isinstance(clauses, list) else 0,
         "clauses": _trim(clauses, max_list=8, max_str=280),
+        "gapBoard": _trim(gap_board, max_list=8, max_str=240),
+        "evidenceLevels": gaps.get("evidenceLevels") if isinstance(gaps, dict) else {},
+        "coverageDisclaimer": (
+            gaps.get("coverageDisclaimer") if isinstance(gaps, dict) else None
+        ),
     }
     refs = []
     if isinstance(clauses, list):
@@ -177,7 +198,105 @@ def run_compliance_specialist(
             for c in clauses
             if isinstance(c, dict) and c.get("clauseId")
         ]
-    return SpecialistResult("compliance", digest, steps, refs=refs)
+    if isinstance(gap_board, list):
+        refs.extend(
+            str(c.get("clauseId"))
+            for c in gap_board
+            if isinstance(c, dict) and c.get("clauseId")
+        )
+    return SpecialistResult("compliance", digest, steps, refs=list(dict.fromkeys(refs)))
+
+
+def run_rca_specialist(
+    tools: ToolRegistry,
+    *,
+    finding_id: str,
+    zone_id: str,
+    title: str,
+) -> SpecialistResult:
+    args = {
+        "list_work_orders": {"zone_id": zone_id},
+        "sensor_window": {"finding_id": finding_id},
+        "manual_search": {"query": f"{title} {zone_id} maintenance OEM"},
+        "similar_failures": {"zone_id": zone_id},
+        "get_rca_digest": {
+            "finding_id": finding_id,
+            "zone_id": zone_id,
+            "title": title,
+        },
+    }
+    facts, steps = _run_tools(tools, RCA_TOOLS, args)
+    wos = facts.get("list_work_orders") or {}
+    orders = wos.get("orders") if isinstance(wos, dict) else []
+    if not isinstance(orders, list):
+        orders = []
+    similar = facts.get("similar_failures") or {}
+    similar_list = similar.get("matches") if isinstance(similar, dict) else []
+    if not isinstance(similar_list, list):
+        similar_list = []
+    digest_body = facts.get("get_rca_digest")
+    if not isinstance(digest_body, dict):
+        digest_body = {
+            "workOrderCount": len(orders),
+            "similarFailureCount": len(similar_list),
+            "citationCount": 0,
+            "citations": [],
+            "degraded": True,
+            "reason": "rca-digest-unavailable",
+        }
+    digest = {
+        "workOrders": _trim(orders, max_list=6),
+        "similarFailures": _trim(similar_list, max_list=5),
+        "sensorWindow": _trim(facts.get("sensor_window") or {}, max_str=280),
+        "manuals": _trim(facts.get("manual_search") or {}, max_list=4, max_str=280),
+        "rca": _trim(digest_body, max_list=8, max_str=320),
+    }
+    refs: list[str] = []
+    for wo in orders:
+        if isinstance(wo, dict) and wo.get("orderId"):
+            refs.append(str(wo["orderId"]))
+    for c in digest_body.get("citations") or []:
+        if isinstance(c, dict) and c.get("refId"):
+            refs.append(str(c["refId"]))
+    return SpecialistResult("rca", digest, steps, refs=list(dict.fromkeys(refs)))
+
+
+def run_lessons_specialist(
+    tools: ToolRegistry,
+    *,
+    finding_id: str,
+    zone_id: str,
+    title: str,
+) -> SpecialistResult:
+    args = {
+        "match_lessons": {
+            "zone_id": zone_id,
+            "finding_id": finding_id,
+            "title": title,
+        }
+    }
+    facts, steps = _run_tools(tools, LESSONS_TOOLS, args)
+    matched = facts.get("match_lessons") or {}
+    lessons = matched.get("lessons") if isinstance(matched, dict) else []
+    cards = matched.get("proactiveCards") if isinstance(matched, dict) else []
+    if not isinstance(lessons, list):
+        lessons = []
+    if not isinstance(cards, list):
+        cards = []
+    digest = {
+        "lessonCount": len(lessons),
+        "lessons": _trim(lessons, max_list=5, max_str=320),
+        "proactiveCards": _trim(cards, max_list=3, max_str=280),
+    }
+    refs: list[str] = []
+    for lesson in lessons:
+        if not isinstance(lesson, dict):
+            continue
+        if lesson.get("lessonId"):
+            refs.append(str(lesson["lessonId"]))
+        for r in lesson.get("sourceRefs") or []:
+            refs.append(str(r))
+    return SpecialistResult("lessons", digest, steps, refs=list(dict.fromkeys(refs)))
 
 
 def run_multimodal_specialist(
@@ -229,6 +348,18 @@ def run_all_specialists(
         ),
         run_compliance_specialist(tools, zone_id=zone_id),
     ]
+    if tools.get("list_work_orders") or tools.get("similar_failures"):
+        results.append(
+            run_rca_specialist(
+                tools, finding_id=finding_id, zone_id=zone_id, title=title
+            )
+        )
+    if tools.get("match_lessons"):
+        results.append(
+            run_lessons_specialist(
+                tools, finding_id=finding_id, zone_id=zone_id, title=title
+            )
+        )
     if include_multimodal and (
         tools.get("get_recent_voice_events") or tools.get("get_recent_vision_events")
     ):

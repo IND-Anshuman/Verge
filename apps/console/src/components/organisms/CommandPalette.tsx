@@ -11,6 +11,7 @@ import {
   Settings,
   ArrowRightLeft,
   BookOpen,
+  Wrench,
   Eye,
   Radio,
   CornerDownLeft,
@@ -25,6 +26,7 @@ import {
 const VIEWS = [
   { label: 'Board', to: '/', icon: Activity },
   { label: 'Knowledge', to: '/knowledge', icon: BookOpen },
+  { label: 'Maintenance', to: '/maintenance', icon: Wrench },
   { label: 'Replay', to: '/replay', icon: History },
   { label: 'Fleet', to: '/fleet', icon: BarChart2 },
   { label: 'Audit', to: '/audit', icon: Shield },
@@ -35,7 +37,7 @@ const VIEWS = [
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { findings, shadow, setShadow, setSelectedId } = useFindingsStore();
+  const { findings, shadow, setShadow } = useFindingsStore();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -119,12 +121,7 @@ export function CommandPalette() {
                   <Command.Item
                     key={f.findingId}
                     value={`${f.findingId} ${f.title} ${f.zoneId} ${f.leadTimeBand}`}
-                    onSelect={() =>
-                      go(() => {
-                        navigate('/');
-                        setSelectedId(f.findingId);
-                      })
-                    }
+                    onSelect={() => go(() => navigate(`/findings/${f.findingId}`))}
                     className="flex items-center gap-2.5 px-2.5 h-10 rounded cursor-pointer select-none data-[selected=true]:bg-panel-2"
                   >
                     <span className="w-24 shrink-0">

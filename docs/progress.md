@@ -1,5 +1,21 @@
 # Dex Progress Log
 
+## 2026-07-19 — Phase 3 Specialist Agents closed in depth
+
+### Done
+- `services/maintenance/` — Vizag WO CSV, similar failures, RCA digest (≥3 citations or degraded)
+- `services/lessons/` — corpus match + proactive LESSON cards (cited only)
+- Compliance `enrich_report` / evidenceLevel gap board (no bare “81%” hero)
+- Orchestrator specialists: `rca`, deepened `compliance`, `lessons` + investigate tools
+- Console: `/maintenance`, LessonProactiveStrip, CompliancePanel evidence levels
+- Eval gold: `eval/agents/gold/specialists.json` + unit/eval tests
+
+### Next
+- Ash: design_plan U1–U6 (leave FindingDetail WIP alone)
+- Eng: Phase 4 multi-pack / premium UI
+
+---
+
 ## 2026-07-19 — Phase 2 Live Fusion closed in depth
 
 ### Done
@@ -8,7 +24,7 @@
 - Stream runner re-eval on voice/vision/maintenance/worker/capa
 - Live fuse loads workers, maintenance, CAPA, zone adjacency
 - Predicates `adjacent_permit` + `open_capa`; starter rules **60+**
-- RTSP/file worker, MinIO frame URI on detect-frame
+- RTSP/file worker, MinIO frames URI on detect-frame
 - Board transcript ticker + Vision Ops strip (Ash crafts later)
 - Contracts for voice/vision/maintenance/capa; harness compound catch-rate column
 

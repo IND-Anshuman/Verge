@@ -68,6 +68,77 @@ def _tools() -> ToolRegistry:
         Tool("get_compliance_clauses", "c",
              lambda zone_id="": [{"clauseId": "VC-HOT-WORK", "title": "Hot work"}],
              {"type": "object", "properties": {"zone_id": {"type": "string"}}}),
+        Tool("get_compliance_gaps", "gaps",
+             lambda zone_id="": {
+                 "gapBoard": [{"clauseId": "VC-TANK", "evidenceLevel": "not-evidenced"}],
+                 "evidenceLevels": {"not-evidenced": 1},
+                 "coverageDisclaimer": "detector tally, not legal %",
+             },
+             {"type": "object", "properties": {"zone_id": {"type": "string"}}}),
+        Tool("list_work_orders", "wo",
+             lambda zone_id="", equipment_id="": {
+                 "orders": [{
+                     "orderId": "WO-2024-142",
+                     "equipmentId": "EQ-OVEN-4",
+                     "zoneId": "B-04",
+                     "failureCode": "SEAL-LEAK",
+                     "state": "closed",
+                     "title": "Repack seal",
+                 }],
+                 "count": 1,
+             },
+             {"type": "object", "properties": {
+                 "zone_id": {"type": "string"},
+                 "equipment_id": {"type": "string"},
+             }}),
+        Tool("sensor_window", "sw",
+             lambda finding_id="": {"series": [{"sensorId": "LEL-04A"}], "degraded": False},
+             {"type": "object", "properties": {"finding_id": {"type": "string"}}}),
+        Tool("manual_search", "ms",
+             lambda query="": {"citations": [{"documentId": "DOC-1", "excerpt": "purge"}]},
+             {"type": "object", "properties": {"query": {"type": "string"}}}),
+        Tool("similar_failures", "sf",
+             lambda zone_id="", equipment_id="", failure_code="": {
+                 "matches": [{"orderId": "WO-2024-118", "failureCode": "BRG-OVERHEAT"}],
+             },
+             {"type": "object", "properties": {
+                 "zone_id": {"type": "string"},
+                 "equipment_id": {"type": "string"},
+                 "failure_code": {"type": "string"},
+             }}),
+        Tool("get_rca_digest", "rca",
+             lambda finding_id="", zone_id="", title="": {
+                 "citationCount": 3,
+                 "citations": [
+                     {"refId": "WO-2024-142", "kind": "work-order"},
+                     {"refId": "LEL-04A", "kind": "sensor-window"},
+                     {"refId": "DOC-1", "kind": "manual"},
+                 ],
+                 "degraded": False,
+             },
+             {"type": "object", "properties": {
+                 "finding_id": {"type": "string"},
+                 "zone_id": {"type": "string"},
+                 "title": {"type": "string"},
+             }}),
+        Tool("match_lessons", "ll",
+             lambda zone_id="", finding_id="", title="": {
+                 "lessons": [{
+                     "lessonId": "LL-2024-GAS-SEAL",
+                     "title": "Gas smell during hot work",
+                     "sourceRefs": ["WO-2024-142"],
+                 }],
+                 "proactiveCards": [{
+                     "severity": "LESSON",
+                     "lessonId": "LL-2024-GAS-SEAL",
+                     "sourceRefs": ["WO-2024-142"],
+                 }],
+             },
+             {"type": "object", "properties": {
+                 "zone_id": {"type": "string"},
+                 "finding_id": {"type": "string"},
+                 "title": {"type": "string"},
+             }}),
     ])
 
 
@@ -93,10 +164,13 @@ def test_orchestrator_degraded_runs_specialists():
     assert out["orchestrator"] == "advisory-v1"
     names = [s["name"] for s in out["specialists"]]
     assert "telemetry" in names and "knowledge" in names and "compliance" in names
+    assert "rca" in names and "lessons" in names
     tools_called = {e["tool"] for e in out["evidence"]}
     assert "get_finding" in tools_called
     assert "search_plant_docs" in tools_called
     assert "get_compliance_clauses" in tools_called
+    assert "list_work_orders" in tools_called
+    assert "match_lessons" in tools_called
     assert out["validation"]["ok"] is True  # fact sheet has no bad barriers
 
 

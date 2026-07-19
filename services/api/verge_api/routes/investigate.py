@@ -12,7 +12,12 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 from verge_agents import Tool, ToolRegistry, TwinCatalog, investigate
+from verge_compliance import assess, enrich_report
 from verge_compliance.clauses import load_clauses
+from verge_lessons import default_corpus, match_lessons, proactive_cards
+from verge_maintenance import default_store as default_wo_store
+from verge_maintenance.rca import build_rca_digest, similar_failures
+from verge_risk import STARTER_RULES, load_rules
 
 router = APIRouter(tags=["investigate"])
 
@@ -27,6 +32,8 @@ def _build_tools(app, finding) -> ToolRegistry:
     permits = app.state.permits
     thresholds = getattr(app.state, "sensor_thresholds", {})
     docintel = getattr(app.state, "docintel", None)
+    wo_store = getattr(app.state, "work_orders", None) or default_wo_store()
+    lesson_corpus = getattr(app.state, "lessons", None) or default_corpus()
 
     def get_finding(finding_id: str = "") -> dict:
         f = store.get_finding(finding_id or finding.finding_id)
@@ -114,9 +121,102 @@ def _build_tools(app, finding) -> ToolRegistry:
         for c in load_clauses():
             words = [w for w in c.capability.replace("-", " ").split() if len(w) > 3]
             if any(w in haystack for w in words):
-                scored.append({"clauseId": c.id, "standard": c.standard,
-                               "title": c.title, "requirement": c.requirement})
+                scored.append({
+                    "clauseId": c.id,
+                    "standard": c.standard,
+                    "title": c.title,
+                    "requirement": c.requirement,
+                    "capability": c.capability,
+                })
         return scored[:8]
+
+    def get_compliance_gaps(zone_id: str = "") -> dict:
+        """Full gap board with evidenceLevel disclaimers (Phase 3B)."""
+        _ = zone_id or finding.zone_id
+        report = assess(plant, load_rules(STARTER_RULES))
+        return enrich_report(report)
+
+    def list_work_orders(zone_id: str = "", equipment_id: str = "") -> dict:
+        zid = zone_id or finding.zone_id
+        orders = [
+            o.to_dict()
+            for o in wo_store.list(zone_id=zid or None, equipment_id=equipment_id or None)
+        ]
+        return {
+            "zoneId": zid,
+            "orders": orders,
+            "count": len(orders),
+            "knownOrderIds": sorted(wo_store.known_ids()),
+            "degraded": len(orders) == 0,
+            "reason": "" if orders else "no-work-orders-for-zone",
+        }
+
+    def sensor_window(finding_id: str = "") -> dict:
+        return get_recent_telemetry(finding_id or finding.finding_id)
+
+    def manual_search(query: str = "") -> dict:
+        return search_plant_docs(query or f"{finding.title} OEM manual")
+
+    def similar_failures_tool(
+        zone_id: str = "",
+        equipment_id: str = "",
+        failure_code: str = "",
+    ) -> dict:
+        zid = zone_id or finding.zone_id
+        matches = similar_failures(
+            wo_store,
+            zone_id=zid or None,
+            equipment_id=equipment_id or None,
+            failure_code=failure_code or None,
+        )
+        return {"zoneId": zid, "matches": matches, "count": len(matches)}
+
+    def get_rca_digest(
+        finding_id: str = "",
+        zone_id: str = "",
+        title: str = "",
+    ) -> dict:
+        zid = zone_id or finding.zone_id
+        orders = [o.to_dict() for o in wo_store.list(zone_id=zid or None)]
+        sims = similar_failures(wo_store, zone_id=zid or None)
+        return build_rca_digest(
+            work_orders=orders,
+            sensor_window=get_recent_telemetry(finding_id or finding.finding_id),
+            manuals=search_plant_docs(title or finding.title),
+            similar=sims,
+            finding_title=title or finding.title,
+        )
+
+    def match_lessons_tool(
+        zone_id: str = "",
+        finding_id: str = "",
+        title: str = "",
+    ) -> dict:
+        zid = zone_id or finding.zone_id
+        active_kinds = sorted({p.kind for p in permits.list_active() if p.zone_id == zid})
+        hazards: list[str] = []
+        try:
+            from ..voice_events import list_voice_events
+
+            for ev in list_voice_events(app.state, limit=10):
+                hazards.extend(list(ev.hazards or []))
+        except Exception:
+            pass
+        lessons = match_lessons(
+            lesson_corpus,
+            zone_id=zid,
+            title=title or finding.title,
+            lineage=list(finding.lineage or []),
+            permit_kinds=active_kinds,
+            hazards=hazards,
+        )
+        cards = proactive_cards(lessons, finding_id=finding_id or finding.finding_id)
+        return {
+            "zoneId": zid,
+            "lessons": lessons,
+            "proactiveCards": cards,
+            "count": len(lessons),
+        }
 
     def search_plant_docs(query: str = "") -> dict:
         """Local DocIntel chunk retrieval for the Knowledge Specialist."""
@@ -256,8 +356,74 @@ def _build_tools(app, finding) -> ToolRegistry:
              "Multi-hop zone graph: local twin adjacency/equipment + Neo4j coverage.",
              query_zone_graph, {"type": "object", "properties": {"zone_id": _STR}}),
         Tool("get_compliance_clauses",
-             "Regulatory clauses (OISD/Factory Act) relevant to this finding.",
+             "Regulatory clauses (OISD/Factory Act/PESO/env) relevant to this finding.",
              get_compliance_clauses, {"type": "object", "properties": {"zone_id": _STR}}),
+        Tool(
+            "get_compliance_gaps",
+            "Plant gap board with evidenceLevel (platform/configured/not-evidenced).",
+            get_compliance_gaps,
+            {"type": "object", "properties": {"zone_id": _STR}},
+        ),
+        Tool(
+            "list_work_orders",
+            "List real work orders for a zone/equipment (never invents WOs).",
+            list_work_orders,
+            {
+                "type": "object",
+                "properties": {"zone_id": _STR, "equipment_id": _STR},
+            },
+        ),
+        Tool(
+            "sensor_window",
+            "Telemetry window for the finding (RCA sensor evidence).",
+            sensor_window,
+            {"type": "object", "properties": {"finding_id": _STR}},
+        ),
+        Tool(
+            "manual_search",
+            "Search OEM/SOP manuals via DocIntel citations.",
+            manual_search,
+            {"type": "object", "properties": {"query": _STR}},
+        ),
+        Tool(
+            "similar_failures",
+            "Closed WOs with similar failure codes / equipment / zone.",
+            similar_failures_tool,
+            {
+                "type": "object",
+                "properties": {
+                    "zone_id": _STR,
+                    "equipment_id": _STR,
+                    "failure_code": _STR,
+                },
+            },
+        ),
+        Tool(
+            "get_rca_digest",
+            "Distilled RCA digest with ≥citations when evidence exists.",
+            get_rca_digest,
+            {
+                "type": "object",
+                "properties": {
+                    "finding_id": _STR,
+                    "zone_id": _STR,
+                    "title": _STR,
+                },
+            },
+        ),
+        Tool(
+            "match_lessons",
+            "Match lessons-learned corpus to the live finding; proactive cards.",
+            match_lessons_tool,
+            {
+                "type": "object",
+                "properties": {
+                    "zone_id": _STR,
+                    "finding_id": _STR,
+                    "title": _STR,
+                },
+            },
+        ),
         Tool("get_recent_voice_events",
              "Recent radio/voice events (English ops text) near the finding zone.",
              get_recent_voice_events, {"type": "object", "properties": {"zone_id": _STR}}),

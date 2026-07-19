@@ -38,6 +38,9 @@ export interface ComplianceGap {
 export interface ComplianceGaps {
   plant: string;
   gaps: ComplianceGap[];
+  gapBoard?: ComplianceClause[];
+  evidenceLevels?: Record<string, number>;
+  coverageDisclaimer?: string;
 }
 
 export interface ComplianceClause {
@@ -50,6 +53,7 @@ export interface ComplianceClause {
   isPlatform: boolean;
   status: 'satisfied' | 'gap';
   reason: string;
+  evidenceLevel?: string;
 }
 
 export interface ComplianceReport {
@@ -60,6 +64,9 @@ export interface ComplianceReport {
   total: number;
   clauses: ComplianceClause[];
   evidencePack?: Record<string, unknown>;
+  evidenceLevels?: Record<string, number>;
+  gapBoard?: ComplianceClause[];
+  coverageDisclaimer?: string;
 }
 
 export interface ModelCard {

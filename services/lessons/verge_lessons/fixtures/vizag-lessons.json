@@ -1,0 +1,32 @@
+[
+  {
+    "lessonId": "LL-2024-GAS-SEAL",
+    "title": "Gas smell during hot work — check shaft seals before cutting",
+    "summary": "Closed incident: radio-reported gas smell on B-04 during hot work traced to oven-4 shaft seal weep. Purge and seal check before restarting hot work.",
+    "zoneIds": ["B-04", "B-03"],
+    "hazardTags": ["gas", "smell", "lel", "hot-work", "seal"],
+    "permitKinds": ["hot-work"],
+    "sourceRefs": ["WO-2024-142", "VE-NEAR-MISS-GAS", "DOC-HOT-WORK-SOP"],
+    "severity": "LESSON"
+  },
+  {
+    "lessonId": "LL-2024-BRG-VIB",
+    "title": "Bearing overheat repeats when vibration ignored",
+    "summary": "Two closed WOs on EQ-OVEN-4 show BRG-OVERHEAT after elevated vibration windows. Treat rising vibration + open MO as a compound signal.",
+    "zoneIds": ["B-04"],
+    "hazardTags": ["vibration", "bearing", "maintenance"],
+    "permitKinds": [],
+    "sourceRefs": ["WO-2024-118", "WO-2025-019"],
+    "severity": "LESSON"
+  },
+  {
+    "lessonId": "LL-2025-SIMOPS",
+    "title": "Adjacent seal work pauses hot work",
+    "summary": "SIMOPS: P-3 seal repair on B-03 conflicted with B-04 hot work. Always review adjacent permits.",
+    "zoneIds": ["B-04", "B-03"],
+    "hazardTags": ["simops", "adjacent", "seal"],
+    "permitKinds": ["hot-work", "cold-work"],
+    "sourceRefs": ["WO-2025-044", "VC-SIMOPS"],
+    "severity": "LESSON"
+  }
+]

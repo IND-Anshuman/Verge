@@ -23,6 +23,8 @@ dependencies = [
   "verge-compliance",
   "verge-vision",
   "verge-connectors",
+  "verge-maintenance",
+  "verge-lessons",
   "verge-sims",
   "verge-cli",
   "verge-api",
@@ -62,6 +64,8 @@ members = [
   "services/compliance",
   "services/vision",
   "services/connectors",
+  "services/maintenance",
+  "services/lessons",
   "services/docintel",
   "sims",
   "cli",
@@ -86,6 +90,8 @@ verge-twin = { workspace = true }
 verge-compliance = { workspace = true }
 verge-vision = { workspace = true }
 verge-connectors = { workspace = true }
+verge-maintenance = { workspace = true }
+verge-lessons = { workspace = true }
 verge-sims = { workspace = true }
 verge-cli = { workspace = true }
 verge-api = { workspace = true }
