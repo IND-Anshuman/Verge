@@ -77,7 +77,8 @@ def build_rca_digest(
 
     schedule_why = None
     if work_orders:
-        open_like = [w for w in work_orders if w.get("state") in {"open", "in-progress", "degraded"}]
+        open_states = {"open", "in-progress", "degraded"}
+        open_like = [w for w in work_orders if w.get("state") in open_states]
         if open_like:
             wo = open_like[0]
             schedule_why = (

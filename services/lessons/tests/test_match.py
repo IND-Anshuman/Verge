@@ -8,7 +8,7 @@ from verge_lessons import default_corpus, match_lessons, proactive_cards
 def test_corpus_loads_fixtures():
     corpus = default_corpus()
     assert len(corpus.lessons) >= 2
-    ids = {l.lesson_id for l in corpus.lessons}
+    ids = {lesson.lesson_id for lesson in corpus.lessons}
     assert "LL-2024-GAS-SEAL" in ids
 
 

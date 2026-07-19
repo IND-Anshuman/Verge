@@ -55,9 +55,13 @@ class WorkOrderStore:
                 orders.append(
                     WorkOrder(
                         order_id=oid,
-                        equipment_id=(row.get("equipmentId") or row.get("equipment_id") or "").strip(),
+                        equipment_id=(
+                            row.get("equipmentId") or row.get("equipment_id") or ""
+                        ).strip(),
                         zone_id=(row.get("zoneId") or row.get("zone_id") or "").strip(),
-                        failure_code=(row.get("failureCode") or row.get("failure_code") or "").strip(),
+                        failure_code=(
+                            row.get("failureCode") or row.get("failure_code") or ""
+                        ).strip(),
                         state=(row.get("state") or "closed").strip().lower(),
                         title=(row.get("title") or "").strip(),
                         opened_at=(row.get("openedAt") or row.get("opened_at") or "").strip(),

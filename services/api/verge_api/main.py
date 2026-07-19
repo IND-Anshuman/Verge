@@ -219,8 +219,8 @@ app.state.voice_event_buffer = make_voice_event_buffer(store=store)
 app.state.voice_events = app.state.voice_event_buffer.events  # fusion reads this list
 app.state.vision_detections = []  # rolling VisionDetection list for risk fusion
 try:
-    from verge_maintenance import default_store as _wo_store
     from verge_lessons import default_corpus as _lesson_corpus
+    from verge_maintenance import default_store as _wo_store
 
     app.state.work_orders = _wo_store()
     app.state.lessons = _lesson_corpus()
